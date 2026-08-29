@@ -167,6 +167,7 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 .trng{padding:6px 14px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;font-family:-apple-system,sans-serif;transition:all .15s}
 .trng.on{background:var(--or);border-color:var(--or);color:#000}
 .cwx .rain{color:#60a5fa}
+.cwx .wxAdd{color:rgba(255,255,255,.3);font-weight:700}
 /* TOAST */
 .toast{position:fixed;bottom:calc(86px + env(safe-area-inset-bottom,0px));
   left:50%;transform:translateX(-50%) translateY(10px);
@@ -3719,6 +3720,8 @@ function storeWxData(data){
   if(!ST.wx)ST.wx={};
   var changed=false;
   for(var i=0;i<d.time.length;i++){
+    // Never overwrite a manually-entered correction with fetched data
+    if(ST.wx[d.time[i]]&&ST.wx[d.time[i]].manual)continue;
     var maxT=d.temperature_2m_max[i];
     var minT=d.temperature_2m_min[i];
     var rain=d.precipitation_sum[i];
@@ -3798,6 +3801,39 @@ function fetchWeather(year, month, cb){
 
 function getWxForDate(dateStr){
   return WX[dateStr]||null;
+}
+
+// MANUAL WEATHER EDIT - for days BOM's own record is missing
+var wxEditDate=null;
+function openWxEdit(date){
+  wxEditDate=date;
+  var w=getWxForDate(date);
+  var dt=new Date(date+"T12:00:00");
+  document.getElementById("wxEditSub").textContent=dt.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  document.getElementById("wxMinInput").value=(w&&w.minT!==null&&w.minT!==undefined)?w.minT:"";
+  document.getElementById("wxMaxInput").value=(w&&w.maxT!==null&&w.maxT!==undefined)?w.maxT:"";
+  document.getElementById("wxRainInput").value=(w&&w.rain!==null&&w.rain!==undefined)?w.rain:"";
+  document.getElementById("wxEditOv").style.display="flex";
+}
+function closeWxEdit(){
+  document.getElementById("wxEditOv").style.display="none";
+  wxEditDate=null;
+}
+function wxEditBg(e){if(e.target.id==="wxEditOv")closeWxEdit();}
+function saveWxEdit(){
+  if(!wxEditDate)return;
+  var minV=parseFloat(document.getElementById("wxMinInput").value);
+  var maxV=parseFloat(document.getElementById("wxMaxInput").value);
+  var rainV=parseFloat(document.getElementById("wxRainInput").value);
+  var entry={minT:isNaN(minV)?null:minV,maxT:isNaN(maxV)?null:maxV,rain:isNaN(rainV)?0:rainV,manual:true};
+  if(!ST.wx)ST.wx={};
+  ST.wx[wxEditDate]=entry;
+  WX[wxEditDate]=entry;
+  var savedDate=wxEditDate;
+  sv();
+  closeWxEdit();
+  renderCal();
+  showToast("Weather saved for "+savedDate);
 }
 
 // BOM CSV IMPORT
@@ -4026,17 +4062,16 @@ function parseBomCsv(){
     var maxT=parts.length>mxi?parseFloat(parts[mxi]):NaN;
     var rain=parts.length>ri?parseFloat(parts[ri]):NaN;
 
-    WX[isoDate]={
-      minT:isNaN(minT)?null:minT,
-      maxT:isNaN(maxT)?null:maxT,
-      rain:isNaN(rain)?0:rain
-    };
     var mKey=isoDate.substring(0,7);
     WX_FETCHED[mKey]=true;
+    if(!ST.wx)ST.wx={};
+    // Never overwrite a manually-entered correction with an imported CSV row
+    if(ST.wx[isoDate]&&ST.wx[isoDate].manual)continue;
+    var wxRow={minT:isNaN(minT)?null:minT,maxT:isNaN(maxT)?null:maxT,rain:isNaN(rain)?0:rain};
+    WX[isoDate]=wxRow;
     imported++;
     // Save to ST for persistence
-    if(!ST.wx)ST.wx={};
-    ST.wx[isoDate]={minT:isNaN(minT)?null:minT,maxT:isNaN(maxT)?null:maxT,rain:isNaN(rain)?0:rain};
+    ST.wx[isoDate]=wxRow;
   }
 
   if(imported===0){
@@ -5119,7 +5154,7 @@ function renderCal(){
     if(isToday)cls+=" tod";
     html+='<div class="'+cls+'"'+oc+'><div class="cdn">'+d+'</div><div class="cdc">'+cost+'</div>';
     html+=dotHtml;
-    if(!isFut&&isStart&&iso>='2025-04-01')html+='<div class="cwx" id="wx-'+iso+'"></div>';
+    if(!isFut&&isStart&&iso>='2025-04-01')html+='<div class="cwx" id="wx-'+iso+'" onclick="event.stopPropagation();openWxEdit(\''+iso+'\')" style="cursor:pointer"></div>';
     if(!isFut&&isStart&&ST.notes&&ST.notes[iso])html+='<div style="font-size:6px;color:var(--cy);line-height:1">note</div>';
     html+='</div>';
   }
@@ -5146,12 +5181,14 @@ function renderCal(){
       var wEl=document.getElementById("wx-"+wiso);
       if(wEl){
         var w=getWxForDate(wiso);
+        var wh="";
         if(w){
-          var wh="";
           if(w.maxT!==null&&w.minT!==null)wh+='<span>'+Math.round(w.maxT)+'/'+Math.round(w.minT)+'</span><br>';
+          else if(w.maxT!==null)wh+='<span>'+Math.round(w.maxT)+'/-</span><br>';
+          else if(w.minT!==null)wh+='<span>-/'+Math.round(w.minT)+'</span><br>';
           if(w.rain!==null&&w.rain>0)wh+='<span class="rain">'+w.rain.toFixed(1)+'mm</span>';
-          wEl.innerHTML=wh;
         }
+        wEl.innerHTML=wh||'<span class="wxAdd">+</span>';
       }
     }
   }
@@ -5837,6 +5874,7 @@ function fbBuildDayDocs(ST){
       if (!out[d2]) out[d2] = {};
       var w = ST.wx[d2];
       out[d2].minT = w.minT; out[d2].maxT = w.maxT; out[d2].rain = w.rain;
+      out[d2].wxManual = w.manual ? true : null;
     }
   }
   return out;
@@ -5899,7 +5937,7 @@ async function fbHydrateAndMerge(){
     var v = dsnap.data(); var date = dsnap.id;
     entries.push({date:date, usage:v.usage, feedin:v.feedin, net:v.net, production:v.production, charge:v.charge, discharge:v.discharge, rate:v.rate});
     if (v.cost!==undefined && v.cost!==null) actual[date] = {cost:v.cost, pk:v.pk, sh:v.sh, op:v.op, gen:v.gen};
-    if (v.rain!==undefined && v.rain!==null) wx[date] = {minT:v.minT, maxT:v.maxT, rain:v.rain};
+    if (v.rain!==undefined && v.rain!==null) wx[date] = {minT:v.minT, maxT:v.maxT, rain:v.rain, manual:v.wxManual?true:undefined};
   });
   var billsSnap = await getDocs(collection(fbDb, fbBasePath, "bills"));
   var bills = []; billsSnap.forEach(function(b){ bills.push(b.data()); });
@@ -6101,6 +6139,33 @@ window.fbBackgroundSync = function(){
     <div class="btn-row">
       <button class="btn btn-s" onclick="closeBomImport()">CANCEL</button>
       <button class="btn btn-p" onclick="parseBomCsv()">IMPORT TEXT</button>
+    </div>
+  </div>
+</div>
+<!-- MANUAL WEATHER EDIT OVERLAY -->
+<div class="ov" id="wxEditOv" onclick="wxEditBg(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="edit-title">Edit Weather</div>
+    <div class="edit-sub" id="wxEditSub"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 10px">
+      <div style="flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--mu);margin-bottom:3px">Min &#176;C</div>
+        <input type="number" inputmode="decimal" step="0.1" id="wxMinInput" placeholder="-" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none;box-sizing:border-box">
+      </div>
+      <div style="flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--mu);margin-bottom:3px">Max &#176;C</div>
+        <input type="number" inputmode="decimal" step="0.1" id="wxMaxInput" placeholder="-" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none;box-sizing:border-box">
+      </div>
+      <div style="flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--mu);margin-bottom:3px">Rain mm</div>
+        <input type="number" inputmode="decimal" step="0.1" id="wxRainInput" placeholder="0" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--di);padding:0 16px 12px;line-height:1.5">Use this when BOM's own page is missing a value for this day. Once saved, this day is locked to your entry and won't be overwritten by future weather fetches or imports.</div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="closeWxEdit()">CANCEL</button>
+      <button class="btn btn-p" onclick="saveWxEdit()">SAVE</button>
     </div>
   </div>
 </div>

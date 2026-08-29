@@ -769,6 +769,7 @@ canvas{display:block;width:100%;height:56px}
       <button onclick="saveApiKey()" style="background:var(--or);border:none;color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:13px;padding:11px 16px;border-radius:9px;cursor:pointer">SAVE</button>
     </div>
     <div id="apiKeyStatus" style="margin-top:8px;font-size:11px;color:var(--mu)"></div>
+    <button onclick="removeApiKey()" style="width:100%;margin-top:10px;padding:9px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">Remove key</button>
   </div>
 
 <div class="card">
@@ -1019,6 +1020,10 @@ function localDate(d){
 }
 function localNow(){
   return new Date();
+}
+function escapeHtml(s){
+  if(!s)return"";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 var _s=ld();
 var ST={
@@ -2376,7 +2381,7 @@ function buildYoY(iso){
       h+='<div style="font-size:9px;color:var(--mu)">G:'+entry.usage.toFixed(1)+' F:'+entry.feedin.toFixed(1)+prodStr+battStr+'</div>';
     }
     var note=ST.notes&&ST.notes[d]?ST.notes[d]:'';
-    if(note)h+='<div style="font-size:9px;color:var(--cy);font-style:italic">'+note+'</div>';
+    if(note)h+='<div style="font-size:9px;color:var(--cy);font-style:italic">'+escapeHtml(note)+'</div>';
     h+='</div>';
     if(wxStr)h+='<div style="font-size:9px;color:var(--mu);text-align:right;line-height:1.4">'+wxStr+'</div>';
     h+='</div>';
@@ -2428,41 +2433,59 @@ function saveApiKey(){
   document.getElementById("apiKeyStatus").textContent="Saved! SCAN is ready to use.";
   document.getElementById("apiKeyStatus").style.color="var(--gr)";
 }
+function removeApiKey(){
+  localStorage.removeItem("solarApiKey");
+  document.getElementById("sApiKey").value="";
+  document.getElementById("apiKeyStatus").textContent="Key removed - SCAN is disabled until a new key is saved.";
+  document.getElementById("apiKeyStatus").style.color="var(--mu)";
+}
 function saveAppPin(){
   var pin=document.getElementById("appPinInput").value.trim();
   var statusEl=document.getElementById("appPinStatus");
   if(!pin){
+    localStorage.removeItem("solarAppPinHash");
     localStorage.removeItem("solarAppPin");
     statusEl.textContent="PIN removed - app is now unlocked";
     statusEl.style.color="var(--mu)";
-  } else if(pin.length<4){
+    document.getElementById("appPinInput").value="";
+    return;
+  }
+  if(pin.length<4){
     statusEl.textContent="PIN must be at least 4 digits";
     statusEl.style.color="var(--re)";
     return;
-  } else {
-    localStorage.setItem("solarAppPin",pin);
+  }
+  hashPin(pin,function(h){
+    localStorage.setItem("solarAppPinHash",h);
+    localStorage.removeItem("solarAppPin");
     statusEl.textContent="PIN set - app will lock on next open";
     statusEl.style.color="var(--gr)";
-  }
-  document.getElementById("appPinInput").value="";
+    document.getElementById("appPinInput").value="";
+  });
 }
 function saveGuestPin(){
   var pin=document.getElementById("guestPinInput").value.trim();
   var statusEl=document.getElementById("guestPinStatus");
   if(!pin){
+    localStorage.removeItem("solarGuestPinHash");
     localStorage.removeItem("solarGuestPin");
     statusEl.textContent="Guest PIN removed";
     statusEl.style.color="var(--mu)";
-  } else if(pin.length<4){
+    document.getElementById("guestPinInput").value="";
+    return;
+  }
+  if(pin.length<4){
     statusEl.textContent="PIN must be at least 4 digits";
     statusEl.style.color="var(--re)";
     return;
-  } else {
-    localStorage.setItem("solarGuestPin",pin);
+  }
+  hashPin(pin,function(h){
+    localStorage.setItem("solarGuestPinHash",h);
+    localStorage.removeItem("solarGuestPin");
     statusEl.textContent="Guest PIN set - share the app URL with family";
     statusEl.style.color="var(--gr)";
-  }
-  document.getElementById("guestPinInput").value="";
+    document.getElementById("guestPinInput").value="";
+  });
 }
 function showDotInfo(iso,prod,exp,label){
   var pct=Math.round((prod/exp)*100);
@@ -4174,16 +4197,61 @@ function parseBomCsv(){
 // INIT
 var calY,calM;
 var guestMode=false;
-var DEFAULT_PIN="7710";
-var DEFAULT_GUEST_PIN="1234";
 
+function pinSalt(){
+  var s=localStorage.getItem("solarPinSalt");
+  if(!s){
+    s=Math.random().toString(36).slice(2)+Date.now().toString(36);
+    localStorage.setItem("solarPinSalt",s);
+  }
+  return s;
+}
+function hashPin(pin,cb){
+  var salt=pinSalt();
+  var enc=new TextEncoder();
+  var data=enc.encode(salt+":"+pin);
+  crypto.subtle.digest("SHA-256",data).then(function(buf){
+    var arr=Array.prototype.slice.call(new Uint8Array(buf));
+    var hex=arr.map(function(b){return(b<16?"0":"")+b.toString(16);}).join("");
+    cb(hex);
+  });
+}
+function migratePinsToHash(cb){
+  var oldApp=localStorage.getItem("solarAppPin");
+  var oldGuest=localStorage.getItem("solarGuestPin");
+  if(!oldApp&&!oldGuest){cb();return;}
+  var pending=0;
+  function done(){pending--;if(pending<=0)cb();}
+  if(oldApp){
+    pending++;
+    hashPin(oldApp,function(h){
+      localStorage.setItem("solarAppPinHash",h);
+      localStorage.removeItem("solarAppPin");
+      done();
+    });
+  }
+  if(oldGuest){
+    pending++;
+    hashPin(oldGuest,function(h){
+      localStorage.setItem("solarGuestPinHash",h);
+      localStorage.removeItem("solarGuestPin");
+      done();
+    });
+  }
+}
 function init(){
   if(sessionStorage.getItem("solarGuestMode")==="1")guestMode=true;
-  if(!sessionStorage.getItem("solarUnlocked")){
+  migratePinsToHash(function(){
+    if(sessionStorage.getItem("solarUnlocked")){
+      startApp();
+      return;
+    }
+    if(!localStorage.getItem("solarAppPinHash")&&!localStorage.getItem("solarGuestPinHash")){
+      startApp();
+      return;
+    }
     document.getElementById("lockScreen").style.display="flex";
-    return;
-  }
-  startApp();
+  });
 }
 function startApp(){
   var now=localNow();calY=now.getFullYear();calM=now.getMonth();
@@ -4220,6 +4288,10 @@ function submitResetVerify(){
     document.getElementById("resetPinOv").style.display="none";
     localStorage.removeItem("solarAppPin");
     localStorage.removeItem("solarGuestPin");
+    localStorage.removeItem("solarAppPinHash");
+    localStorage.removeItem("solarGuestPinHash");
+    localStorage.removeItem("solarPinFailCount");
+    localStorage.removeItem("solarPinLockoutUntil");
     sessionStorage.setItem("solarUnlocked","1");
     sessionStorage.setItem("solarGuestMode","0");
     document.getElementById("lockScreen").style.display="none";
@@ -4230,30 +4302,53 @@ function submitResetVerify(){
   });
 }
 var lockPinBuffer="";
+function getLockFailCount(){return parseInt(localStorage.getItem("solarPinFailCount")||"0",10);}
+function setLockFailCount(n){localStorage.setItem("solarPinFailCount",String(n));}
+function getLockLockoutUntil(){return parseInt(localStorage.getItem("solarPinLockoutUntil")||"0",10);}
+function setLockLockoutUntil(t){localStorage.setItem("solarPinLockoutUntil",String(t));}
 function submitLockPin(){
   var entered=lockPinBuffer;
   lockPinBuffer="";
   var dots=document.getElementById("lockDots");
   if(dots){var h="";for(var i=0;i<4;i++)h+='<div style="width:14px;height:14px;border-radius:50%;background:var(--bd)"></div>';dots.innerHTML=h;}
-  var saved=localStorage.getItem("solarAppPin")||DEFAULT_PIN;
-  var guest=localStorage.getItem("solarGuestPin")||DEFAULT_GUEST_PIN;
-  if(entered===saved){
-    guestMode=false;
-    sessionStorage.setItem("solarUnlocked","1");
-    sessionStorage.setItem("solarGuestMode","0");
-    document.getElementById("lockScreen").style.display="none";
-    startApp();
-  } else if(entered===guest){
-    guestMode=true;
-    sessionStorage.setItem("solarUnlocked","1");
-    sessionStorage.setItem("solarGuestMode","1");
-    document.getElementById("lockScreen").style.display="none";
-    startApp();
-  } else {
-    var errEl=document.getElementById("lockError");
-    errEl.textContent="Incorrect PIN";
+  var errEl=document.getElementById("lockError");
+  var lockoutUntil=getLockLockoutUntil();
+  if(Date.now()<lockoutUntil){
+    var waitS=Math.ceil((lockoutUntil-Date.now())/1000);
+    errEl.textContent="Too many attempts - wait "+waitS+"s";
     setTimeout(function(){errEl.textContent="";},2000);
+    return;
   }
+  hashPin(entered,function(enteredHash){
+    var savedHash=localStorage.getItem("solarAppPinHash");
+    var guestHash=localStorage.getItem("solarGuestPinHash");
+    if(savedHash&&enteredHash===savedHash){
+      setLockFailCount(0);
+      guestMode=false;
+      sessionStorage.setItem("solarUnlocked","1");
+      sessionStorage.setItem("solarGuestMode","0");
+      document.getElementById("lockScreen").style.display="none";
+      startApp();
+    } else if(guestHash&&enteredHash===guestHash){
+      setLockFailCount(0);
+      guestMode=true;
+      sessionStorage.setItem("solarUnlocked","1");
+      sessionStorage.setItem("solarGuestMode","1");
+      document.getElementById("lockScreen").style.display="none";
+      startApp();
+    } else {
+      var fails=getLockFailCount()+1;
+      if(fails>=5){
+        setLockLockoutUntil(Date.now()+30000);
+        setLockFailCount(0);
+        errEl.textContent="Too many attempts - wait 30s";
+      } else {
+        setLockFailCount(fails);
+        errEl.textContent="Incorrect PIN";
+      }
+      setTimeout(function(){errEl.textContent="";},2000);
+    }
+  });
 }
 function lockPinKey(k){
   if(k==="del"){lockPinBuffer=lockPinBuffer.slice(0,-1);}
@@ -5530,7 +5625,7 @@ function renderBills(){
       html+='<div class="bill-card" onclick="openBillForm('+idx+')" style="cursor:pointer">';
       // Top row
       html+='<div class="bill-top">';
-      html+='<div><div class="bill-period">'+b.p+'</div>';
+      html+='<div><div class="bill-period">'+escapeHtml(b.p)+'</div>';
       html+='<div class="bill-dates">'+(b.s||"")+(b.e?" - "+b.e:"")+(b.days?" ("+b.days+"d)":"")+'</div>';
       html+=lyrStr+'</div>';
       html+='<div style="text-align:right"><div class="bill-amount" style="color:'+col+'">$'+a.toFixed(0)+'</div>';

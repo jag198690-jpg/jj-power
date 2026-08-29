@@ -206,6 +206,7 @@ canvas{display:block;width:100%;height:56px}
   <button class="nt on" onclick="go('home')" id="t-home"><span class="ic">&#9728;</span>HOME</button>
   <button class="nt" onclick="go('cal')" id="t-cal"><span class="ic">&#128197;</span>CALENDAR</button>
   <button class="nt" onclick="go('bills')" id="t-bills"><span class="ic">&#129534;</span>BILLS</button>
+  <button class="nt" onclick="go('import')" id="t-import"><span class="ic">&#128229;</span>IMPORT</button>
   <button class="nt" onclick="go('trends')" id="t-trends"><span class="ic">&#128200;</span>TRENDS</button>
   <button class="nt" onclick="go('settings')" id="t-settings"><span class="ic">&#9881;</span>SETTINGS</button>
 </nav>
@@ -572,6 +573,31 @@ canvas{display:block;width:100%;height:56px}
   <input type="date" id="bFilterTo" style="display:none">
   <div style="display:none" id="bTotPaid"></div>
   <div style="display:none" id="bTotCred"></div>
+</div>
+
+<!-- ??? IMPORT ??? -->
+<div class="sc" id="sc-import">
+  <div class="row" style="margin-bottom:14px">
+    <div><h1>Import</h1><div class="sub">Scan a bill to add it to your history</div></div>
+  </div>
+
+  <div class="card" style="padding:13px;margin-bottom:14px">
+    <div class="sub" style="margin-bottom:8px">BILLS ON FILE</div>
+    <div id="importSummary" style="font-size:13px;color:var(--tx);line-height:1.5">-</div>
+  </div>
+
+  <div class="card" style="padding:18px;margin-bottom:14px;text-align:center">
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px;line-height:1.5">Scan this month's bill, or work back through old bills one at a time to build an accurate history. Claude reads the PDF or photo and fills in the form for you to check before saving.</div>
+    <input type="file" id="importScanInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" style="display:none" onchange="handleBillScan(this)">
+    <button id="importScanBtn" onclick="triggerImportScan()" style="width:100%;padding:15px;border-radius:12px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">SCAN A BILL</button>
+    <button id="importManualBtn" onclick="openBillForm(null)" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--cy);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">Enter manually instead</button>
+    <div id="importScanStatus" style="display:none;text-align:center;font-size:12px;margin-top:12px;font-weight:600"></div>
+  </div>
+
+  <div class="card" style="padding:13px">
+    <div class="sub" style="margin-bottom:8px">RECENTLY IMPORTED</div>
+    <div id="importRecent"></div>
+  </div>
 </div>
 
 <!-- ??? TRENDS ??? -->
@@ -2891,7 +2917,7 @@ function saveBillForm(){
   var bill={p:p,s:s,e:e,days:days,actual:a,credit:cr,dailyAvg:da,weeklyAvg:wk};
   var idx=parseInt(document.getElementById("bf-idx").value);
   if(idx>=0)ST.bills[idx]=bill;else ST.bills.push(bill);
-  sv();renderBills();renderTrends();closeBillForm();
+  sv();renderBills();renderTrends();renderImportTab();closeBillForm();
   showToast(idx>=0?"Bill updated":"Bill added");
 }
 
@@ -2908,12 +2934,21 @@ function triggerBillScan(){
   document.getElementById("billScanInput").value="";
   document.getElementById("billScanInput").click();
 }
+function triggerImportScan(){
+  if(guestMode){showToast("View only - guest access");return;}
+  document.getElementById("importScanInput").value="";
+  document.getElementById("importScanInput").click();
+}
 function setBillScanStatus(msg,col){
-  var el=document.getElementById("billScanStatus");
-  if(!msg){el.style.display="none";return;}
-  el.textContent=msg;
-  el.style.color=col||"var(--cy)";
-  el.style.display="block";
+  var ids=["billScanStatus","importScanStatus"];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(!el)continue;
+    if(!msg){el.style.display="none";continue;}
+    el.textContent=msg;
+    el.style.color=col||"var(--cy)";
+    el.style.display="block";
+  }
 }
 function pdfFileToPageImages(file,maxPages,cb,errCb){
   if(typeof pdfjsLib==="undefined"){errCb("PDF support did not load - try again, or send a screenshot instead");return;}
@@ -3055,6 +3090,40 @@ function dedupeBills(){
   if(changed){ST.bills=out;sv();}
 }
 window.dedupeBills=dedupeBills;
+function renderImportTab(){
+  var sumEl=document.getElementById("importSummary");
+  var recEl=document.getElementById("importRecent");
+  if(!sumEl||!recEl)return;
+  var bills=ST.bills||[];
+  if(!bills.length){
+    sumEl.textContent="No bills recorded yet";
+    recEl.innerHTML='<div style="color:var(--mu);text-align:center;padding:24px;font-size:13px">Scan your first bill above to get started</div>';
+    return;
+  }
+  var oldest=null,newest=null;
+  for(var i=0;i<bills.length;i++){
+    var b=bills[i];
+    if(!b.s)continue;
+    if(!oldest||b.s<oldest.s)oldest=b;
+    if(!newest||b.s>newest.s)newest=b;
+  }
+  var rangeTxt=(oldest&&newest)?(billPeriodLabel(oldest.s)+" \u2192 "+billPeriodLabel(newest.e||newest.s)):"";
+  sumEl.textContent=bills.length+" bill"+(bills.length===1?"":"s")+(rangeTxt?" \u2014 "+rangeTxt:"");
+
+  var list=[];
+  for(var i=0;i<bills.length;i++)list.push({b:bills[i],i:i});
+  list.sort(function(x,y){return(y.b.s||"")>(x.b.s||"")?1:-1;});
+  var max=Math.min(list.length,8);
+  var html="";
+  for(var i=0;i<max;i++){
+    var b=list[i].b,idx=list[i].i;
+    html+='<div onclick="openBillForm('+idx+')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;cursor:pointer'+(i<max-1?';border-bottom:1px solid var(--bd)':'')+'">';
+    html+='<div><div style="font-size:13px;font-weight:600">'+(b.p||"")+'</div><div style="font-size:10px;color:var(--mu)">'+(b.s||"?")+' to '+(b.e||"?")+'</div></div>';
+    html+='<div style="font-size:14px;font-weight:700;color:var(--tx)">$'+Math.round(b.actual||0)+'</div>';
+    html+='</div>';
+  }
+  recEl.innerHTML=html;
+}
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}
   return null;
@@ -4420,6 +4489,8 @@ function startApp(){
     if(enterBtn)enterBtn.style.display="none";
     var settingsTab=document.getElementById("t-settings");
     if(settingsTab)settingsTab.style.display="none";
+    var importTab=document.getElementById("t-import");
+    if(importTab)importTab.style.display="none";
     var billsNewBtn=document.getElementById("billsNewBtn");
     if(billsNewBtn)billsNewBtn.style.display="none";
     var billsScanBtn=document.getElementById("billsScanBtn");
@@ -4520,7 +4591,7 @@ function lockPinKey(k){
   }
   if(lockPinBuffer.length>=4){setTimeout(function(){submitLockPin();},100);}
 }
-function renderAll(){renderHome();renderCal();renderBills();renderTrends();renderSettings()}
+function renderAll(){renderHome();renderCal();renderBills();renderTrends();renderSettings();renderImportTab()}
 
 //  INSIGHT HELPERS 
 
@@ -6266,7 +6337,7 @@ function renderTargetSeasonNote(){
 
 // UI
 function go(t){
-  var tabs=["home","cal","bills","trends","settings"];
+  var tabs=["home","cal","bills","import","trends","settings"];
   for(var i=0;i<tabs.length;i++){
     document.getElementById("sc-"+tabs[i]).className="sc"+(tabs[i]===t?" on":"");
     document.getElementById("t-"+tabs[i]).className="nt"+(tabs[i]===t?" on":"");

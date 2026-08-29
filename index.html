@@ -3809,11 +3809,31 @@ if(ST.wx){for(var _wk in ST.wx){WX[_wk]=ST.wx[_wk];}}
   for(var _sk in BOM_WX){
     if(!ST.wx[_sk]){
       var _sv=BOM_WX[_sk];
-      ST.wx[_sk]={minT:_sv[0],maxT:_sv[1],rain:_sv[2]};
+      ST.wx[_sk]={minT:_sv[0],maxT:_sv[1],rain:_sv[2],seed:true};
       needsSave=true;
     }
   }
   if(needsSave)sv();
+})();
+// One-time migration: retag any existing wx entry that exactly matches the
+// baked-in BOM_WX seed value (and isn't a manual correction) as seed:true.
+// These were auto-copied before the seed tag existed, so cloud sync was
+// treating them as real data and permanently blocking corrections made on
+// other devices from ever landing here.
+(function(){
+  if(!ST.wx)return;
+  var changed=false;
+  for(var _mk in ST.wx){
+    var _me=ST.wx[_mk];
+    if(!_me||_me.manual||_me.seed)continue;
+    var _mb=BOM_WX[_mk];
+    if(!_mb)continue;
+    if(_me.minT===_mb[0]&&_me.maxT===_mb[1]&&_me.rain===_mb[2]){
+      _me.seed=true;
+      changed=true;
+    }
+  }
+  if(changed)sv();
 })();
 var WX_FETCHED = {}; // keyed by "YYYY-MM" to avoid double-fetching
 var WX_CB = {}; // pending callbacks
@@ -6277,7 +6297,11 @@ async function fbHydrateAndMerge(){
   if (!ST.actual) ST.actual = {};
   for (var dk in actual){ if (!ST.actual[dk]) ST.actual[dk] = actual[dk]; }
   if (!ST.wx) ST.wx = {};
-  for (var wk in wx){ if (!ST.wx[wk]) ST.wx[wk] = wx[wk]; }
+  // A locally auto-seeded placeholder (copied from the baked-in BOM_WX
+  // fallback, never a real import or correction) is allowed to be replaced
+  // by whatever the cloud has - otherwise the first device to seed a date
+  // permanently blocks every other device's real weather data for it.
+  for (var wk in wx){ if (!ST.wx[wk] || ST.wx[wk].seed) ST.wx[wk] = wx[wk]; }
   if (bills.length > (ST.bills?ST.bills.length:0)) ST.bills = bills;
   if (typeof window.dedupeBills === "function") window.dedupeBills();
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;

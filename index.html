@@ -890,21 +890,6 @@ canvas{display:block;width:100%;height:56px}
   </div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD BACKUP</div><button class="info-btn" onclick="showInfo('cloudbackup')">i</button></div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Backs up all your data to Cloudflare. Set a PIN to protect your backup — you'll need it to restore.</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="password" id="cloudPin" placeholder="PIN (min 4 digits)" maxlength="12" style="flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-user-select:auto;user-select:auto">
-      <button onclick="saveCloudPin()" style="background:var(--or);border:none;color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:13px;padding:9px 14px;border-radius:9px;cursor:pointer">SET</button>
-    </div>
-    <div id="cloudPinStatus" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <button onclick="cloudBackup()" style="padding:12px;border-radius:12px;border:none;background:var(--gr);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:13px;cursor:pointer">Backup Now</button>
-      <button onclick="cloudRestore()" style="padding:12px;border-radius:12px;border:none;background:var(--bl);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:13px;cursor:pointer">Restore</button>
-    </div>
-    <div id="cloudStatus" style="margin-bottom:10px;font-size:12px;color:var(--mu);text-align:center"></div>
-  </div>
-
-  <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">EXPORT DATA</div><button class="info-btn" onclick="showInfo('exportdata')">i</button></div>
     <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Download all your daily energy data as a CSV spreadsheet.</div>
     <button onclick="exportCSV()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--cy);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Download CSV</button>
@@ -2527,37 +2512,6 @@ function saveApiKey(){
   document.getElementById("apiKeyStatus").textContent="Saved! SCAN is ready to use.";
   document.getElementById("apiKeyStatus").style.color="var(--gr)";
 }
-var CLOUD_URL="https://solar-sync.jamie-riley.workers.dev";
-
-function buildCloudPayload(){
-  var d=localStorage.getItem("solar8")||"{}";
-  // API key deliberately NOT included - it stays on-device only
-  return JSON.stringify({_solarBackup:2,data:d});
-}
-function applyCloudPayload(raw){
-  var parsed=JSON.parse(raw);
-  if(parsed&&parsed._solarBackup){
-    if(parsed.data)localStorage.setItem("solar8",parsed.data);
-    if(parsed.apiKey)localStorage.setItem("solarApiKey",parsed.apiKey);
-  } else {
-    localStorage.setItem("solar8",raw);
-  }
-}
-function cloudBackupSilent(){
-  var pin=localStorage.getItem("solarCloudPin")||"7710";
-  if(!pin)return;
-  fetch(CLOUD_URL+"?pin="+encodeURIComponent(pin),{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:buildCloudPayload()
-  }).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      localStorage.setItem("solarLastBackup",new Date().toISOString());
-      showToast("Backed up to cloud");
-    }
-  }).catch(function(){});
-}
-
 function saveAppPin(){
   var pin=document.getElementById("appPinInput").value.trim();
   var statusEl=document.getElementById("appPinStatus");
@@ -2685,58 +2639,6 @@ function showDotInfo(iso,prod,exp,label){
   ov.style.display="flex";
 }
 function closeDotInfo(){document.getElementById("dotInfoOv").style.display="none";}
-function saveCloudPin(){
-  var pin=document.getElementById("cloudPin").value.trim();
-  if(!pin||pin.length<4){document.getElementById("cloudPinStatus").textContent="PIN must be at least 4 characters";document.getElementById("cloudPinStatus").style.color="var(--re)";return;}
-  localStorage.setItem("solarCloudPin",pin);
-  document.getElementById("cloudPin").value="";
-  document.getElementById("cloudPinStatus").textContent="PIN saved";
-  document.getElementById("cloudPinStatus").style.color="var(--gr)";
-}
-
-function setCloudStatus(msg,col){
-  var el=document.getElementById("cloudStatus");
-  if(el){el.textContent=msg;el.style.color=col||"var(--mu)";}
-}
-
-function cloudBackup(){
-  var pin=localStorage.getItem("solarCloudPin")||"";
-  if(!pin){setCloudStatus("Set a PIN first","var(--re)");return;}
-  setCloudStatus("Backing up...");
-  fetch(CLOUD_URL+"?pin="+encodeURIComponent(pin),{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:buildCloudPayload()
-  }).then(function(r){return r.json();}).then(function(d){
-    if(d.ok){
-      localStorage.setItem("solarLastBackup",new Date().toISOString());
-      setCloudStatus("Backed up at "+new Date().toLocaleTimeString("en-AU"),"var(--gr)");
-      renderSettings();
-    } else {
-      setCloudStatus("Backup failed: "+d.msg,"var(--re)");
-    }
-  }).catch(function(){setCloudStatus("Network error - check connection","var(--re)");});
-}
-
-function cloudRestore(){
-  var pin=localStorage.getItem("solarCloudPin")||"";
-  if(!pin){setCloudStatus("Set a PIN first","var(--re)");return;}
-  document.getElementById("cloudRestoreConfirmOv").style.display="flex";
-}
-function cloudRestoreConfirmed(){
-  document.getElementById("cloudRestoreConfirmOv").style.display="none";
-  var pin=localStorage.getItem("solarCloudPin")||"";
-  if(!pin){setCloudStatus("Set a PIN first","var(--re)");return;}
-  setCloudStatus("Restoring...");
-  fetch(CLOUD_URL+"?pin="+encodeURIComponent(pin),{method:"GET"})
-  .then(function(r){return r.text();}).then(function(raw){
-    try{
-      applyCloudPayload(raw);
-      setCloudStatus("Restored! Reloading...","var(--gr)");
-      setTimeout(function(){location.reload();},1500);
-    }catch(e){setCloudStatus("Restore error: "+e.message,"var(--re)");}
-  }).catch(function(){setCloudStatus("Network error - check connection","var(--re)");});
-}
 
 function exportDiagnostic(){
   var all=allData();
@@ -2776,8 +2678,7 @@ function exportDiagnostic(){
   for(var r=0;r<recent.length;r++){var e=recent[r];lines.push(e.date+" grid="+e.usage+" fi="+e.feedin+" net=$"+e.net+" prod="+(e.production||0)+" ch="+(e.charge||0)+" dis="+(e.discharge||0));}
   lines.push("");
   lines.push("--- CLOUD ---");
-  lines.push("Last backup: "+(localStorage.getItem("solarLastBackup")||"unknown"));
-  lines.push("Cloud PIN set: "+(localStorage.getItem("solarCloudPin")?"yes":"using default"));
+  lines.push("Firebase sync: "+(window.fbCurrentUserEmail?("signed in as "+window.fbCurrentUserEmail):"not signed in"));
   lines.push("");
   var actCount=ST.actual?Object.keys(ST.actual).length:0;
   lines.push("--- RED ENERGY ACTUAL COSTS ---");
@@ -2991,10 +2892,6 @@ function saveNP(){
   if(idx>=0)ST.entries[idx]=entry;else ST.entries.push(entry);
   if(noteVal){if(!ST.notes)ST.notes={};ST.notes[date]=noteVal;}else{if(!ST.notes)ST.notes={};delete ST.notes[date];}sv();renderAll();closeNP();
   showToast("Saved \u2014 "+f$(net));
-  // Auto backup to cloud if PIN is set
-  if(localStorage.getItem("solarCloudPin")){
-    setTimeout(function(){cloudBackupSilent();},800);
-  }
 }
 
 // BILL FORM
@@ -3975,10 +3872,6 @@ var INFO = {
   "exportdata": {
     title: "Export Data",
     body: "Downloads all your daily energy data as a CSV file that opens in Excel or Numbers. Each row is one day with grid use, feed-in, solar production, battery charge and discharge, net cost, and any notes. Useful for your own records, sharing with your solar installer, or doing your own analysis."
-  },
-  "cloudbackup": {
-    title: "Cloud Backup",
-    body: "Saves all your data to Cloudflare's servers so it is safe even if you lose your phone or delete the app. Set a PIN that only you know - the same PIN is needed to restore, so use something not easily guessed. Tap Backup Now after entering data each day. Tap Restore to bring your data back on a new phone using the same PIN."
   }
 };
 
@@ -4552,53 +4445,6 @@ function init(){
   }
   startApp();
 }
-function cloudSyncOnOpen(){
-  var pin=localStorage.getItem("solarCloudPin")||"7710";
-  fetch(CLOUD_URL+"?pin="+encodeURIComponent(pin)).then(function(r){
-    if(!r.ok)return null;
-    return r.text();
-  }).then(function(t){
-    if(!t)return;
-    try{
-      var remote=JSON.parse(t);
-      var local=JSON.parse(localStorage.getItem("solar8")||"{}");
-      var changed=false;
-      // Merge remote entries into local - remote wins if local has no entry for that date
-      if(remote.entries&&remote.entries.length){
-        if(!local.entries)local.entries=[];
-        var localMap={};
-        for(var i=0;i<local.entries.length;i++)localMap[local.entries[i].date]=i;
-        for(var j=0;j<remote.entries.length;j++){
-          var re=remote.entries[j];
-          if(localMap[re.date]===undefined){
-            local.entries.push(re);
-            changed=true;
-          }
-        }
-      }
-      // Use remote bills if local has fewer
-      if(remote.bills&&(!local.bills||remote.bills.length>local.bills.length)){
-        local.bills=remote.bills;changed=true;
-      }
-      // Use remote wx if available
-      if(remote.wx&&Object.keys(remote.wx).length>0){
-        if(!local.wx)local.wx={};
-        for(var wk in remote.wx){
-          if(!local.wx[wk]){local.wx[wk]=remote.wx[wk];changed=true;}
-        }
-      }
-      if(changed){
-        localStorage.setItem("solar8",JSON.stringify(local));
-        // Reload ST from updated localStorage
-        var _s2=JSON.parse(localStorage.getItem("solar8")||"{}");
-        if(_s2.entries)ST.entries=_s2.entries;
-        if(_s2.bills)ST.bills=_s2.bills;
-        if(_s2.wx){ST.wx=_s2.wx;for(var _wk2 in ST.wx){WX[_wk2]=ST.wx[_wk2];}}
-        renderAll();
-      }
-    }catch(e){}
-  }).catch(function(){});
-}
 function startApp(){
   var now=localNow();calY=now.getFullYear();calM=now.getMonth();
   var h=now.getHours();
@@ -4616,7 +4462,6 @@ function startApp(){
     if(badge)badge.style.display="inline-block";
   }
   renderAll();
-  if(!guestMode){setTimeout(function(){cloudSyncOnOpen();},1500);}
   setTimeout(function(){fetchWeather(new Date().getFullYear(),new Date().getMonth()+1,null);},200);
   setTimeout(function(){fetchWeather(2026,1,null);},800);
   setTimeout(function(){fetchWeather(2025,4,null);},1600);
@@ -4625,17 +4470,24 @@ function resetPins(){
   document.getElementById("resetPinOv").style.display="flex";
 }
 function submitResetVerify(){
-  var entered=document.getElementById("resetVerifyInput").value.trim();
-  var cloudPin=localStorage.getItem("solarCloudPin")||"";
-  if(!cloudPin){document.getElementById("resetVerifyError").textContent="No recovery PIN set \u2014 cannot reset.";return;}
-  if(entered!==cloudPin){document.getElementById("resetVerifyError").textContent="Incorrect PIN";return;}
-  document.getElementById("resetPinOv").style.display="none";
-  localStorage.removeItem("solarAppPin");
-  localStorage.removeItem("solarGuestPin");
-  sessionStorage.setItem("solarUnlocked","1");
-  sessionStorage.setItem("solarGuestMode","0");
-  document.getElementById("lockScreen").style.display="none";
-  startApp();
+  var email=document.getElementById("resetVerifyEmail").value.trim();
+  var password=document.getElementById("resetVerifyPassword").value;
+  var errEl=document.getElementById("resetVerifyError");
+  if(!email||!password){errEl.style.color="var(--re)";errEl.textContent="Enter your email and password";return;}
+  if(typeof window.fbVerifyForReset!=="function"){errEl.style.color="var(--re)";errEl.textContent="Cloud sign-in not ready yet \u2014 try again in a moment";return;}
+  errEl.style.color="var(--mu)";errEl.textContent="Verifying...";
+  window.fbVerifyForReset(email,password).then(function(){
+    document.getElementById("resetPinOv").style.display="none";
+    localStorage.removeItem("solarAppPin");
+    localStorage.removeItem("solarGuestPin");
+    sessionStorage.setItem("solarUnlocked","1");
+    sessionStorage.setItem("solarGuestMode","0");
+    document.getElementById("lockScreen").style.display="none";
+    startApp();
+  }).catch(function(err){
+    errEl.style.color="var(--re)";
+    errEl.textContent=err.message;
+  });
 }
 var lockPinBuffer="";
 function submitLockPin(){
@@ -4655,17 +4507,8 @@ function submitLockPin(){
     guestMode=true;
     sessionStorage.setItem("solarUnlocked","1");
     sessionStorage.setItem("solarGuestMode","1");
-    var cloudPin=localStorage.getItem("solarCloudPin")||"7710";
-    var lockEl=document.getElementById("lockScreen");
-    var errEl2=document.getElementById("lockError");
-    errEl2.style.color="var(--cy)";
-    errEl2.textContent="Loading latest data...";
-    fetch(CLOUD_URL+"?pin="+encodeURIComponent(cloudPin),{method:"GET"})
-    .then(function(r){return r.text();}).then(function(raw){
-      try{JSON.parse(raw);localStorage.setItem("solar8",raw);}catch(e){}
-      lockEl.style.display="none";
-      startApp();
-    }).catch(function(){lockEl.style.display="none";startApp();});
+    document.getElementById("lockScreen").style.display="none";
+    startApp();
   } else {
     var errEl=document.getElementById("lockError");
     errEl.textContent="Incorrect PIN";
@@ -7454,15 +7297,6 @@ function renderSettings(){
     apiStatusEl.textContent=hasKey?"Key saved - SCAN is ready":"No key saved yet";
     apiStatusEl.style.color=hasKey?"var(--gr)":"var(--mu)";
   }
-  var cloudPinStatusEl=document.getElementById("cloudPinStatus");
-  if(cloudPinStatusEl){
-    var hasPin=!!localStorage.getItem("solarCloudPin");
-    var lastBackup=localStorage.getItem("solarLastBackup");
-    var msg=hasPin?"PIN set":"No PIN set yet";
-    if(hasPin&&lastBackup){var d=new Date(lastBackup);msg="PIN set - last backup "+d.toLocaleDateString("en-AU")+" "+d.toLocaleTimeString("en-AU");}
-    cloudPinStatusEl.textContent=msg;
-    cloudPinStatusEl.style.color=hasPin?"var(--gr)":"var(--mu)";
-  }
 }
 
 // UI
@@ -7510,7 +7344,7 @@ var fbApp = initializeApp(fbConfig);
 var fbDb = getFirestore(fbApp);
 var fbAuth = getAuth(fbApp);
 var fbBasePath = "users/jamie";
-var fbLastSnapshot = {};
+var fbLastSnapshot = {days:{}, bills:{}, rateHistory:{}, settings:null};
 
 function fbSetStatus(msg, isErr){
   var el = document.getElementById("fbSyncStatus");
@@ -7545,6 +7379,55 @@ function fbBuildDayDocs(ST){
   return out;
 }
 
+function fbSafeId(s){
+  var str = String(s);
+  str = str.replace(/\//g, "-");
+  return str.length ? str : "_";
+}
+
+function fbBuildBillDocs(ST){
+  var out = {};
+  var bills = ST.bills || [];
+  for (var i=0; i<bills.length; i++){
+    var b = bills[i];
+    var id = fbSafeId(b.p || ("bill" + i));
+    out[id] = {
+      p: b.p!==undefined?b.p:null, s: b.s!==undefined?b.s:null, e: b.e!==undefined?b.e:null,
+      days: b.days!==undefined?b.days:null, actual: b.actual!==undefined?b.actual:null,
+      credit: b.credit!==undefined?b.credit:null, dailyAvg: b.dailyAvg!==undefined?b.dailyAvg:null,
+      weeklyAvg: b.weeklyAvg!==undefined?b.weeklyAvg:null
+    };
+  }
+  return out;
+}
+
+function fbBuildRateDocs(ST){
+  var out = {};
+  var rh = ST.rateHistory || [];
+  for (var i=0; i<rh.length; i++){
+    var r = rh[i];
+    var id = fbSafeId(r.from || ("rate" + i));
+    out[id] = {
+      from: r.from!==undefined?r.from:null, peak: r.peak!==undefined?r.peak:null,
+      shoulder: r.shoulder!==undefined?r.shoulder:null, offpeak: r.offpeak!==undefined?r.offpeak:null,
+      supply: r.supply!==undefined?r.supply:null, feedin: r.feedin!==undefined?r.feedin:null
+    };
+  }
+  return out;
+}
+
+function fbBuildSettingsDoc(ST){
+  return {
+    billStart: ST.billStart!==undefined?ST.billStart:null,
+    target: ST.target!==undefined?ST.target:null,
+    threshMode: ST.threshMode!==undefined?ST.threshMode:null,
+    threshVal: ST.threshVal!==undefined?ST.threshVal:null,
+    battery: ST.battery||null,
+    system: ST.system||null,
+    notes: ST.notes!==undefined?ST.notes:null
+  };
+}
+
 async function fbHydrateAndMerge(){
   fbSetStatus("Pulling your data from the cloud...");
   var daysSnap = await getDocs(collection(fbDb, fbBasePath, "days"));
@@ -7562,8 +7445,8 @@ async function fbHydrateAndMerge(){
   var settingsDoc = await getDoc(doc(fbDb, fbBasePath, "settings", "app"));
   var settings = settingsDoc.exists() ? settingsDoc.data() : {};
 
-  // Merge into ST the same safe way cloudSyncOnOpen already does: remote fills gaps,
-  // never overwrites a local entry that already exists.
+  // Merge remote into ST safely: remote fills gaps, never overwrites a local
+  // entry that already exists.
   var localMap = {};
   for (var i=0;i<ST.entries.length;i++) localMap[ST.entries[i].date] = i;
   var added = 0;
@@ -7576,12 +7459,26 @@ async function fbHydrateAndMerge(){
   for (var wk in wx){ if (!ST.wx[wk]) ST.wx[wk] = wx[wk]; }
   if (bills.length > (ST.bills?ST.bills.length:0)) ST.bills = bills;
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
+  if (settings){
+    if (_s.billStart===undefined && settings.billStart!==undefined && settings.billStart!==null) ST.billStart = settings.billStart;
+    if (_s.target===undefined && settings.target!==undefined && settings.target!==null) ST.target = settings.target;
+    if (_s.threshMode===undefined && settings.threshMode!==undefined && settings.threshMode!==null) ST.threshMode = settings.threshMode;
+    if (_s.threshVal===undefined && settings.threshVal!==undefined && settings.threshVal!==null) ST.threshVal = settings.threshVal;
+    if (_s.battery===undefined && settings.battery) ST.battery = settings.battery;
+    if (_s.system===undefined && settings.system) ST.system = Object.assign({}, ST.system, settings.system);
+    if (_s.notes===undefined && settings.notes!==undefined && settings.notes!==null) ST.notes = settings.notes;
+  }
 
   try{ sv(); }catch(e){}
   try{ if (typeof renderAll === "function") renderAll(); }catch(e){}
   try{ if (typeof startApp === "function") startApp(); }catch(e){}
 
-  fbLastSnapshot = JSON.parse(JSON.stringify(fbBuildDayDocs(ST)));
+  fbLastSnapshot = {
+    days: JSON.parse(JSON.stringify(fbBuildDayDocs(ST))),
+    bills: JSON.parse(JSON.stringify(fbBuildBillDocs(ST))),
+    rateHistory: JSON.parse(JSON.stringify(fbBuildRateDocs(ST))),
+    settings: JSON.parse(JSON.stringify(fbBuildSettingsDoc(ST)))
+  };
   fbSetStatus("Synced. " + added + " day(s) pulled from the cloud.");
 }
 
@@ -7599,9 +7496,16 @@ window.fbConnectClick = function(){
   });
 };
 
+// Used by the "Forgot PIN? Reset" flow to verify identity via the same
+// Firebase account, instead of the old Cloudflare recovery PIN.
+window.fbVerifyForReset = function(email, password){
+  return signInWithEmailAndPassword(fbAuth, email, password);
+};
+
 onAuthStateChanged(fbAuth, function(user){
   var out = document.getElementById("fbSyncLoggedOut");
   var inn = document.getElementById("fbSyncLoggedIn");
+  window.fbCurrentUserEmail = user ? user.email : null;
   if (user){
     if (out) out.style.display = "none";
     if (inn) inn.style.display = "block";
@@ -7613,37 +7517,63 @@ onAuthStateChanged(fbAuth, function(user){
   }
 });
 
-// Background sync: called after every sv(). Only writes days that actually
-// changed since the last sync, so this stays cheap even with 1000+ days.
+// Background sync: called after every sv(). Only writes items that actually
+// changed since the last sync (across days, bills, rateHistory, settings),
+// so this stays cheap even with 1000+ days.
 window.fbBackgroundSync = function(){
   if (!fbAuth.currentUser) return;
   if (typeof ST === "undefined") return;
   try{
-    var current = fbBuildDayDocs(ST);
-    var changedDates = [];
-    for (var date in current){
-      var a = JSON.stringify(current[date]);
-      var b = fbLastSnapshot[date] ? JSON.stringify(fbLastSnapshot[date]) : null;
-      if (a !== b) changedDates.push(date);
+    var currentDays = fbBuildDayDocs(ST);
+    var currentBills = fbBuildBillDocs(ST);
+    var currentRates = fbBuildRateDocs(ST);
+    var currentSettings = fbBuildSettingsDoc(ST);
+
+    var ops = [];
+    var id;
+    for (id in currentDays){
+      var da = JSON.stringify(currentDays[id]);
+      var db = fbLastSnapshot.days[id] ? JSON.stringify(fbLastSnapshot.days[id]) : null;
+      if (da !== db) ops.push({col:"days", id:id, data:currentDays[id]});
     }
-    if (changedDates.length === 0) return;
-    fbSetStatus("Syncing " + changedDates.length + " day(s)...");
+    for (id in currentBills){
+      var ba = JSON.stringify(currentBills[id]);
+      var bb = fbLastSnapshot.bills[id] ? JSON.stringify(fbLastSnapshot.bills[id]) : null;
+      if (ba !== bb) ops.push({col:"bills", id:id, data:currentBills[id]});
+    }
+    for (id in currentRates){
+      var ra = JSON.stringify(currentRates[id]);
+      var rb = fbLastSnapshot.rateHistory[id] ? JSON.stringify(fbLastSnapshot.rateHistory[id]) : null;
+      if (ra !== rb) ops.push({col:"rateHistory", id:id, data:currentRates[id]});
+    }
+    if (JSON.stringify(currentSettings) !== JSON.stringify(fbLastSnapshot.settings)){
+      ops.push({col:"settings", id:"app", data:currentSettings});
+    }
+
+    if (ops.length === 0) return;
+    fbSetStatus("Syncing " + ops.length + " item(s)...");
     var CHUNK = 400;
     var chain = Promise.resolve();
-    for (var i=0; i<changedDates.length; i+=CHUNK){
-      var slice = changedDates.slice(i, i+CHUNK);
+    for (var i=0; i<ops.length; i+=CHUNK){
+      var slice = ops.slice(i, i+CHUNK);
       chain = chain.then(function(sliceCopy){
         return function(){
           var batch = writeBatch(fbDb);
           for (var k=0;k<sliceCopy.length;k++){
-            batch.set(doc(fbDb, fbBasePath, "days", sliceCopy[k]), current[sliceCopy[k]]);
+            var op = sliceCopy[k];
+            batch.set(doc(fbDb, fbBasePath, op.col, op.id), op.data);
           }
           return batch.commit();
         };
       }(slice)());
     }
     chain.then(function(){
-      fbLastSnapshot = JSON.parse(JSON.stringify(current));
+      fbLastSnapshot = {
+        days: JSON.parse(JSON.stringify(currentDays)),
+        bills: JSON.parse(JSON.stringify(currentBills)),
+        rateHistory: JSON.parse(JSON.stringify(currentRates)),
+        settings: JSON.parse(JSON.stringify(currentSettings))
+      };
       fbSetStatus("Synced.");
     }).catch(function(err){
       fbSetStatus("Sync failed (data is still saved locally): " + err.message, true);
@@ -7727,24 +7657,13 @@ window.fbBackgroundSync = function(){
   </div>
 </div>
 
-<!-- RESTORE CONFIRM OVERLAY -->
-<div id="cloudRestoreConfirmOv" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--s1);border-radius:20px;padding:24px;width:100%;max-width:340px;border:1px solid var(--bd)">
-    <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:8px">Restore from Cloud?</div>
-    <div style="font-size:13px;color:var(--mu);margin-bottom:20px;line-height:1.6">This will replace ALL your current data with the cloud backup. Make sure you have a recent backup first.</div>
-    <div style="display:flex;gap:8px">
-      <button onclick="document.getElementById('cloudRestoreConfirmOv').style.display='none'" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>
-      <button onclick="cloudRestoreConfirmed()" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--re);color:#fff;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Restore</button>
-    </div>
-  </div>
-</div>
-
 <!-- RESET PIN OVERLAY -->
 <div id="resetPinOv" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:24px">
   <div style="background:var(--s1);border-radius:20px;padding:24px;width:100%;max-width:340px;border:1px solid var(--bd)">
     <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:8px">Reset App PIN</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Enter your cloud backup PIN to verify your identity.</div>
-    <input type="tel" id="resetVerifyInput" placeholder="Cloud backup PIN" maxlength="12" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--cy);font-size:16px;padding:10px;outline:none;box-sizing:border-box;margin-bottom:8px;-webkit-user-select:auto;user-select:auto">
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Sign in with your Firebase account to verify your identity.</div>
+    <input type="email" id="resetVerifyEmail" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--cy);font-size:16px;padding:10px;outline:none;box-sizing:border-box;margin-bottom:8px;-webkit-user-select:auto;user-select:auto">
+    <input type="password" id="resetVerifyPassword" placeholder="Password" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--cy);font-size:16px;padding:10px;outline:none;box-sizing:border-box;margin-bottom:8px;-webkit-user-select:auto;user-select:auto">
     <div id="resetVerifyError" style="font-size:11px;color:var(--re);margin-bottom:12px;min-height:16px"></div>
     <div style="display:flex;gap:8px">
       <button onclick="document.getElementById('resetPinOv').style.display='none'" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>

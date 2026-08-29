@@ -252,7 +252,7 @@ canvas{display:block;width:100%;height:56px}
 
   <!-- CURRENT BILL -->
   <div class="card" style="background:linear-gradient(145deg,#131e30,#0d1820,#0a1218);border-color:rgba(251,140,58,.3);margin-bottom:16px;box-shadow:0 4px 28px rgba(0,0,0,.5);padding:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="sub">CURRENT BILL PERIOD</div><button class="info-btn" onclick="showInfo('bill')">i</button></div>
+    <div class="sub" style="margin-bottom:6px">CURRENT BILL PERIOD</div>
     <div style="display:flex;align-items:baseline;gap:8px">
       <div style="font-size:58px;font-weight:800;color:var(--or);line-height:1;letter-spacing:-1px" id="hBill">$0.00</div>
       <div style="font-size:12px;color:var(--mu);padding-bottom:6px">net cost</div>
@@ -286,6 +286,7 @@ canvas{display:block;width:100%;height:56px}
         <div style="font-size:11px;color:var(--mu)">SOLAR SAVED THIS PERIOD</div>
         <div style="font-size:15px;font-weight:700;color:var(--gr)" id="hSolarSavedTotal">-</div>
       </div>
+      <div style="font-size:11px;font-weight:600;margin-top:6px" id="hVsLastYear"></div>
     </div>
   </div>
 
@@ -326,29 +327,11 @@ canvas{display:block;width:100%;height:56px}
     </div>
   </div>
 
-  <!-- SMART INSIGHTS -->
-  <div class="card" style="margin-bottom:14px;padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="sub">SMART INSIGHTS</div>
-    </div>
-    <div id="hSmartInsights" style="display:flex;flex-direction:column;gap:8px">
-      <div style="color:var(--mu);font-size:12px">Loading...</div>
-    </div>
-  </div>
-
-  <!-- STREAK + MISSING -->
-  <div class="g2" style="margin-bottom:12px">
-    <div class="card" style="padding:13px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">STREAK</div><button class="info-btn" onclick="showInfo('streak')">i</button></div>
-      <div style="font-size:22px;font-weight:700;color:var(--am);margin-top:4px" id="streakNum">0</div>
-      <div style="font-size:10px;color:var(--mu);margin-top:2px">days in a row</div>
-      <div style="font-size:9px;color:var(--di);margin-top:4px" id="streakBest"></div>
-    </div>
-    <div class="card" style="padding:13px;cursor:pointer" onclick="go('cal')">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">MISSING</div><button class="info-btn" onclick="event.stopPropagation();showInfo('missing')">i</button></div>
-      <div style="font-size:22px;font-weight:700;color:var(--re);margin-top:4px" id="missNum">0</div>
-      <div style="font-size:10px;color:var(--mu);margin-top:2px">days to enter</div>
-    </div>
+  <!-- SYSTEM SNAPSHOT -->
+  <div class="g3" style="margin-bottom:12px">
+    <div class="stat"><span class="stat-l">SOLAR COVERED</span><div class="stat-v" style="color:var(--gr)" id="selfConsumePct">-</div><div class="stat-u">%</div></div>
+    <div class="stat"><span class="stat-l">BATTERY 14D</span><div class="stat-v" id="battTrendMini">-</div><div class="stat-u" id="battTrendSub">kWh net</div></div>
+    <div class="stat" style="cursor:pointer" onclick="goToFirstMissing()"><span class="stat-l">MISSING</span><div class="stat-v" style="color:var(--re)" id="missNum">0</div><div class="stat-u">tap to fill</div></div>
   </div>
 
   <!-- LATEST ENTRY -->
@@ -376,25 +359,49 @@ canvas{display:block;width:100%;height:56px}
     <div class="sub">DUBBO FORECAST</div>
     <span style="font-size:9px;color:var(--mu)" id="fcastUpdated"></span>
   </div>
-  <div class="card" style="padding:12px 10px" id="forecastCard">
+  <div class="card" style="padding:12px 10px;margin-bottom:12px" id="forecastCard">
     <div style="color:var(--mu);font-size:12px;text-align:center;padding:8px">Loading forecast...</div>
   </div>
 
+  <!-- MORE DETAIL DISCLOSURE -->
+  <div class="card" style="padding:13px;margin-bottom:12px;cursor:pointer;text-align:center" onclick="toggleHomeMore()">
+    <span class="sub" id="homeMoreArrow">MORE v</span>
+  </div>
+  <div id="homeMoreSection" style="display:none">
+
+  <!-- SMART INSIGHTS -->
+  <div class="card" style="margin-bottom:14px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="sub">SMART INSIGHTS</div>
+    </div>
+    <div id="hSmartInsights" style="display:flex;flex-direction:column;gap:8px">
+      <div style="color:var(--mu);font-size:12px">Loading...</div>
+    </div>
+  </div>
+
+  <!-- STREAK -->
+  <div class="card" style="padding:13px;margin-bottom:12px">
+    <div class="sub">STREAK</div>
+    <div style="font-size:22px;font-weight:700;color:var(--am);margin-top:4px" id="streakNum">0</div>
+    <div style="font-size:10px;color:var(--mu);margin-top:2px">days in a row</div>
+    <div style="font-size:9px;color:var(--di);margin-top:4px" id="streakBest"></div>
+  </div>
+
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div class="sub">LAST 14 DAYS</div><button class="info-btn" onclick="showInfo('last14')">i</button>
+    <div class="sub">LAST 14 DAYS</div>
   </div>
   <div class="card" style="padding:10px 12px"><canvas id="spark"></canvas></div>
 
   <!-- INSIGHTS ROW 1: Same month last year + Days until bill -->
   <div class="g2" style="margin-bottom:0">
     <div class="card" style="padding:13px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">SAME MONTH LAST YEAR</div><button class="info-btn" onclick="showInfo('smly')">i</button></div>
+      <div class="sub">SAME MONTH LAST YEAR</div>
       <div style="font-size:20px;font-weight:700;margin:4px 0 2px" id="smlyCost">-</div>
       <div style="font-size:10px;color:var(--mu)" id="smlyLabel">-</div>
       <div style="font-size:11px;font-weight:600;margin-top:6px" id="smlyVariance">-</div>
     </div>
     <div class="card" style="padding:13px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">DAYS UNTIL BILL</div><button class="info-btn" onclick="showInfo('daystobill')">i</button></div>
+      <div class="sub">DAYS UNTIL BILL</div>
       <div style="font-size:32px;font-weight:700;color:var(--cy);margin:4px 0 2px" id="daysUntilBill">-</div>
       <div style="font-size:10px;color:var(--mu)" id="daysUntilSub">-</div>
       <div style="font-size:11px;font-weight:600;color:var(--or);margin-top:6px" id="projBillAmt">-</div>
@@ -403,8 +410,8 @@ canvas{display:block;width:100%;height:56px}
 
   <!-- INSIGHTS ROW 2: Solar covered -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">SOLAR COVERED</div><button class="info-btn" onclick="showInfo('selfconsume')">i</button></div>
-    <div style="font-size:28px;font-weight:700;color:var(--gr);margin:4px 0 2px" id="selfConsumePct">-</div>
+    <div class="sub">SOLAR COVERED</div>
+    <div style="font-size:28px;font-weight:700;color:var(--gr);margin:4px 0 2px" id="selfConsumePctFull">-</div>
     <div style="font-size:10px;color:var(--mu)">of home energy from solar</div>
     <div style="font-size:10px;color:var(--di);margin-top:5px" id="selfConsumeSub">-</div>
   </div>
@@ -413,7 +420,7 @@ canvas{display:block;width:100%;height:56px}
   <div class="card" style="padding:13px;margin-bottom:12px" id="seasonCard">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="sub">SEASONAL INSIGHT</div><button class="info-btn" onclick="showInfo('seasonal')">i</button></div>
+        <div class="sub">SEASONAL INSIGHT</div>
         <div style="font-size:13px;font-weight:600;margin-top:5px" id="seasonText">-</div>
       </div>
       <div style="font-size:28px" id="seasonIcon">?</div>
@@ -422,7 +429,7 @@ canvas{display:block;width:100%;height:56px}
 
   <!-- INSIGHTS ROW 4: Running bill vs last year -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="sub">RUNNING BILL vs LAST YEAR</div><button class="info-btn" onclick="showInfo('runningbill')">i</button></div>
+    <div class="sub" style="margin-bottom:8px">RUNNING BILL vs LAST YEAR</div>
     <div style="font-size:10px;color:var(--mu);margin-bottom:10px" id="runningBillSub">Same period last year</div>
     <div id="runningBillChart"></div>
   </div>
@@ -436,13 +443,13 @@ canvas{display:block;width:100%;height:56px}
 
   <!-- INSIGHTS ROW 5e: Weekly energy summary -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="sub">WEEKLY ENERGY SUMMARY</div><button class="info-btn" onclick="showInfo('weeklyenergy')">i</button></div>
+    <div class="sub" style="margin-bottom:8px">WEEKLY ENERGY SUMMARY</div>
     <div id="weeklyEnergyCard"></div>
   </div>
 
   <!-- INSIGHTS ROW 5f: Battery health -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="sub">BATTERY HEALTH</div><button class="info-btn" onclick="showInfo('battnet')">i</button></div>
+    <div class="sub" style="margin-bottom:8px">BATTERY HEALTH</div>
     <div style="font-size:10px;color:var(--mu);margin-bottom:10px">Is solar keeping your 32kWh battery topped up through winter?</div>
     <div id="battNetCard"></div>
   </div>
@@ -450,36 +457,29 @@ canvas{display:block;width:100%;height:56px}
   <div class="sec">PERFORMANCE</div>
   <!-- SOLAR PERFORMANCE RATING -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="sub">SOLAR PERFORMANCE</div>
-      <button class="info-btn" onclick="showInfo('solarperf')">i</button>
-    </div>
+    <div class="sub" style="margin-bottom:8px">SOLAR PERFORMANCE</div>
     <div id="solarPerfCard"></div>
   </div>
 
   <!-- WINTER READINESS -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="sub">WINTER READINESS</div>
-      <button class="info-btn" onclick="showInfo('winterready')">i</button>
-    </div>
+    <div class="sub" style="margin-bottom:8px">WINTER READINESS</div>
     <div id="winterReadyCard"></div>
   </div>
 
   <!-- YEAR ON YEAR MONTHLY -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="sub">YEAR ON YEAR MONTHLY</div>
-      <button class="info-btn" onclick="showInfo('yoymonthly')">i</button>
-    </div>
+    <div class="sub" style="margin-bottom:8px">YEAR ON YEAR MONTHLY</div>
     <div id="yoyMonthlyCard"></div>
   </div>
 
   <!-- INSIGHTS ROW 6: Self-sufficiency -->
   <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="sub">SELF-SUFFICIENCY</div><button class="info-btn" onclick="showInfo('selfsuff')">i</button></div>
+    <div class="sub" style="margin-bottom:8px">SELF-SUFFICIENCY</div>
     <div style="font-size:10px;color:var(--mu);margin-bottom:10px">Days your battery + solar covered all needs (zero grid draw)</div>
     <div id="selfSuffCard"></div>
+  </div>
+
   </div>
 </div>
 
@@ -2906,6 +2906,11 @@ function missingDays(){
   }
   return miss;
 }
+function goToFirstMissing(){
+  var m=missingDays();
+  go("cal");
+  if(m.length)setTimeout(function(){openNP(m[0]);},80);
+}
 function streak(){
   var map={},all=allData();
   for(var i=0;i<all.length;i++)map[all[i].date]=1;
@@ -3123,6 +3128,14 @@ function renderBatteryNet(){
   var netCol=totalNet>0?"var(--gr)":totalNet<0?"var(--re)":"var(--mu)";
   var trend=totalNet>2?"Building reserves":totalNet<-2?"Draining reserves":"Roughly balanced";
   var trendCol=totalNet>2?"var(--gr)":totalNet<-2?"var(--re)":"var(--am)";
+
+  var trendMiniEl=document.getElementById("battTrendMini");
+  if(trendMiniEl){
+    trendMiniEl.textContent=(totalNet>=0?"+":"")+totalNet.toFixed(1);
+    trendMiniEl.style.color=trendCol;
+  }
+  var trendSubEl=document.getElementById("battTrendSub");
+  if(trendSubEl)trendSubEl.textContent=trend.toLowerCase();
 
   var h='';
 
@@ -4841,12 +4854,16 @@ function renderInsights(){
       var arrow=diff<0?"v":"^";
       smlyVar.textContent=arrow+" $"+Math.abs(diff).toFixed(0)+" ("+pct+"%) vs last yr";
       smlyVar.style.color=diff<0?"var(--gr)":"var(--re)";
+      var hVlyEl=document.getElementById("hVsLastYear");
+      if(hVlyEl){hVlyEl.textContent=arrow+" $"+Math.abs(diff).toFixed(0)+" ("+pct+"%) vs "+smly.month+" last year";hVlyEl.style.color=diff<0?"var(--gr)":"var(--re)";}
     }
   } else if(smlyEl){
     smlyEl.textContent="No data";
     smlyEl.style.color="var(--mu)";
     if(smlyLbl)smlyLbl.textContent=smly.month+" last year";
     if(smlyVar)smlyVar.textContent="First year of tracking";
+    var hVlyEl2=document.getElementById("hVsLastYear");
+    if(hVlyEl2){hVlyEl2.textContent="No data for "+smly.month+" last year yet";hVlyEl2.style.color="var(--mu)";}
     if(smlyVar)smlyVar.style.color="var(--mu)";
   }
 
@@ -4868,10 +4885,16 @@ function renderInsights(){
   //  Self consumption 
   var sc=getSelfConsumption();
   var scEl=document.getElementById("selfConsumePct");
+  var scFullEl=document.getElementById("selfConsumePctFull");
   var scSub=document.getElementById("selfConsumeSub");
+  var scCol=sc.pct>60?"var(--gr)":sc.pct>40?"var(--am)":"var(--re)";
   if(scEl){
-    scEl.textContent=sc.pct+"%";
-    scEl.style.color=sc.pct>60?"var(--gr)":sc.pct>40?"var(--am)":"var(--re)";
+    scEl.textContent=sc.pct;
+    scEl.style.color=scCol;
+  }
+  if(scFullEl){
+    scFullEl.textContent=sc.pct+"%";
+    scFullEl.style.color=scCol;
     if(scSub)scSub.textContent=sc.label;
   }
 
@@ -5808,6 +5831,14 @@ function go(t){
     document.getElementById("t-"+tabs[i]).className="nt"+(tabs[i]===t?" on":"");
   }
   window.scrollTo(0,0);
+}
+function toggleHomeMore(){
+  var el=document.getElementById("homeMoreSection");
+  if(!el)return;
+  var open=el.style.display!=="none";
+  el.style.display=open?"none":"block";
+  var ar=document.getElementById("homeMoreArrow");
+  if(ar)ar.textContent=open?"MORE v":"LESS ^";
 }
 function showToast(msg){
   var t=document.getElementById("toast");

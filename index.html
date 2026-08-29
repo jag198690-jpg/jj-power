@@ -5828,10 +5828,18 @@ function tfSummary(meta,series,szLabel){
 function tfBuild(el){
   var meta=TF_META[tfMetric];
   var series=meta.bands?tfRainBands():(tfMetric==="cost"?tfCostSeries():tfMonthlySeries(tfMetric));
-  var szActive=(!meta.bands&&tfSeason!=="all")?tfSeason:null;
-  if(szActive){
-    var wantIdx=TF_SEASON_IDX[szActive];
+  var szFilter=(!meta.bands&&tfSeason!=="all"&&tfSeason!=="grouped")?tfSeason:null;
+  var szGrouped=(!meta.bands&&tfSeason==="grouped");
+  if(szFilter){
+    var wantIdx=TF_SEASON_IDX[szFilter];
     series=series.filter(function(s){return seasonOf(parseInt(s.key.substring(5,7),10))===wantIdx;});
+  } else if(szGrouped){
+    series=series.slice().sort(function(a,b){
+      var sa=seasonOf(parseInt(a.key.substring(5,7),10));
+      var sb=seasonOf(parseInt(b.key.substring(5,7),10));
+      if(sa!==sb)return sa-sb;
+      return a.key<b.key?-1:(a.key>b.key?1:0);
+    });
   }
   var mx=0;for(var i=0;i<series.length;i++){if(series[i].val>mx)mx=series[i].val;}
   if(meta.unit==="%")mx=100;
@@ -5839,14 +5847,26 @@ function tfBuild(el){
   var chips="";for(var c=0;c<TF_CHIPS.length;c++){var on=TF_CHIPS[c][0]===tfMetric;chips+='<button class="trng'+(on?" on":"")+'" style="flex:0 0 auto;white-space:nowrap" onclick="tfPick(\''+TF_CHIPS[c][0]+'\')">'+TF_CHIPS[c][1]+'</button>';}
   var szChips="";
   if(!meta.bands){
+    var grpOn=tfSeason==="grouped";
+    szChips+='<button class="trng'+(grpOn?" on":"")+'" style="flex:0 0 auto;white-space:nowrap" onclick="tfSeasonPick(\'grouped\')">By Season</button>';
     for(var sz=0;sz<TF_SEASONS.length;sz++){
       var szId=TF_SEASONS[sz][0],szOn=tfSeason===szId;
       szChips+='<button class="trng'+(szOn?" on":"")+'" style="flex:0 0 auto;white-space:nowrap'+(szOn?";background:"+TF_SEASONS[sz][2]+";color:#000":"")+'" onclick="tfSeasonPick(\''+szId+'\')">'+TF_SEASONS[sz][1]+'</button>';
     }
   }
   var rows="";
+  var lastGroupSeason=-1;
   for(var r=0;r<series.length;r++){
-    var s=series[r];var w=mx>0?Math.max(2,Math.round(s.val/mx*100)):2;
+    var s=series[r];
+    if(szGrouped){
+      var curSeason=seasonOf(parseInt(s.key.substring(5,7),10));
+      if(curSeason!==lastGroupSeason){
+        var szNames=["Summer","Autumn","Winter","Spring"];
+        rows+='<div style="font-size:10px;font-weight:700;letter-spacing:.05em;color:'+EX_SEASON_COLS[curSeason]+';margin:'+(r===0?"0":"12px")+' 0 2px">'+szNames[curSeason].toUpperCase()+'</div>';
+        lastGroupSeason=curSeason;
+      }
+    }
+    var w=mx>0?Math.max(2,Math.round(s.val/mx*100)):2;
     var mark=meta.target?'<div class="tf-mark" style="left:'+Math.round(meta.target/mx*100)+'%"></div>':"";
     var vcol=(tfMetric==="selfsuff")?(' style="color:'+tfSuffCol(s.val)+'"'):"";
     rows+='<div class="tf-row"><div class="tf-lb">'+s.label+'</div><div class="tf-track"><div class="tf-fill" style="width:'+w+'%;background:'+s.col+'"></div>'+mark+'</div><div class="tf-val"'+vcol+'>'+tfFmt(meta,s.val)+'</div></div>';
@@ -5856,7 +5876,7 @@ function tfBuild(el){
   var range12=trendRange==="12";
   var takeText=meta.take;
   if(!range12&&meta.unit==="$"&&rateHistoryThin())takeText+=" Priced at today's rates for all history - add past rate changes in Settings for accuracy.";
-  var szLabel=szActive?TF_SEASONS[TF_SEASON_IDX[szActive]][1]:"";
+  var szLabel=szFilter?TF_SEASONS[TF_SEASON_IDX[szFilter]][1]:"";
   var szRow=meta.bands?"":'<div class="tf-chips" style="margin-bottom:10px">'+szChips+'</div>';
   el.innerHTML='<style>'+TF_CSS+'</style><div class="tf-wrap"><div class="row" style="margin-bottom:14px"><h1>Trends</h1><div style="display:flex;gap:6px"><button class="trng'+(range12?" on":"")+'" onclick="tfRange(\'12\')">12M</button><button class="trng'+(range12?"":" on")+'" onclick="tfRange(\'all\')">All</button></div></div><div class="tf-chips">'+chips+'</div>'+szRow+tfSummary(meta,series,szLabel)+'<div class="sub" style="margin-bottom:8px">'+meta.name.toUpperCase()+(szLabel?" - "+szLabel.toUpperCase():"")+'</div><div class="card"><div class="tf-chart">'+rows+'</div>'+legend+'<div class="tf-take">'+takeText+'</div></div></div>';
 }

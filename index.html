@@ -6310,9 +6310,7 @@ window.fbConnectClick = function(){
   var btn = document.getElementById("fbConnectBtn");
   btn.disabled = true;
   fbSetStatus("Signing in...");
-  signInWithEmailAndPassword(fbAuth, email, password).then(function(){
-    return fbHydrateAndMerge();
-  }).catch(function(err){
+  signInWithEmailAndPassword(fbAuth, email, password).catch(function(err){
     fbSetStatus(err.message, true);
     btn.disabled = false;
   });
@@ -6324,6 +6322,10 @@ window.fbVerifyForReset = function(email, password){
   return signInWithEmailAndPassword(fbAuth, email, password);
 };
 
+// Fires on every load, not just a fresh manual sign-in - Firebase restores
+// a signed-in session automatically (browserLocalPersistence, the default).
+// Pulling here, not just from fbConnectClick, is what makes cloud data show
+// up without the user having to re-enter their password every visit.
 onAuthStateChanged(fbAuth, function(user){
   var out = document.getElementById("fbSyncLoggedOut");
   var inn = document.getElementById("fbSyncLoggedIn");
@@ -6333,6 +6335,12 @@ onAuthStateChanged(fbAuth, function(user){
     if (inn) inn.style.display = "block";
     var shown = document.getElementById("fbEmailShown");
     if (shown) shown.textContent = user.email;
+    var btn = document.getElementById("fbConnectBtn");
+    fbHydrateAndMerge().catch(function(err){
+      fbSetStatus(err.message, true);
+    }).then(function(){
+      if (btn) btn.disabled = false;
+    });
   } else {
     if (out) out.style.display = "block";
     if (inn) inn.style.display = "none";

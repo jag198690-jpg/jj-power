@@ -811,6 +811,7 @@ canvas{display:block;width:100%;height:56px}
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
+    <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
     <div id="fbSyncLoggedOut">
       <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Log in once to pull your data from the cloud and keep future changes backed up automatically. Your app keeps working normally either way.</div>
       <form id="fbLoginForm" onsubmit="event.preventDefault();fbConnectClick();return false;">
@@ -6096,6 +6097,29 @@ function renderSettings(){
   var missEl=document.getElementById("sMissCount");
   if(missEl)missEl.textContent=missingDays().length;
   renderTargetSeasonNote();
+  renderFbLastSynced();
+}
+
+function fbLastSyncedAgoText(){
+  var signedIn=!!(window.fbCurrentUserEmail);
+  var ts=parseInt(localStorage.getItem("fbLastSyncedAt")||"0",10);
+  if(!signedIn)return"Not signed in on this device - nothing here is backed up yet.";
+  if(!ts)return"Signed in, but this device has not completed a sync yet.";
+  var diffS=Math.floor((Date.now()-ts)/1000);
+  if(diffS<60)return"Backed up just now.";
+  var diffM=Math.floor(diffS/60);
+  if(diffM<60)return"Backed up "+diffM+" minute"+(diffM===1?"":"s")+" ago.";
+  var diffH=Math.floor(diffM/60);
+  if(diffH<24)return"Backed up "+diffH+" hour"+(diffH===1?"":"s")+" ago.";
+  var diffD=Math.floor(diffH/24);
+  return"Backed up "+diffD+" day"+(diffD===1?"":"s")+" ago.";
+}
+function renderFbLastSynced(){
+  var el=document.getElementById("fbLastSyncedDisplay");
+  if(!el)return;
+  var txt=fbLastSyncedAgoText();
+  el.textContent=txt;
+  el.style.color=(txt.indexOf("Not signed in")===0||txt.indexOf("not completed")>=0)?"var(--re)":"var(--mu)";
 }
 
 var SEASON_MONTHS={12:"summer",1:"summer",2:"summer",3:"autumn",4:"autumn",5:"autumn",6:"winter",7:"winter",8:"winter",9:"spring",10:"spring",11:"spring"};
@@ -6325,6 +6349,8 @@ async function fbHydrateAndMerge(){
     rateHistory: JSON.parse(JSON.stringify(fbBuildRateDocs(ST))),
     settings: JSON.parse(JSON.stringify(fbBuildSettingsDoc(ST)))
   };
+  try{ localStorage.setItem("fbLastSyncedAt", String(Date.now())); }catch(e){}
+  try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
   fbSetStatus("Synced. " + added + " day(s) pulled from the cloud.");
 }
 
@@ -6354,6 +6380,7 @@ onAuthStateChanged(fbAuth, function(user){
   var out = document.getElementById("fbSyncLoggedOut");
   var inn = document.getElementById("fbSyncLoggedIn");
   window.fbCurrentUserEmail = user ? user.email : null;
+  try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
   if (user){
     if (out) out.style.display = "none";
     if (inn) inn.style.display = "block";
@@ -6428,6 +6455,8 @@ window.fbBackgroundSync = function(){
         rateHistory: JSON.parse(JSON.stringify(currentRates)),
         settings: JSON.parse(JSON.stringify(currentSettings))
       };
+      try{ localStorage.setItem("fbLastSyncedAt", String(Date.now())); }catch(e){}
+      try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
       fbSetStatus("Synced.");
     }).catch(function(err){
       fbSetStatus("Sync failed (data is still saved locally): " + err.message, true);

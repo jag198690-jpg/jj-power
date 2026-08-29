@@ -813,9 +813,11 @@ canvas{display:block;width:100%;height:56px}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
     <div id="fbSyncLoggedOut">
       <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Log in once to pull your data from the cloud and keep future changes backed up automatically. Your app keeps working normally either way.</div>
-      <input id="fbEmail" type="email" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
-      <input id="fbPassword" type="password" placeholder="Password" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
-      <button onclick="fbConnectClick()" id="fbConnectBtn" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--gr);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Connect &amp; Sync</button>
+      <form id="fbLoginForm" onsubmit="event.preventDefault();fbConnectClick();return false;">
+      <input id="fbEmail" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
+      <input id="fbPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
+      <button type="submit" id="fbConnectBtn" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--gr);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Connect &amp; Sync</button>
+      </form>
     </div>
     <div id="fbSyncLoggedIn" style="display:none">
       <div style="font-size:12px;color:var(--mu)">Signed in as <span id="fbEmailShown" style="color:var(--tx);font-weight:700"></span>. Changes now sync to the cloud automatically.</div>

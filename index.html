@@ -293,14 +293,15 @@ canvas{display:block;width:100%;height:56px}
   <!-- CUMULATIVE SAVINGS + PAYBACK -->
   <div class="card" style="background:linear-gradient(145deg,#0d1f18,#0a1a14,#081210);border-color:rgba(52,211,153,.3);margin-bottom:14px;padding:20px;box-shadow:0 4px 28px rgba(0,0,0,.5)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="sub">TOTAL SAVINGS SINCE INSTALL</div>
+      <div class="sub">SAVINGS LOGGED SINCE 2023</div>
       <button class="info-btn" onclick="showInfo('totalsavings')">i</button>
     </div>
     <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
       <div style="font-size:52px;font-weight:800;color:var(--gr);line-height:1;letter-spacing:-1px" id="hTotalSaved">$0</div>
-      <div style="font-size:12px;color:var(--mu);padding-bottom:5px">saved from solar</div>
+      <div style="font-size:12px;color:var(--mu);padding-bottom:5px">saved from solar, from your actual data</div>
     </div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:14px" id="hTotalSavedSub"></div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:6px" id="hTotalSavedSub"></div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:14px;padding-top:8px;border-top:1px dashed rgba(52,211,153,.2)" id="hEstTotalIncl"></div>
     <!-- Payback progress bar -->
     <div style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
@@ -2263,6 +2264,11 @@ function ratesForDate(d){
   for(i=0;i<rh.length;i++){if(rh[i].from<=d)best=rh[i];}
   return best;
 }
+// True when there is only one rate period on record, so every historical
+// day is priced at today's rates rather than what was actually charged then.
+function rateHistoryThin(){
+  return !ST.rateHistory||ST.rateHistory.length<=1;
+}
 function calcNet(u,f,r,d){
   var rt=d?ratesForDate(d):(ST.rates||RFL);
   return (u*(rt[r]||rt.shoulder))+rt.supply-(f*rt.feedin);
@@ -2910,6 +2916,24 @@ function goToFirstMissing(){
   var m=missingDays();
   go("cal");
   if(m.length)setTimeout(function(){openNP(m[0]);},80);
+}
+// System was down 30 Sep - 19 Oct 2023: 0 solar/charge/discharge recorded
+// with normal (high) grid draw. Real data - kept in history and bills - but
+// excluded from solar/battery performance aggregates so a known equipment
+// outage doesn't read as a bad solar or battery period.
+var OUTAGE_START="2023-09-30",OUTAGE_END="2023-10-19";
+function isOutageDay(dateStr){
+  return dateStr>=OUTAGE_START&&dateStr<=OUTAGE_END;
+}
+// Odd day: the known outage, an energy-identity result that can't be real
+// (negative home use), or a new day that looks like the outage pattern -
+// zero solar with unusually high grid draw. Flags for review, never deletes.
+function isOddDay(d){
+  if(isOutageDay(d.date))return"outage";
+  var home=(d.usage||0)+(d.production||0)-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
+  if(home<-0.5)return"identity";
+  if((d.production||0)<=0&&(d.usage||0)>10)return"nosolar";
+  return null;
 }
 function streak(){
   var map={},all=allData();
@@ -4558,6 +4582,7 @@ function calcTotalSaved(){
   for(var i=0;i<all.length;i++){
     var d=all[i];
     if(!d.production)continue;
+    if(isOutageDay(d.date))continue;
     var _rd=ratesForDate(d.date);
     var sah=Math.max(0,(d.production||0)-(d.feedin||0));
     dataSaved+=sah*_rd.shoulder+(d.feedin||0)*_rd.feedin;
@@ -4570,6 +4595,7 @@ function calcTotalSaved(){
 function renderPaybackCard(){
   var savedEl=document.getElementById("hTotalSaved");
   var subEl=document.getElementById("hTotalSavedSub");
+  var estEl=document.getElementById("hEstTotalIncl");
   var pctEl=document.getElementById("hPaybackPct");
   var barEl=document.getElementById("hPaybackBar");
   var remEl=document.getElementById("hPaybackRemaining");
@@ -4579,15 +4605,23 @@ function renderPaybackCard(){
   var sys=ST.system||{};
   var totalCost=(sys.solarCost||13000)+(sys.batt1Cost||13000)+(sys.batt2Cost||10000);
   var s=calcTotalSaved();
-  var totalSaved=s.total;
-  var pct=Math.min(100,Math.round((totalSaved/totalCost)*100));
-  var remaining=Math.max(0,totalCost-totalSaved);
-  savedEl.textContent="$"+Math.round(totalSaved).toLocaleString();
+  // Two figures, never blended: the headline is only what's logged in actual
+  // data since tracking started. The payback timeline below separately adds
+  // an estimate for pre-tracking savings, labelled as such.
+  var loggedSaved=s.dataSaved;
+  var estTotal=s.total;
+  var pct=Math.min(100,Math.round((estTotal/totalCost)*100));
+  var remaining=Math.max(0,totalCost-estTotal);
+  savedEl.textContent="$"+Math.round(loggedSaved).toLocaleString();
   if(invEl)invEl.textContent="$"+Math.round(totalCost).toLocaleString();
   if(subEl){
     var all=allData();
-    var dataStart=all.length?all[0].date:"May 2024";
-    subEl.textContent="$"+Math.round(s.prior).toLocaleString()+" est. pre-"+dataStart+" + $"+Math.round(s.dataSaved).toLocaleString()+" from "+all.length+" days of data";
+    var dataStart=all.length?all[0].date:"7 Jul 2023";
+    var rateNote=rateHistoryThin()?" Priced at today's rates for all history - add past rate changes in Settings for accuracy.":"";
+    subEl.textContent="From "+all.length+" days of data logged since "+dataStart+"."+rateNote;
+  }
+  if(estEl){
+    estEl.textContent="Payback below adds a $"+Math.round(s.prior).toLocaleString()+" estimate for pre-tracking savings - est. total $"+Math.round(estTotal).toLocaleString()+".";
   }
   if(pctEl)pctEl.textContent=pct+"%";
   if(barEl)barEl.style.width=pct+"%";
@@ -4596,7 +4630,7 @@ function renderPaybackCard(){
     var all=allData();
     var daysWithSolar=0,rateSaved=0;
     for(var i=0;i<all.length;i++){
-      if(all[i].production>0){
+      if(all[i].production>0&&!isOutageDay(all[i].date)){
         var sah=Math.max(0,(all[i].production||0)-(all[i].feedin||0));
         var _pRD=ratesForDate(all[i].date);rateSaved+=sah*_pRD.shoulder+(all[i].feedin||0)*_pRD.feedin;
         daysWithSolar++;
@@ -5080,10 +5114,11 @@ function heatBorder(cost,date){
 
 function renderCal(){
   var now=new Date(),today=localDate(now);
-  var map={},prodMap={},scMap={},all=allData();
+  var map={},prodMap={},scMap={},entryMap={},all=allData();
   for(var i=0;i<all.length;i++){
     map[all[i].date]=all[i].net;
     prodMap[all[i].date]=all[i].production||0;
+    entryMap[all[i].date]=all[i];
     // Pre-calculate self-consumption % per day
     var _prod=all[i].production||0;
     if(_prod>0){
@@ -5175,9 +5210,19 @@ function renderCal(){
       oc=' onclick="openNP(\''+iso+'\')"';
     }
     if(isToday)cls+=" tod";
+    var oddHtml="";
+    if(entryMap[iso]){
+      var oddKind=isOddDay(entryMap[iso]);
+      if(oddKind){
+        var oddCol=oddKind==="outage"?"var(--di)":"var(--re)";
+        var oddTitle=oddKind==="outage"?"Known outage - excluded from performance stats":oddKind==="identity"?"Energy numbers do not add up - check entry":"Zero solar with high grid - check entry";
+        oddHtml='<div style="font-size:6px;color:'+oddCol+';line-height:1;margin-top:1px" title="'+oddTitle+'">'+(oddKind==="outage"?"outage":"odd")+'</div>';
+      }
+    }
     html+='<div class="'+cls+'"'+oc+'><div class="cdn">'+d+'</div><div class="cdc">'+cost+'</div>';
     html+=dotHtml;
     if(!isFut&&isStart&&iso>='2025-04-01')html+='<div class="cwx" id="wx-'+iso+'" onclick="event.stopPropagation();openWxEdit(\''+iso+'\')" style="cursor:pointer"></div>';
+    html+=oddHtml;
     if(!isFut&&isStart&&ST.notes&&ST.notes[iso])html+='<div style="font-size:6px;color:var(--cy);line-height:1">note</div>';
     html+='</div>';
   }
@@ -5629,7 +5674,9 @@ function tfBuild(el){
   }
   var legend=meta.bands?'<div class="tf-legend"><span><i style="background:var(--bl)"></i>Avg solar per day by rainfall</span></div>':'<div class="tf-legend"><span><i style="background:'+EX_SEASON_COLS[0]+'"></i>Summer</span><span><i style="background:'+EX_SEASON_COLS[1]+'"></i>Autumn</span><span><i style="background:'+EX_SEASON_COLS[2]+'"></i>Winter</span><span><i style="background:'+EX_SEASON_COLS[3]+'"></i>Spring</span>'+(meta.target?'<span><i style="background:var(--tx);opacity:.35"></i>95% target</span>':"")+'</div>';
   var range12=trendRange==="12";
-  el.innerHTML='<style>'+TF_CSS+'</style><div class="tf-wrap"><div class="row" style="margin-bottom:14px"><h1>Trends</h1><div style="display:flex;gap:6px"><button class="trng'+(range12?" on":"")+'" onclick="tfRange(\'12\')">12M</button><button class="trng'+(range12?"":" on")+'" onclick="tfRange(\'all\')">All</button></div></div><div class="tf-chips">'+chips+'</div>'+tfSummary(meta,series)+'<div class="sub" style="margin-bottom:8px">'+meta.name.toUpperCase()+'</div><div class="card"><div class="tf-chart">'+rows+'</div>'+legend+'<div class="tf-take">'+meta.take+'</div></div></div>';
+  var takeText=meta.take;
+  if(!range12&&meta.unit==="$"&&rateHistoryThin())takeText+=" Priced at today's rates for all history - add past rate changes in Settings for accuracy.";
+  el.innerHTML='<style>'+TF_CSS+'</style><div class="tf-wrap"><div class="row" style="margin-bottom:14px"><h1>Trends</h1><div style="display:flex;gap:6px"><button class="trng'+(range12?" on":"")+'" onclick="tfRange(\'12\')">12M</button><button class="trng'+(range12?"":" on")+'" onclick="tfRange(\'all\')">All</button></div></div><div class="tf-chips">'+chips+'</div>'+tfSummary(meta,series)+'<div class="sub" style="margin-bottom:8px">'+meta.name.toUpperCase()+'</div><div class="card"><div class="tf-chart">'+rows+'</div>'+legend+'<div class="tf-take">'+takeText+'</div></div></div>';
 }
 function tfPick(id){tfMetric=id;var el=document.getElementById("tfFlow");if(el){try{tfBuild(el);}catch(e){}}}
 function tfRange(r){trendRange=r;renderTrends();}

@@ -2920,6 +2920,19 @@ function confirmEdit(){
 document.getElementById("editInp").addEventListener("keydown",function(e){if(e.key==="Enter")confirmEdit()});
 
 // DATA HELPERS
+function dedupeBills(){
+  if(!ST.bills||!ST.bills.length)return;
+  var seen={},out=[],changed=false;
+  for(var i=0;i<ST.bills.length;i++){
+    var b=ST.bills[i];
+    var key=String(b&&b.p?b.p:("bill"+i)).replace(/\//g,"-");
+    if(seen[key]){changed=true;continue;}
+    seen[key]=true;
+    out.push(b);
+  }
+  if(changed){ST.bills=out;sv();}
+}
+window.dedupeBills=dedupeBills;
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}
   return null;
@@ -4240,6 +4253,7 @@ function migratePinsToHash(cb){
   }
 }
 function init(){
+  dedupeBills();
   if(sessionStorage.getItem("solarGuestMode")==="1")guestMode=true;
   migratePinsToHash(function(){
     if(sessionStorage.getItem("solarUnlocked")){
@@ -6218,6 +6232,7 @@ async function fbHydrateAndMerge(){
   if (!ST.wx) ST.wx = {};
   for (var wk in wx){ if (!ST.wx[wk]) ST.wx[wk] = wx[wk]; }
   if (bills.length > (ST.bills?ST.bills.length:0)) ST.bills = bills;
+  if (typeof window.dedupeBills === "function") window.dedupeBills();
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
   if (settings){
     if (_s.billStart===undefined && settings.billStart!==undefined && settings.billStart!==null) ST.billStart = settings.billStart;

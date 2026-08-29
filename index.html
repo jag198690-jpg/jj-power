@@ -2952,56 +2952,6 @@ function getThreshold(){
   return rolling6MonthAvg();
 }
 
-// SEASON GRID INDEPENDENCE
-function renderSeasonGrid(){
-  var el=document.getElementById("seasonGridCard");
-  if(!el)return;
-  var all=allData();
-  if(!all.length)return;
-  // Seasons: Summer Dec-Feb, Autumn Mar-May, Winter Jun-Aug, Spring Sep-Nov
-  var seasons={
-    Summer:{months:[12,1,2],days:0,zeroDays:0,totalCost:0,icon:"Sun"},
-    Autumn:{months:[3,4,5],days:0,zeroDays:0,totalCost:0,icon:"Aut"},
-    Winter:{months:[6,7,8],days:0,zeroDays:0,totalCost:0,icon:"Win"},
-    Spring:{months:[9,10,11],days:0,zeroDays:0,totalCost:0,icon:"Spr"}
-  };
-  var order=["Summer","Autumn","Winter","Spring"];
-  for(var i=0;i<all.length;i++){
-    var d=all[i];
-    var m=parseInt(d.date.substring(5,7));
-    for(var s=0;s<order.length;s++){
-      var sn=order[s];
-      if(seasons[sn].months.indexOf(m)>=0){
-        seasons[sn].days++;
-        seasons[sn].totalCost+=d.net;
-        if(d.usage<=0.9)seasons[sn].zeroDays++;
-        break;
-      }
-    }
-  }
-  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  for(var s=0;s<order.length;s++){
-    var sn=order[s],sv2=seasons[sn];
-    if(!sv2.days){h+='<div style="padding:10px;background:var(--s2);border-radius:10px;text-align:center"><div style="font-size:18px">'+sv2.icon+'</div><div style="font-size:11px;font-weight:600;color:var(--tx)">'+sn+'</div><div style="font-size:9px;color:var(--mu)">no data</div></div>';continue;}
-    var pct=Math.round((sv2.zeroDays/sv2.days)*100);
-    var avgCost=(sv2.totalCost/sv2.days).toFixed(2);
-    var col=pct>=60?"var(--gr)":pct>=35?"var(--cy)":pct>=15?"var(--am)":"var(--re)";
-    h+='<div style="padding:10px;background:var(--s2);border-radius:10px;text-align:center">';
-    h+='<div style="font-size:18px">'+sv2.icon+'</div>';
-    h+='<div style="font-size:11px;font-weight:600;color:var(--tx)">'+sn+'</div>';
-    h+='<div style="font-size:20px;font-weight:700;color:'+col+';margin:3px 0">'+pct+'%</div>';
-    h+='<div style="font-size:9px;color:var(--mu)">grid-free days</div>';
-    // Mini bar
-    h+='<div style="height:4px;background:var(--bd);border-radius:2px;margin:5px 0;overflow:hidden">';
-    h+='<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px"></div></div>';
-    h+='<div style="font-size:9px;color:var(--mu)">avg $'+avgCost+'/day</div>';
-    h+='<div style="font-size:8px;color:var(--di)">'+sv2.zeroDays+'/'+sv2.days+' days</div>';
-    h+='</div>';
-  }
-  h+='</div>';
-  el.innerHTML=h;
-}
-
 // HOME CONSUMPTION
 function renderHomeConsumption(){
   var el=document.getElementById("homeConsCard");
@@ -3489,76 +3439,6 @@ function renderYoYMonthly(){
   el.innerHTML=h;
 }
 
-// MONTHLY PRODUCTION SUMMARY - uses SG_MONTHLY
-function renderMonthlySummary(){
-  var el=document.getElementById("monthlySummaryCard");
-  if(!el)return;
-  var SG_MONTHLY=monthlyAgg();
-  var months=Object.keys(SG_MONTHLY).sort();
-  if(!months.length)return;
-
-  // Build 24-month bar chart of production
-  var maxProd=0;
-  for(var i=0;i<months.length;i++){if(SG_MONTHLY[months[i]].prod>maxProd)maxProd=SG_MONTHLY[months[i]].prod;}
-
-  var h='<div style="font-size:9px;color:var(--mu);margin-bottom:6px">MONTHLY SOLAR PRODUCTION (kWh)</div>';
-  h+='<div style="display:flex;align-items:flex-end;gap:2px;height:60px;margin-bottom:4px">';
-  for(var i=0;i<months.length;i++){
-    var m=months[i],d=SG_MONTHLY[m];
-    var pct=Math.round((d.prod/maxProd)*100);
-    var barH=Math.max(2,Math.round(pct*0.56));
-    // Color by season (Southern hemisphere)
-    var mo=parseInt(m.slice(5));
-    var col=mo>=3&&mo<=5?"var(--am)":mo>=6&&mo<=8?"var(--bl)":mo>=9&&mo<=11?"var(--gr)":"var(--or)";
-    h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end" title="'+m+': '+d.prod+'kWh">';
-    h+='<div style="width:100%;height:'+barH+'px;background:'+col+';border-radius:2px 2px 0 0;opacity:.85"></div></div>';
-  }
-  h+='</div>';
-  h+='<div style="display:flex;justify-content:space-between;font-size:8px;color:var(--mu);margin-bottom:10px">';
-  h+='<span>'+months[0].slice(0,7)+'</span><span>'+months[months.length-1].slice(0,7)+'</span></div>';
-
-  // Battery net by month
-  h+='<div style="font-size:9px;color:var(--mu);margin-bottom:6px">MONTHLY BATTERY NET (charge - discharge kWh)</div>';
-  h+='<div style="display:flex;align-items:center;gap:2px;height:40px;margin-bottom:4px">';
-  var maxNet=0;
-  for(var i=0;i<months.length;i++){var n=Math.abs(SG_MONTHLY[months[i]].ch-SG_MONTHLY[months[i]].dis);if(n>maxNet)maxNet=n;}
-  if(maxNet===0)maxNet=1;
-  for(var i=0;i<months.length;i++){
-    var d=SG_MONTHLY[months[i]];
-    var net=d.ch-d.dis;
-    var pct=Math.round((Math.abs(net)/maxNet)*100);
-    var barH=Math.max(2,Math.round(pct*0.36));
-    var col=net>=0?"var(--gr)":"var(--re)";
-    h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:'+(net>=0?"flex-end":"flex-start")+'">';
-    h+='<div style="width:100%;height:'+barH+'px;background:'+col+';border-radius:2px;opacity:.8"></div></div>';
-  }
-  h+='</div>';
-
-  // Stats summary
-  var totalProd=0,totalCh=0,totalDis=0;
-  for(var i=0;i<months.length;i++){
-    totalProd+=SG_MONTHLY[months[i]].prod;
-    totalCh+=SG_MONTHLY[months[i]].ch;
-    totalDis+=SG_MONTHLY[months[i]].dis;
-  }
-  var battEff=totalCh>0?Math.round((totalDis/totalCh)*100):0;
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">';
-  var stats=[
-    {l:"Total Solar",v:Math.round(totalProd/1000*10)/10+"MWh",c:"var(--am)"},
-    {l:"Batt Charged",v:Math.round(totalCh)+"kWh",c:"var(--gr)"},
-    {l:"Batt Efficiency",v:battEff+"%",c:"var(--cy)"}
-  ];
-  for(var i=0;i<stats.length;i++){
-    h+='<div style="text-align:center;padding:7px 4px;background:var(--s2);border-radius:8px">';
-    h+='<div style="font-size:8px;color:var(--mu)">'+stats[i].l+'</div>';
-    h+='<div style="font-size:13px;font-weight:700;color:'+stats[i].c+'">'+stats[i].v+'</div></div>';
-  }
-  h+='</div>';
-  h+='<div style="font-size:8px;color:var(--di);margin-top:6px">'+months.length+' months of Sungrow data | Green bars = battery net positive</div>';
-  el.innerHTML=h;
-}
-
-
 // TARIFF CALCULATOR
 var tcAdj={shoulder:0,offpeak:0};
 function adjTariff(type, delta){
@@ -3746,104 +3626,7 @@ function saveThreshMode(val){
   showToast(val==="manual"?"Manual threshold active":"Rolling 6-month avg active");
 }
 
-//  TRENDS FILTERS 
-var trendMonthFilter=0;
-var kwhMetric="all"; // 0 = all months
-
-
-
-function getTrendBills(){
-  var view=document.getElementById("trendView");
-  var mode=view?view.value:"all";
-  var bills=ST.bills.slice();
-
-  // Apply count filter
-  if(mode==="6")bills=bills.slice(-6);
-  else if(mode==="12")bills=bills.slice(-12);
-
-  // Apply month chip filter
-  if(trendMonthFilter>0){
-    var mStr=trendMonthFilter<10?"0"+trendMonthFilter:""+trendMonthFilter;
-    bills=bills.filter(function(b){
-      return b.s&&b.s.indexOf("-"+mStr+"-")>=0;
-    });
-  }
-  return bills;
-}
-
-function renderYoY(){
-  // Group bills by month number, show year-over-year
-  var allBills=ST.bills;
-  var byMonth={};
-  for(var i=0;i<allBills.length;i++){
-    var b=allBills[i];
-    if(!b.s)continue;
-    var parts=b.s.split("-");
-    if(parts.length<2)continue;
-    var mNum=parts[1]; // "01"-"12"
-    var yr=parts[0];
-    if(!byMonth[mNum])byMonth[mNum]={};
-    byMonth[mNum][yr]=b;
-  }
-  var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  var years=["2024","2025","2026"];
-  var colors={"2024":"rgba(96,165,250,.8)","2025":"rgba(251,191,36,.8)","2026":"rgba(249,115,22,.9)"};
-
-  var html="";
-  // Show each month that has data in >1 year
-  var maxVal=0.01;
-  var mkeys=Object.keys(byMonth).sort();
-  for(var mi=0;mi<mkeys.length;mi++){
-    var mk=mkeys[mi];
-    for(var yr in byMonth[mk]){
-      var v=byMonth[mk][yr].actual||0;
-      if(v>maxVal)maxVal=v;
-    }
-  }
-
-  for(var mi=0;mi<mkeys.length;mi++){
-    var mk=mkeys[mi];
-    var mName=months[parseInt(mk,10)-1];
-    var yrsAvail=Object.keys(byMonth[mk]).sort();
-    if(yrsAvail.length<1)continue;
-    html+='<div style="margin-bottom:12px">';
-    html+='<div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:5px">'+mName+'</div>';
-
-    // Show variance if 2 years exist
-    if(yrsAvail.length>=2){
-      var vals=[];for(var yi=0;yi<yrsAvail.length;yi++){vals.push(byMonth[mk][yrsAvail[yi]].actual||0);}
-      var latest=vals[vals.length-1],prev=vals[vals.length-2];
-      var diff=latest-prev,pct=prev>0?((diff/prev)*100).toFixed(0):0;
-      var diffCol=diff>0?"var(--re)":"var(--gr)";
-      var arrow=diff>0?"^":"v";
-      html+='<div style="font-size:10px;color:'+diffCol+';margin-bottom:4px">'+arrow+' $'+Math.abs(diff).toFixed(2)+' ('+pct+'%) vs prior year</div>';
-    }
-
-    for(var yi=0;yi<yrsAvail.length;yi++){
-      var yr=yrsAvail[yi];
-      var b=byMonth[mk][yr];
-      var a=b.actual||0,pct2=Math.round((a/maxVal)*100);
-      var col=colors[yr]||"rgba(74,122,155,.7)";
-      html+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">';
-      html+='<div style="font-size:9px;color:var(--mu);width:28px">'+yr.slice(2)+'</div>';
-      html+='<div style="flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden">';
-      html+='<div style="width:'+pct2+'%;height:100%;background:'+col+';border-radius:4px;display:flex;align-items:center;padding-left:6px">';
-      html+='<span style="font-size:9px;color:rgba(255,255,255,.95);font-weight:600">$'+a.toFixed(0)+'</span>';
-      html+='</div></div></div>';
-    }
-    html+='</div>';
-  }
-
-  // Legend
-  html+='<div style="display:flex;gap:12px;margin-top:8px">';
-  for(var yi=0;yi<years.length;yi++){
-    html+='<span style="font-size:9px;color:'+colors[years[yi]]+'">* '+years[yi]+'</span>';
-  }
-  html+='</div>';
-  document.getElementById("yoyChart").innerHTML=html;
-}
-
-//  BILLS SORT 
+//  BILLS SORT
 var billSortAsc=false; // default newest first
 
 function toggleBillSort(){
@@ -5216,8 +4999,8 @@ function drawSpark(data){
 }
 
 // CALENDAR
-function heatColor(cost){
-  var s=ST.rates?ST.rates.supply:1.45;
+function heatColor(cost,date){
+  var s=date?ratesForDate(date).supply:(ST.rates?ST.rates.supply:1.45);
   if(cost<=0)return"rgba(52,211,153,.35)";
   if(cost<=s*0.5)return"rgba(52,211,153,.25)";
   if(cost<=s)return"rgba(52,211,153,.15)";
@@ -5226,8 +5009,8 @@ function heatColor(cost){
   if(cost<=s*5)return"rgba(249,115,22,.2)";
   return"rgba(239,68,68,.25)";
 }
-function heatBorder(cost){
-  var s=ST.rates?ST.rates.supply:1.45;
+function heatBorder(cost,date){
+  var s=date?ratesForDate(date).supply:(ST.rates?ST.rates.supply:1.45);
   if(cost<=0)return"rgba(52,211,153,.8)";
   if(cost<=s*0.5)return"rgba(52,211,153,.6)";
   if(cost<=s)return"rgba(52,211,153,.35)";
@@ -5311,7 +5094,7 @@ function renderCal(){
       var thr=getThreshold();
       if(v>thr){cls+=" high";}else{cls+=" ent";}
       cost=v<=0?"credit":"$"+v.toFixed(2);
-      var hbg=heatColor(v),hbd=heatBorder(v);
+      var hbg=heatColor(v,iso),hbd=heatBorder(v,iso);
       oc=' onclick="openNP(\''+iso+'\')" style="background:'+hbg+';border-color:'+hbd+'"';
       // Solar production dot
       var prod=prodMap[iso]||0;

@@ -767,8 +767,13 @@ canvas{display:block;width:100%;height:56px}
 
   <div class="card">
     <div class="sub" style="margin-bottom:10px">SCAN / AI SCREENSHOT</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Scanning (daily entry and bill import) runs through your signed-in Cloud Sync account - no key stored on this device.</div>
-    <div id="scanKeyStatus" style="font-size:11px;color:var(--mu)"></div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Anthropic API key for the SCAN buttons (daily entry and bill import). Saved locally on this device only.</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="password" id="sApiKey" placeholder="sk-ant-..." style="flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-user-select:auto;user-select:auto">
+      <button onclick="saveApiKey()" style="background:var(--or);border:none;color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:13px;padding:11px 16px;border-radius:9px;cursor:pointer">SAVE</button>
+    </div>
+    <div id="apiKeyStatus" style="margin-top:8px;font-size:11px;color:var(--mu)"></div>
+    <button onclick="removeApiKey()" style="width:100%;margin-top:10px;padding:9px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">Remove key</button>
   </div>
 
 <div class="card">
@@ -2428,16 +2433,19 @@ function openNP(date){
   }catch(e){}
   document.getElementById("npOv").style.display="flex";
 }
-function renderScanKeyStatus(){
-  var el=document.getElementById("scanKeyStatus");
-  if(!el)return;
-  if(window.fbCurrentUserEmail){
-    el.textContent="Ready - signed in as "+window.fbCurrentUserEmail;
-    el.style.color="var(--gr)";
-  } else {
-    el.textContent="Not signed in - sign in under Cloud Sync (below) to use SCAN";
-    el.style.color="var(--re)";
-  }
+function saveApiKey(){
+  var val=document.getElementById("sApiKey").value.trim();
+  if(!val){document.getElementById("apiKeyStatus").textContent="Enter a key first";return;}
+  localStorage.setItem("solarApiKey",val);
+  document.getElementById("sApiKey").value="";
+  document.getElementById("apiKeyStatus").textContent="Saved! SCAN is ready to use.";
+  document.getElementById("apiKeyStatus").style.color="var(--gr)";
+}
+function removeApiKey(){
+  localStorage.removeItem("solarApiKey");
+  document.getElementById("sApiKey").value="";
+  document.getElementById("apiKeyStatus").textContent="Key removed - SCAN is disabled until a new key is saved.";
+  document.getElementById("apiKeyStatus").style.color="var(--mu)";
 }
 function saveAppPin(){
   var pin=document.getElementById("appPinInput").value.trim();
@@ -2716,14 +2724,6 @@ function setSsStatus(msg,col){
 function handleSsImport(input){
   if(!input.files||!input.files[0])return;
   var file=input.files[0];
-  if(!window.fbCurrentUserEmail){
-    setSsStatus("Sign in under Settings > Cloud Sync to use SCAN","var(--re)");
-    return;
-  }
-  if(typeof window.fbScanImage!=="function"){
-    setSsStatus("Scan service not ready yet - try again in a moment","var(--re)");
-    return;
-  }
   setSsStatus("Reading image...");
   var reader=new FileReader();
   reader.onload=function(e){
@@ -2736,8 +2736,26 @@ function handleSsImport(input){
     }
     setSsStatus("Asking Claude to read values...");
     var prompt="This is a screenshot from a Sungrow solar app showing a single day's energy data. Extract ONLY these 5 numeric values in kWh as a JSON object with these exact keys: usage (grid purchase/energy purchase), feedin (grid feed-in/export), production (solar production), charge (battery charge), discharge (battery discharge). If a value is not visible or missing return 0 for it. Also extract the date shown in YYYY-MM-DD format as key date. Return ONLY the raw JSON object, no markdown, no explanation.";
-    window.fbScanImage([{media_type:mtype,data:b64}],prompt,200).then(function(result){
-      var data=result.data;
+    var body=JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:200,
+      messages:[{role:"user",content:[
+        {type:"image",source:{type:"base64",media_type:mtype,data:b64}},
+        {type:"text",text:prompt}
+      ]}]
+    });
+    var AKEY=localStorage.getItem("solarApiKey")||"";
+    if(!AKEY){setSsStatus("No API key - add it in Settings","var(--re)");return;}
+    fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":AKEY,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:body
+    }).then(function(r){return r.json();}).then(function(data){
       try{
         if(data.error){setSsStatus("API: "+data.error.message,"var(--re)");return;}
         if(!data.content||!data.content.length){setSsStatus("Empty response: "+JSON.stringify(data).slice(0,80),"var(--re)");return;}
@@ -2768,7 +2786,7 @@ function handleSsImport(input){
           setSsStatus("Parse error: "+ex.message,"var(--re)");
         }
       }
-    }).catch(function(err){setSsStatus("Scan failed: "+err.message,"var(--re)");});
+    }).catch(function(){setSsStatus("Network error - check connection","var(--re)");});
   };
   reader.readAsDataURL(file);
 }
@@ -2924,20 +2942,24 @@ function pdfFileToPageImages(file,maxPages,cb,errCb){
 }
 function sendBillImagesToClaude(images,mtype){
   if(!images.length){setBillScanStatus("Could not read any pages from that file","var(--re)");return;}
-  if(!window.fbCurrentUserEmail){
-    setBillScanStatus("Sign in under Settings > Cloud Sync to use SCAN BILL","var(--re)");
-    return;
-  }
-  if(typeof window.fbScanImage!=="function"){
-    setBillScanStatus("Scan service not ready yet - try again in a moment","var(--re)");
-    return;
-  }
+  var AKEY=localStorage.getItem("solarApiKey")||"";
+  if(!AKEY){setBillScanStatus("No API key - add it in Settings","var(--re)");return;}
   setBillScanStatus("Asking Claude to read the bill...");
   var prompt="These are page(s) from an Australian electricity bill (e.g. Red Energy). The charges table is usually on page 2, not page 1. Extract ONLY these values as a JSON object with these exact keys: start (billing period start date, YYYY-MM-DD), end (billing period end date, YYYY-MM-DD), actual (the dollar amount of 'Total Electricity Charges' for this billing period - the real cost of electricity used, NOT the 'Amount Due' or account balance, since Amount Due can be reduced to zero by credit carried over from a previous bill and does not reflect actual usage cost), credit (the total solar/feed-in credit for this period in dollars, as a positive number - usually labeled 'Total Solar' and shown as a negative charge on the bill, but report it here as a positive number). If a value cannot be found, use null for it. Return ONLY the raw JSON object, no markdown, no explanation.";
-  var fnImages=[];
-  for(var i=0;i<images.length;i++)fnImages.push({media_type:mtype,data:images[i]});
-  window.fbScanImage(fnImages,prompt,300).then(function(result){
-    var data=result.data;
+  var content=[];
+  for(var i=0;i<images.length;i++)content.push({type:"image",source:{type:"base64",media_type:mtype,data:images[i]}});
+  content.push({type:"text",text:prompt});
+  var body=JSON.stringify({model:"claude-sonnet-4-6",max_tokens:300,messages:[{role:"user",content:content}]});
+  fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key":AKEY,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body:body
+  }).then(function(r){return r.json();}).then(function(data){
     try{
       if(data.error){setBillScanStatus("API: "+data.error.message,"var(--re)");return;}
       if(!data.content||!data.content.length){setBillScanStatus("Empty response: "+JSON.stringify(data).slice(0,80),"var(--re)");return;}
@@ -2958,7 +2980,7 @@ function sendBillImagesToClaude(images,mtype){
     }catch(ex){
       setBillScanStatus("Could not read that bill - enter it manually. ("+ex.message+")","var(--re)");
     }
-  }).catch(function(err){setBillScanStatus("Scan failed: "+err.message,"var(--re)");});
+  }).catch(function(){setBillScanStatus("Network error - check connection","var(--re)");});
 }
 function handleBillScan(input){
   if(!input.files||!input.files[0])return;
@@ -6187,7 +6209,12 @@ function renderSettings(){
   if(tDisp)tDisp.textContent="$"+tVal.toFixed(2)+(tMode==="rolling"?" (6-mo avg)":" (manual)");
   var tValEl=document.getElementById("s-threshVal");
   if(tValEl)tValEl.textContent="$"+(ST.threshVal||5).toFixed(2);
-  renderScanKeyStatus();
+  var apiStatusEl=document.getElementById("apiKeyStatus");
+  if(apiStatusEl){
+    var hasKey=!!localStorage.getItem("solarApiKey");
+    apiStatusEl.textContent=hasKey?"Key saved - SCAN is ready":"No key saved yet";
+    apiStatusEl.style.color=hasKey?"var(--gr)":"var(--mu)";
+  }
   var missEl=document.getElementById("sMissCount");
   if(missEl)missEl.textContent=missingDays().length;
   renderTargetSeasonNote();
@@ -6289,9 +6316,6 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getFunctions, httpsCallable
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 var fbConfig = {
   apiKey: "AIzaSyBhAh6N56pTbQqb7eqNisSde9XY9-tmMfM",
@@ -6304,16 +6328,8 @@ var fbConfig = {
 var fbApp = initializeApp(fbConfig);
 var fbDb = getFirestore(fbApp);
 var fbAuth = getAuth(fbApp);
-var fbFunctions = getFunctions(fbApp);
 var fbBasePath = "users/jamie";
 var fbLastSnapshot = {days:{}, bills:{}, rateHistory:{}, settings:null};
-
-// Server-side proxy for SCAN / SCAN BILL - see functions/index.js. Requires
-// being signed in (same login as Cloud Sync); no API key needed on-device.
-window.fbScanImage = function(images, prompt, maxTokens){
-  var call = httpsCallable(fbFunctions, "scanImage");
-  return call({images: images, prompt: prompt, max_tokens: maxTokens});
-};
 
 function fbSetStatus(msg, isErr){
   var el = document.getElementById("fbSyncStatus");
@@ -6456,7 +6472,6 @@ async function fbHydrateAndMerge(){
   };
   try{ localStorage.setItem("fbLastSyncedAt", String(Date.now())); }catch(e){}
   try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
-  try{ if (typeof window.renderScanKeyStatus === "function") window.renderScanKeyStatus(); }catch(e){}
   fbSetStatus("Synced. " + added + " day(s) pulled from the cloud.");
 }
 
@@ -6487,7 +6502,6 @@ onAuthStateChanged(fbAuth, function(user){
   var inn = document.getElementById("fbSyncLoggedIn");
   window.fbCurrentUserEmail = user ? user.email : null;
   try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
-  try{ if (typeof window.renderScanKeyStatus === "function") window.renderScanKeyStatus(); }catch(e){}
   if (user){
     if (out) out.style.display = "none";
     if (inn) inn.style.display = "block";
@@ -6564,7 +6578,6 @@ window.fbBackgroundSync = function(){
       };
       try{ localStorage.setItem("fbLastSyncedAt", String(Date.now())); }catch(e){}
       try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
-  try{ if (typeof window.renderScanKeyStatus === "function") window.renderScanKeyStatus(); }catch(e){}
       fbSetStatus("Synced.");
     }).catch(function(err){
       fbSetStatus("Sync failed (data is still saved locally): " + err.message, true);

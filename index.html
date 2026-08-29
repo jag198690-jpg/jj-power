@@ -7510,7 +7510,7 @@ var fbApp = initializeApp(fbConfig);
 var fbDb = getFirestore(fbApp);
 var fbAuth = getAuth(fbApp);
 var fbBasePath = "users/jamie";
-var fbLastSnapshot = {};
+var fbLastSnapshot = {days:{}, bills:{}, rateHistory:{}, settings:null};
 
 function fbSetStatus(msg, isErr){
   var el = document.getElementById("fbSyncStatus");
@@ -7545,6 +7545,55 @@ function fbBuildDayDocs(ST){
   return out;
 }
 
+function fbSafeId(s){
+  var str = String(s);
+  str = str.replace(/\//g, "-");
+  return str.length ? str : "_";
+}
+
+function fbBuildBillDocs(ST){
+  var out = {};
+  var bills = ST.bills || [];
+  for (var i=0; i<bills.length; i++){
+    var b = bills[i];
+    var id = fbSafeId(b.p || ("bill" + i));
+    out[id] = {
+      p: b.p!==undefined?b.p:null, s: b.s!==undefined?b.s:null, e: b.e!==undefined?b.e:null,
+      days: b.days!==undefined?b.days:null, actual: b.actual!==undefined?b.actual:null,
+      credit: b.credit!==undefined?b.credit:null, dailyAvg: b.dailyAvg!==undefined?b.dailyAvg:null,
+      weeklyAvg: b.weeklyAvg!==undefined?b.weeklyAvg:null
+    };
+  }
+  return out;
+}
+
+function fbBuildRateDocs(ST){
+  var out = {};
+  var rh = ST.rateHistory || [];
+  for (var i=0; i<rh.length; i++){
+    var r = rh[i];
+    var id = fbSafeId(r.from || ("rate" + i));
+    out[id] = {
+      from: r.from!==undefined?r.from:null, peak: r.peak!==undefined?r.peak:null,
+      shoulder: r.shoulder!==undefined?r.shoulder:null, offpeak: r.offpeak!==undefined?r.offpeak:null,
+      supply: r.supply!==undefined?r.supply:null, feedin: r.feedin!==undefined?r.feedin:null
+    };
+  }
+  return out;
+}
+
+function fbBuildSettingsDoc(ST){
+  return {
+    billStart: ST.billStart!==undefined?ST.billStart:null,
+    target: ST.target!==undefined?ST.target:null,
+    threshMode: ST.threshMode!==undefined?ST.threshMode:null,
+    threshVal: ST.threshVal!==undefined?ST.threshVal:null,
+    battery: ST.battery||null,
+    system: ST.system||null,
+    notes: ST.notes!==undefined?ST.notes:null
+  };
+}
+
 async function fbHydrateAndMerge(){
   fbSetStatus("Pulling your data from the cloud...");
   var daysSnap = await getDocs(collection(fbDb, fbBasePath, "days"));
@@ -7576,12 +7625,26 @@ async function fbHydrateAndMerge(){
   for (var wk in wx){ if (!ST.wx[wk]) ST.wx[wk] = wx[wk]; }
   if (bills.length > (ST.bills?ST.bills.length:0)) ST.bills = bills;
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
+  if (settings){
+    if (_s.billStart===undefined && settings.billStart!==undefined && settings.billStart!==null) ST.billStart = settings.billStart;
+    if (_s.target===undefined && settings.target!==undefined && settings.target!==null) ST.target = settings.target;
+    if (_s.threshMode===undefined && settings.threshMode!==undefined && settings.threshMode!==null) ST.threshMode = settings.threshMode;
+    if (_s.threshVal===undefined && settings.threshVal!==undefined && settings.threshVal!==null) ST.threshVal = settings.threshVal;
+    if (_s.battery===undefined && settings.battery) ST.battery = settings.battery;
+    if (_s.system===undefined && settings.system) ST.system = Object.assign({}, ST.system, settings.system);
+    if (_s.notes===undefined && settings.notes!==undefined && settings.notes!==null) ST.notes = settings.notes;
+  }
 
   try{ sv(); }catch(e){}
   try{ if (typeof renderAll === "function") renderAll(); }catch(e){}
   try{ if (typeof startApp === "function") startApp(); }catch(e){}
 
-  fbLastSnapshot = JSON.parse(JSON.stringify(fbBuildDayDocs(ST)));
+  fbLastSnapshot = {
+    days: JSON.parse(JSON.stringify(fbBuildDayDocs(ST))),
+    bills: JSON.parse(JSON.stringify(fbBuildBillDocs(ST))),
+    rateHistory: JSON.parse(JSON.stringify(fbBuildRateDocs(ST))),
+    settings: JSON.parse(JSON.stringify(fbBuildSettingsDoc(ST)))
+  };
   fbSetStatus("Synced. " + added + " day(s) pulled from the cloud.");
 }
 
@@ -7613,37 +7676,63 @@ onAuthStateChanged(fbAuth, function(user){
   }
 });
 
-// Background sync: called after every sv(). Only writes days that actually
-// changed since the last sync, so this stays cheap even with 1000+ days.
+// Background sync: called after every sv(). Only writes items that actually
+// changed since the last sync (across days, bills, rateHistory, settings),
+// so this stays cheap even with 1000+ days.
 window.fbBackgroundSync = function(){
   if (!fbAuth.currentUser) return;
   if (typeof ST === "undefined") return;
   try{
-    var current = fbBuildDayDocs(ST);
-    var changedDates = [];
-    for (var date in current){
-      var a = JSON.stringify(current[date]);
-      var b = fbLastSnapshot[date] ? JSON.stringify(fbLastSnapshot[date]) : null;
-      if (a !== b) changedDates.push(date);
+    var currentDays = fbBuildDayDocs(ST);
+    var currentBills = fbBuildBillDocs(ST);
+    var currentRates = fbBuildRateDocs(ST);
+    var currentSettings = fbBuildSettingsDoc(ST);
+
+    var ops = [];
+    var id;
+    for (id in currentDays){
+      var da = JSON.stringify(currentDays[id]);
+      var db = fbLastSnapshot.days[id] ? JSON.stringify(fbLastSnapshot.days[id]) : null;
+      if (da !== db) ops.push({col:"days", id:id, data:currentDays[id]});
     }
-    if (changedDates.length === 0) return;
-    fbSetStatus("Syncing " + changedDates.length + " day(s)...");
+    for (id in currentBills){
+      var ba = JSON.stringify(currentBills[id]);
+      var bb = fbLastSnapshot.bills[id] ? JSON.stringify(fbLastSnapshot.bills[id]) : null;
+      if (ba !== bb) ops.push({col:"bills", id:id, data:currentBills[id]});
+    }
+    for (id in currentRates){
+      var ra = JSON.stringify(currentRates[id]);
+      var rb = fbLastSnapshot.rateHistory[id] ? JSON.stringify(fbLastSnapshot.rateHistory[id]) : null;
+      if (ra !== rb) ops.push({col:"rateHistory", id:id, data:currentRates[id]});
+    }
+    if (JSON.stringify(currentSettings) !== JSON.stringify(fbLastSnapshot.settings)){
+      ops.push({col:"settings", id:"app", data:currentSettings});
+    }
+
+    if (ops.length === 0) return;
+    fbSetStatus("Syncing " + ops.length + " item(s)...");
     var CHUNK = 400;
     var chain = Promise.resolve();
-    for (var i=0; i<changedDates.length; i+=CHUNK){
-      var slice = changedDates.slice(i, i+CHUNK);
+    for (var i=0; i<ops.length; i+=CHUNK){
+      var slice = ops.slice(i, i+CHUNK);
       chain = chain.then(function(sliceCopy){
         return function(){
           var batch = writeBatch(fbDb);
           for (var k=0;k<sliceCopy.length;k++){
-            batch.set(doc(fbDb, fbBasePath, "days", sliceCopy[k]), current[sliceCopy[k]]);
+            var op = sliceCopy[k];
+            batch.set(doc(fbDb, fbBasePath, op.col, op.id), op.data);
           }
           return batch.commit();
         };
       }(slice)());
     }
     chain.then(function(){
-      fbLastSnapshot = JSON.parse(JSON.stringify(current));
+      fbLastSnapshot = {
+        days: JSON.parse(JSON.stringify(currentDays)),
+        bills: JSON.parse(JSON.stringify(currentBills)),
+        rateHistory: JSON.parse(JSON.stringify(currentRates)),
+        settings: JSON.parse(JSON.stringify(currentSettings))
+      };
       fbSetStatus("Synced.");
     }).catch(function(err){
       fbSetStatus("Sync failed (data is still saved locally): " + err.message, true);

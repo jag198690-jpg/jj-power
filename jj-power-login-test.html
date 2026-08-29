@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J&J Power - Login Test</title>
+<style>
+  :root{--bg:#0a0e15;--card:#0f1723;--bd:rgba(255,255,255,.08);--tx:#eef2f6;--mu:#8593a3;
+    --gr:#3fb984;--re:#f0736f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:18px 16px 60px}
+  .wrap{max-width:480px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--mu);margin-bottom:18px;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+  label{display:block;font-size:12px;color:var(--mu);margin:10px 0 4px}
+  input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:#060a10;color:var(--tx);font-size:16px}
+  button{width:100%;padding:15px;border-radius:12px;border:none;background:var(--gr);color:#031b12;
+    font-weight:800;font-size:16px;cursor:pointer;margin-top:14px}
+  button:disabled{opacity:.4}
+  .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--mu)}
+  .row .v{font-weight:700}
+  .errbox{display:none;background:rgba(240,115,111,.1);border:1px solid var(--re);border-radius:10px;padding:12px;
+    font-family:ui-monospace,monospace;font-size:12px;color:var(--re);margin-top:10px;white-space:pre-wrap}
+  .banner{border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:15px;margin-top:14px;display:none}
+  .banner.ok{background:rgba(63,185,132,.15);border:1px solid var(--gr);color:var(--gr)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>J&amp;J Power - Login Test</h1>
+  <div class="sub">Proves the whole chain works: your login, the security rules, and reading your real data back out of Firestore. This is a standalone test - your live app is not touched.</div>
+
+  <div class="card" id="loginCard">
+    <label>Email</label>
+    <input id="email" type="email" autocapitalize="off" autocorrect="off">
+    <label>Password</label>
+    <input id="password" type="password">
+    <button id="signInBtn">Sign In</button>
+    <div class="errbox" id="errbox"></div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <div class="row"><span class="k">Signed in as</span><span class="v" id="rUser">-</span></div>
+    <div class="row"><span class="k">Days read back</span><span class="v" id="rDays">-</span></div>
+    <div class="row"><span class="k">Date range</span><span class="v" id="rRange">-</span></div>
+    <div class="row"><span class="k">Bills</span><span class="v" id="rBills">-</span></div>
+    <div class="row"><span class="k">Settings doc</span><span class="v" id="rSettings">-</span></div>
+  </div>
+
+  <div class="banner ok" id="bannerOk">&#10003; Login and read-back both work. The full app rewrite is safe to build next.</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBhAh6N56pTbQqb7eqNisSde9XY9-tmMfM",
+  authDomain: "j-j-solar2026.firebaseapp.com",
+  projectId: "j-j-solar2026",
+  storageBucket: "j-j-solar2026.firebasestorage.app",
+  messagingSenderId: "143622878542",
+  appId: "1:143622878542:web:463730b47b3d717de3da1f"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+
+const errEl = document.getElementById("errbox");
+function showErr(err){
+  errEl.style.display = "block";
+  errEl.textContent = (err && err.message) ? err.message : String(err);
+}
+window.addEventListener("error", function(e){ showErr(e.error || e.message); });
+
+async function runTest(){
+  const btn = document.getElementById("signInBtn");
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  btn.disabled = true;
+  errEl.style.display = "none";
+  try{
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("resultCard").style.display = "block";
+    document.getElementById("rUser").textContent = cred.user.email;
+
+    const daysSnap = await getDocs(collection(db, "users/jamie/days"));
+    const dates = [];
+    daysSnap.forEach(function(d){ dates.push(d.id); });
+    dates.sort();
+    document.getElementById("rDays").textContent = dates.length;
+    document.getElementById("rRange").textContent = dates.length ? (dates[0] + " to " + dates[dates.length-1]) : "-";
+
+    const billsSnap = await getDocs(collection(db, "users/jamie/bills"));
+    document.getElementById("rBills").textContent = billsSnap.size;
+
+    const settingsDoc = await getDoc(doc(db, "users/jamie/settings", "app"));
+    document.getElementById("rSettings").textContent = settingsDoc.exists() ? "present" : "MISSING";
+
+    document.getElementById("bannerOk").style.display = "block";
+  } catch(err){
+    showErr(err);
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("signInBtn").addEventListener("click", function(){
+  runTest().catch(showErr);
+});
+</script>
+</body>
+</html>

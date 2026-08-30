@@ -601,6 +601,19 @@ canvas{display:block;width:100%;height:56px}
     <div id="importRecent"></div>
   </div>
 
+  <div class="card" style="padding:13px;margin-top:14px">
+    <div onclick="toggleBulkImport()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+      <div class="sub">BULK IMPORT (PASTE DATA)</div>
+      <span id="bulkImportArrow" style="font-size:10px;color:var(--mu);font-weight:600">SHOW &#9660;</span>
+    </div>
+    <div id="bulkImportSection" style="display:none;margin-top:10px">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.5">Paste a list of bills (given to you as data, not typed by hand) and import them all in one go instead of entering each one manually.</div>
+      <textarea id="bulkImportInput" placeholder="Paste bill data here" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-family:monospace;font-size:12px;padding:10px;outline:none;box-sizing:border-box;resize:vertical"></textarea>
+      <button onclick="bulkImportBills()" style="width:100%;margin-top:8px;padding:11px;border-radius:10px;border:none;background:var(--cy);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:12px;cursor:pointer">IMPORT PASTED BILLS</button>
+      <div id="bulkImportStatus" style="display:none;text-align:center;font-size:12px;margin-top:10px;font-weight:600"></div>
+    </div>
+  </div>
+
   <button id="clearBillsBtn" onclick="clearAllBillsPrompt()" style="width:100%;margin-top:14px;padding:11px;border-radius:12px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.08);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">
     Clear all bills and start over
   </button>
@@ -3250,6 +3263,54 @@ function clearAllBillsGo(){
     statusEl.style.color="var(--re)";
     statusEl.textContent="Could not clear the cloud copy: "+err.message+" - try again, or check your connection";
   });
+}
+function toggleBulkImport(force){
+  var el=document.getElementById("bulkImportSection");
+  var ar=document.getElementById("bulkImportArrow");
+  if(!el)return;
+  var open=(force===true)||(force===undefined&&el.style.display==="none");
+  el.style.display=open?"block":"none";
+  if(ar)ar.textContent=open?"HIDE \u25b2":"SHOW \u25bc";
+}
+function bulkImportBills(){
+  if(guestMode){showToast("View only - guest access");return;}
+  var statusEl=document.getElementById("bulkImportStatus");
+  function setStatus(msg,col){
+    if(!msg){statusEl.style.display="none";return;}
+    statusEl.textContent=msg;statusEl.style.color=col||"var(--cy)";statusEl.style.display="block";
+  }
+  var raw=document.getElementById("bulkImportInput").value.trim();
+  if(!raw){setStatus("Paste the bill data first","var(--re)");return;}
+  var arr;
+  try{arr=JSON.parse(raw);}catch(ex){setStatus("Could not read that - make sure the whole block was pasted","var(--re)");return;}
+  if(!Array.isArray(arr)){setStatus("Expected a list of bills","var(--re)");return;}
+  var existingKeys={};
+  for(var i=0;i<ST.bills.length;i++)existingKeys[billDedupeKey(ST.bills[i],i)]=true;
+  var added=0,skipped=0;
+  for(var i=0;i<arr.length;i++){
+    var b=arr[i];
+    if(!b||!b.p||!b.s){skipped++;continue;}
+    var key=billDedupeKey(b,i);
+    if(existingKeys[key]){skipped++;continue;}
+    var days=parseInt(b.days,10);
+    if(!days&&b.s&&b.e)days=Math.round((new Date(b.e)-new Date(b.s))/86400000)+1;
+    if(!days)days=30;
+    var a=parseFloat(b.actual)||0;
+    var cr=parseFloat(b.credit)||0;
+    var da=b.dailyAvg?parseFloat(b.dailyAvg):(a&&days?parseFloat((a/days).toFixed(2)):0);
+    var wk=b.weeklyAvg?parseFloat(b.weeklyAvg):(da?parseFloat((da*7).toFixed(2)):0);
+    var bill={p:String(b.p),s:b.s||"",e:b.e||"",days:days,actual:a,credit:cr,dailyAvg:da,weeklyAvg:wk};
+    for(var fi=0;fi<BILL_ITM_FIELDS.length;fi++){
+      var fk=BILL_ITM_FIELDS[fi];
+      if(b[fk]!==undefined&&b[fk]!==null)bill[fk]=b[fk];
+    }
+    ST.bills.push(bill);
+    existingKeys[key]=true;
+    added++;
+  }
+  if(added){sv();renderBills();renderTrends();renderImportTab();}
+  document.getElementById("bulkImportInput").value="";
+  setStatus(added+" bill"+(added===1?"":"s")+" added"+(skipped?", "+skipped+" skipped (duplicate or invalid)":""),added?"var(--gr)":"var(--re)");
 }
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}

@@ -110,6 +110,8 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
   padding:12px 14px;outline:none;-webkit-appearance:none;appearance:none}
 .bf-inp:focus{border-color:var(--or)}
 .bf-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.bf-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.bf-row-3 .bf-inp{padding:12px 6px;font-size:16px}
 .btn{width:100%;padding:15px;border-radius:12px;border:none;
   font-family:-apple-system,sans-serif;font-weight:600;font-size:15px;cursor:pointer}
 .btn-p{background:var(--or);color:#000}
@@ -598,6 +600,10 @@ canvas{display:block;width:100%;height:56px}
     <div class="sub" style="margin-bottom:8px">RECENTLY IMPORTED</div>
     <div id="importRecent"></div>
   </div>
+
+  <button id="clearBillsBtn" onclick="clearAllBillsPrompt()" style="width:100%;margin-top:14px;padding:11px;border-radius:12px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.08);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">
+    Clear all bills and start over
+  </button>
 </div>
 
 <!-- ??? TRENDS ??? -->
@@ -963,7 +969,7 @@ canvas{display:block;width:100%;height:56px}
       </div>
       <div class="bf-row-2">
         <div>
-          <label class="bf-lbl">AMOUNT PAID ($)</label>
+          <label class="bf-lbl">TOTAL ELECTRICITY CHARGES ($)</label>
           <input type="number" step="0.01" id="bf-actual" class="bf-inp" placeholder="0.00" oninput="autoCalcBillAvgs()">
         </div>
         <div>
@@ -981,6 +987,52 @@ canvas{display:block;width:100%;height:56px}
           <input type="number" step="0.01" id="bf-weekly" class="bf-inp" placeholder="auto">
         </div>
       </div>
+
+      <div onclick="toggleBillItemized()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--bd);margin-top:2px;cursor:pointer">
+        <label class="bf-lbl" style="margin:0">ITEMISED BREAKDOWN (OPTIONAL)</label>
+        <span id="billItemizedArrow" style="font-size:10px;color:var(--mu);font-weight:600">SHOW &#9660;</span>
+      </div>
+      <div id="billItemizedSection" style="display:none">
+        <div class="bf-row-2">
+          <div>
+            <label class="bf-lbl">SOLAR EXPORTED (kWh)</label>
+            <input type="number" step="0.01" id="bf-solarKwh" class="bf-inp" placeholder="0">
+          </div>
+          <div>
+            <label class="bf-lbl">SOLAR RATE ($/kWh)</label>
+            <input type="number" step="0.0001" id="bf-solarRate" class="bf-inp" placeholder="0.00">
+          </div>
+        </div>
+        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">PEAK &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
+        <div class="bf-row-3">
+          <input type="number" step="0.01" id="bf-pkKwh" class="bf-inp" placeholder="kWh">
+          <input type="number" step="0.0001" id="bf-pkRate" class="bf-inp" placeholder="rate">
+          <input type="number" step="0.01" id="bf-pkChg" class="bf-inp" placeholder="$">
+        </div>
+        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">SHOULDER &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
+        <div class="bf-row-3">
+          <input type="number" step="0.01" id="bf-shKwh" class="bf-inp" placeholder="kWh">
+          <input type="number" step="0.0001" id="bf-shRate" class="bf-inp" placeholder="rate">
+          <input type="number" step="0.01" id="bf-shChg" class="bf-inp" placeholder="$">
+        </div>
+        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">OFF-PEAK &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
+        <div class="bf-row-3">
+          <input type="number" step="0.01" id="bf-opKwh" class="bf-inp" placeholder="kWh">
+          <input type="number" step="0.0001" id="bf-opRate" class="bf-inp" placeholder="rate">
+          <input type="number" step="0.01" id="bf-opChg" class="bf-inp" placeholder="$">
+        </div>
+        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">SERVICE TO PROPERTY &#8212; days / rate ($/day) / charge ($)</label></div>
+        <div class="bf-row-3">
+          <input type="number" step="1" id="bf-svcDays" class="bf-inp" placeholder="days">
+          <input type="number" step="0.0001" id="bf-svcRate" class="bf-inp" placeholder="rate">
+          <input type="number" step="0.01" id="bf-svcChg" class="bf-inp" placeholder="$">
+        </div>
+        <div class="bf-row">
+          <label class="bf-lbl">GST ($)</label>
+          <input type="number" step="0.01" id="bf-gst" class="bf-inp" placeholder="0.00">
+        </div>
+      </div>
+
       <input type="hidden" id="bf-idx" value="-1">
       <button class="btn btn-p" onclick="saveBillForm()" style="margin-bottom:10px">SAVE BILL</button>
       <button class="btn btn-s" onclick="closeBillForm()">CANCEL</button>
@@ -2869,10 +2921,20 @@ function saveNP(){
 
 // BILL FORM
 var billEditIdx=-1;
+var BILL_ITM_FIELDS=["solarKwh","solarRate","pkKwh","pkRate","pkChg","shKwh","shRate","shChg","opKwh","opRate","opChg","svcDays","svcRate","svcChg","gst"];
+function toggleBillItemized(force){
+  var el=document.getElementById("billItemizedSection");
+  var ar=document.getElementById("billItemizedArrow");
+  if(!el)return;
+  var open=(force===true)||(force===undefined&&el.style.display==="none");
+  el.style.display=open?"block":"none";
+  if(ar)ar.textContent=open?"HIDE \u25b2":"SHOW \u25bc";
+}
 function openBillForm(idx){
   if(guestMode){showToast("View only - guest access");return;}
   billEditIdx=idx;
   var title=document.getElementById("billFormTitle");
+  var hasItm=false;
   if(idx===null){
     title.textContent="Add New Bill";
     document.getElementById("bf-period").value="";
@@ -2883,6 +2945,10 @@ function openBillForm(idx){
     document.getElementById("bf-daily").value="";
     document.getElementById("bf-weekly").value="";
     document.getElementById("bf-idx").value="-1";
+    for(var i=0;i<BILL_ITM_FIELDS.length;i++){
+      var clearEl=document.getElementById("bf-"+BILL_ITM_FIELDS[i]);
+      if(clearEl)clearEl.value="";
+    }
   } else {
     var b=ST.bills[idx];
     title.textContent="Edit Bill \u2014 "+b.p;
@@ -2894,7 +2960,16 @@ function openBillForm(idx){
     document.getElementById("bf-daily").value=b.dailyAvg||"";
     document.getElementById("bf-weekly").value=b.weeklyAvg||"";
     document.getElementById("bf-idx").value=idx;
+    for(var i=0;i<BILL_ITM_FIELDS.length;i++){
+      var k=BILL_ITM_FIELDS[i];
+      var el=document.getElementById("bf-"+k);
+      if(!el)continue;
+      var v=b[k];
+      el.value=(v!==undefined&&v!==null)?v:"";
+      if(v!==undefined&&v!==null&&v!=="")hasItm=true;
+    }
   }
+  toggleBillItemized(hasItm);
   document.getElementById("billOv").style.display="flex";
 }
 function closeBillForm(){document.getElementById("billOv").style.display="none"}
@@ -2915,6 +2990,13 @@ function saveBillForm(){
   if(!da&&a&&days)da=parseFloat((a/days).toFixed(2));
   if(!wk&&da)wk=parseFloat((da*7).toFixed(2));
   var bill={p:p,s:s,e:e,days:days,actual:a,credit:cr,dailyAvg:da,weeklyAvg:wk};
+  for(var i=0;i<BILL_ITM_FIELDS.length;i++){
+    var fk=BILL_ITM_FIELDS[i];
+    var fel=document.getElementById("bf-"+fk);
+    if(!fel||fel.value==="")continue;
+    var fv=parseFloat(fel.value);
+    if(!isNaN(fv))bill[fk]=fv;
+  }
   var idx=parseInt(document.getElementById("bf-idx").value);
   if(idx>=0)ST.bills[idx]=bill;else ST.bills.push(bill);
   sv();renderBills();renderTrends();renderImportTab();closeBillForm();
@@ -2980,11 +3062,11 @@ function sendBillImagesToClaude(images,mtype){
   var AKEY=localStorage.getItem("solarApiKey")||"";
   if(!AKEY){setBillScanStatus("No API key - add it in Settings","var(--re)");return;}
   setBillScanStatus("Asking Claude to read the bill...");
-  var prompt="These are page(s) from an Australian electricity bill (e.g. Red Energy). The charges table is usually on page 2, not page 1. Extract ONLY these values as a JSON object with these exact keys: start (billing period start date, YYYY-MM-DD), end (billing period end date, YYYY-MM-DD), actual (the dollar amount of 'Total Electricity Charges' for this billing period - the real cost of electricity used, NOT the 'Amount Due' or account balance, since Amount Due can be reduced to zero by credit carried over from a previous bill and does not reflect actual usage cost), credit (the total solar/feed-in credit for this period in dollars, as a positive number - usually labeled 'Total Solar' and shown as a negative charge on the bill, but report it here as a positive number). If a value cannot be found, use null for it. Return ONLY the raw JSON object, no markdown, no explanation.";
+  var prompt="These are page(s) from an Australian electricity bill (e.g. Red Energy). The itemised Electricity Charges table is usually on page 2, not page 1, and lists tariff lines such as 'Total Solar', 'Total Peak', 'Total Shoulder', 'Total Off Peak' and 'Service to Property Charge', each with a Usage (kWh or days), Rate ($/kWh or $/day) and Charge ($) column, plus a GST line. Extract ONLY these values as a JSON object with these exact keys - use null for anything genuinely not shown on the bill, never guess or estimate a value: start (billing period start date, YYYY-MM-DD), end (billing period end date, YYYY-MM-DD), actual (the dollar amount labelled 'Total Electricity Charges' - NOT 'Amount Due' or 'Total Amount Due', since that can be reduced by credit carried over from a previous bill and does not reflect this period's actual usage cost), credit (the 'Total Solar' line's Charge, as a positive number - it is shown as a negative charge on the bill, report it here positive), solarKwh ('Total Solar' Usage in kWh), solarRate ('Total Solar' Rate per kWh as a positive number), pkKwh ('Total Peak' Usage in kWh), pkRate ('Total Peak' Rate per kWh excl. GST), pkChg ('Total Peak' Charge in dollars excl. GST), shKwh ('Total Shoulder' Usage in kWh), shRate ('Total Shoulder' Rate per kWh excl. GST), shChg ('Total Shoulder' Charge in dollars excl. GST), opKwh ('Total Off Peak' Usage in kWh), opRate ('Total Off Peak' Rate per kWh excl. GST), opChg ('Total Off Peak' Charge in dollars excl. GST), svcDays ('Service to Property Charge' number of days), svcRate ('Service to Property Charge' Rate per day excl. GST), svcChg ('Service to Property Charge' Charge in dollars excl. GST), gst (the GST line's dollar amount). Some bills may not itemise every one of these lines - use null rather than estimating. Return ONLY the raw JSON object, no markdown, no explanation.";
   var content=[];
   for(var i=0;i<images.length;i++)content.push({type:"image",source:{type:"base64",media_type:mtype,data:images[i]}});
   content.push({type:"text",text:prompt});
-  var body=JSON.stringify({model:"claude-sonnet-4-6",max_tokens:300,messages:[{role:"user",content:content}]});
+  var body=JSON.stringify({model:"claude-sonnet-4-6",max_tokens:500,messages:[{role:"user",content:content}]});
   fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
@@ -3007,6 +3089,13 @@ function sendBillImagesToClaude(images,mtype){
       if(parsed.end)document.getElementById("bf-end").value=parsed.end;
       if(parsed.actual!==undefined&&parsed.actual!==null)document.getElementById("bf-actual").value=parsed.actual;
       if(parsed.credit!==undefined&&parsed.credit!==null)document.getElementById("bf-credit").value=parsed.credit;
+      var gotItm=false;
+      for(var fi=0;fi<BILL_ITM_FIELDS.length;fi++){
+        var fk=BILL_ITM_FIELDS[fi];
+        var fel=document.getElementById("bf-"+fk);
+        if(fel&&parsed[fk]!==undefined&&parsed[fk]!==null){fel.value=parsed[fk];gotItm=true;}
+      }
+      if(gotItm)toggleBillItemized(true);
       var lbl=billPeriodLabel(parsed.end||parsed.start);
       if(lbl)document.getElementById("bf-period").value=lbl;
       try{autoCalcBillAvgs();}catch(ex){}
@@ -3123,6 +3212,34 @@ function renderImportTab(){
     html+='</div>';
   }
   recEl.innerHTML=html;
+}
+function clearAllBillsPrompt(){
+  if(guestMode){showToast("View only - guest access");return;}
+  var n=(ST.bills||[]).length;
+  if(!n){showToast("No bills to clear");return;}
+  document.getElementById("clearBillsMsg").textContent="This deletes all "+n+" bill"+(n===1?"":"s")+" on file, on every synced device, so you can re-import your history from scratch. This cannot be undone.";
+  document.getElementById("clearBillsStatus").textContent="";
+  document.getElementById("clearBillsOv").style.display="flex";
+}
+function clearAllBillsGo(){
+  var btn=document.getElementById("clearBillsConfirmBtn");
+  var statusEl=document.getElementById("clearBillsStatus");
+  btn.disabled=true;
+  statusEl.style.color="var(--mu)";
+  statusEl.textContent="Clearing...";
+  var p=(typeof window.fbDeleteAllBillDocs==="function")?window.fbDeleteAllBillDocs():Promise.resolve();
+  p.then(function(){
+    ST.bills=[];
+    sv();
+    renderBills();renderTrends();renderImportTab();
+    document.getElementById("clearBillsOv").style.display="none";
+    btn.disabled=false;
+    showToast("All bills cleared");
+  }).catch(function(err){
+    btn.disabled=false;
+    statusEl.style.color="var(--re)";
+    statusEl.textContent="Could not clear the cloud copy: "+err.message+" - try again, or check your connection";
+  });
 }
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}
@@ -6445,15 +6562,21 @@ function fbSafeId(s){
 function fbBuildBillDocs(ST){
   var out = {};
   var bills = ST.bills || [];
+  var itmFields = (typeof BILL_ITM_FIELDS !== "undefined") ? BILL_ITM_FIELDS : [];
   for (var i=0; i<bills.length; i++){
     var b = bills[i];
     var id = fbSafeId(b.p || ("bill" + i));
-    out[id] = {
+    var docObj = {
       p: b.p!==undefined?b.p:null, s: b.s!==undefined?b.s:null, e: b.e!==undefined?b.e:null,
       days: b.days!==undefined?b.days:null, actual: b.actual!==undefined?b.actual:null,
       credit: b.credit!==undefined?b.credit:null, dailyAvg: b.dailyAvg!==undefined?b.dailyAvg:null,
       weeklyAvg: b.weeklyAvg!==undefined?b.weeklyAvg:null
     };
+    for (var fi=0; fi<itmFields.length; fi++){
+      var fk = itmFields[fi];
+      docObj[fk] = (b[fk]!==undefined && b[fk]!==null) ? b[fk] : null;
+    }
+    out[id] = docObj;
   }
   return out;
 }
@@ -6655,6 +6778,21 @@ window.fbBackgroundSync = function(){
     });
   }catch(e){ /* never let a sync error affect the app */ }
 };
+
+// Deletes every bill document from Firestore (not just the local array),
+// so a wipe-and-rebuild doesn't get silently undone by fbHydrateAndMerge
+// pulling the old bills back in on the next load. No-op if not signed in.
+window.fbDeleteAllBillDocs = function(){
+  if (!fbAuth.currentUser) return Promise.resolve();
+  return getDocs(collection(fbDb, fbBasePath, "bills")).then(function(snap){
+    if (snap.empty) return;
+    var batch = writeBatch(fbDb);
+    snap.forEach(function(d){ batch.delete(d.ref); });
+    return batch.commit();
+  }).then(function(){
+    fbLastSnapshot.bills = {};
+  });
+};
 </script>
 
 
@@ -6770,6 +6908,19 @@ window.fbBackgroundSync = function(){
     <div style="display:flex;gap:8px">
       <button onclick="document.getElementById('resetPinOv').style.display='none'" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>
       <button onclick="submitResetVerify()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Verify</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR ALL BILLS CONFIRM -->
+<div id="clearBillsOv" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--s1);border-radius:20px;padding:24px;width:100%;max-width:340px;border:1px solid var(--bd)">
+    <div style="font-size:16px;font-weight:700;color:var(--re);margin-bottom:8px">Clear all bills?</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="clearBillsMsg">This deletes every bill on file.</div>
+    <div id="clearBillsStatus" style="font-size:11px;color:var(--re);margin-bottom:12px;min-height:16px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.getElementById('clearBillsOv').style.display='none'" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>
+      <button onclick="clearAllBillsGo()" id="clearBillsConfirmBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--re);color:#fff;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Delete All</button>
     </div>
   </div>
 </div>

@@ -2693,32 +2693,25 @@ function renderAll(){renderHome();renderCal();renderSettings()}
 //  INSIGHT HELPERS 
 
 function getSameMonthLastYear(){
+  // Same number of days into this month, this year vs last year, both computed
+  // from real daily entries so the two sides are always on the same basis.
   var now=localNow();
-  var curM=now.getMonth()+1; // 1-12
-  var curY=now.getFullYear();
+  var curY=now.getFullYear(),curM=now.getMonth(),dayOfMonth=now.getDate();
   var lyY=curY-1;
-  var mStr=curM<10?"0"+curM:""+curM;
-  // Find bill for this month last year
-  var lyBill=null;
-  for(var i=0;i<ST.bills.length;i++){
-    var b=ST.bills[i];
-    if(b.s&&b.s.indexOf(lyY+"-"+mStr)===0){lyBill=b;break;}
+  var curStart=new Date(curY,curM,1);
+  var lyStart=new Date(lyY,curM,1);
+  var all=allData();
+  var curTotal=0,curDays=0,lyTotal=0,lyDays=0;
+  for(var i=0;i<all.length;i++){
+    var d=new Date(all[i].date+"T00:00:00");
+    if(d.getFullYear()===curY&&d.getMonth()===curM&&d.getDate()<=dayOfMonth){curTotal+=(all[i].net||0);curDays++;}
+    else if(d.getFullYear()===lyY&&d.getMonth()===curM&&d.getDate()<=dayOfMonth){lyTotal+=(all[i].net||0);lyDays++;}
   }
-  // Also get current month bill or running total
-  var curBill=null;
-  for(var i=0;i<ST.bills.length;i++){
-    var b=ST.bills[i];
-    if(b.s&&b.s.indexOf(curY+"-"+mStr)===0){curBill=b;break;}
-  }
-  // If no current bill, use running period data
-  if(!curBill){
-    var bd=billData();
-    if(bd.length>0){
-      var tot=0;for(var i=0;i<bd.length;i++)tot+=(bd[i].net||0);
-      curBill={actual:tot,p:"Current period",days:bd.length,dailyAvg:tot/bd.length};
-    }
-  }
-  return {ly:lyBill, cur:curBill, month:new Date(curY,curM-1,1).toLocaleDateString("en-AU",{month:"long"})};
+  return {
+    ly: lyDays>0?{actual:lyTotal,days:lyDays}:null,
+    cur: curDays>0?{actual:curTotal,days:curDays}:null,
+    month: curStart.toLocaleDateString("en-AU",{month:"long"})
+  };
 }
 
 

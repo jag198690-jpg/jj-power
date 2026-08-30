@@ -407,14 +407,6 @@ canvas{display:block;width:100%;height:56px}
   </div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">EXPORT DATA</div><button class="info-btn" onclick="showInfo('exportdata')">i</button></div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Download all your daily energy data as a CSV spreadsheet.</div>
-    <button onclick="exportCSV()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--cy);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Download CSV</button>
-<button onclick="exportJSON()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--gr);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:10px">Download Full Backup (JSON)</button>
-    <button onclick="exportDiagnostic()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--s2);border:1px solid var(--bd);color:var(--or);font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:10px">Export Diagnostic Report</button>
-  </div>
-
-  <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
     <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
     <div id="fbSyncLoggedOut">
@@ -2104,117 +2096,6 @@ function showDotInfo(iso,prod,exp,label){
 }
 function closeDotInfo(){document.getElementById("dotInfoOv").style.display="none";}
 
-function exportDiagnostic(){
-  var all=allData();
-  var now=localNow();
-  var todayStr=localDate(now);
-  var lines=[];
-  lines.push("=== J&J POWER DIAGNOSTIC REPORT ===");
-  lines.push("Generated: "+todayStr+" at "+now.getHours()+":"+String(now.getMinutes()).padStart(2,"0"));
-  lines.push("App version: solar8");
-  lines.push("");
-  lines.push("--- SETTINGS ---");
-  lines.push("Bill start: "+ST.billStart);
-  lines.push("Target: $"+ST.target);
-  lines.push("Shoulder rate: $"+(ST.rates?ST.rates.shoulder:"?"));
-  lines.push("Off-peak rate: $"+(ST.rates?ST.rates.offpeak:"?"));
-  lines.push("Supply charge: $"+(ST.rates?ST.rates.supply:"?"));
-  lines.push("Feed-in rate: $"+(ST.rates?ST.rates.feedin:"?"));
-  lines.push("");
-  lines.push("--- DATA SUMMARY ---");
-  lines.push("Total days in allData(): "+all.length);
-  lines.push("ST.entries count: "+(ST.entries?ST.entries.length:0));
-  if(all.length>0){lines.push("Data range: "+all[0].date+" to "+all[all.length-1].date);}
-  var missing=[];
-  var check=new Date(now);
-  check.setDate(check.getDate()-90);
-  var dataMap={};
-  for(var i=0;i<all.length;i++)dataMap[all[i].date]=true;
-  while(localDate(check)<todayStr){var ds=localDate(check);if(!dataMap[ds])missing.push(ds);check.setDate(check.getDate()+1);}
-  lines.push("Missing days (last 90): "+missing.length+(missing.length>0?" -- "+missing.slice(0,10).join(", ")+(missing.length>10?" ...":""):""));
-  lines.push("");
-  lines.push("--- BILLS ("+( ST.bills?ST.bills.length:0)+") ---");
-  if(ST.bills){for(var b=0;b<ST.bills.length;b++){var bl=ST.bills[b];lines.push(bl.p+": "+bl.s+" to "+bl.e+" ("+bl.days+"d) $"+bl.actual+" dailyAvg=$"+bl.dailyAvg);}}
-  lines.push("");
-  lines.push("--- LAST 14 ENTRIES ---");
-  var recent=all.slice(-14);
-  for(var r=0;r<recent.length;r++){var e=recent[r];lines.push(e.date+" grid="+e.usage+" fi="+e.feedin+" net=$"+e.net+" prod="+(e.production||0)+" ch="+(e.charge||0)+" dis="+(e.discharge||0));}
-  lines.push("");
-  lines.push("--- CLOUD ---");
-  lines.push("Firebase sync: "+(window.fbCurrentUserEmail?("signed in as "+window.fbCurrentUserEmail):"not signed in"));
-  lines.push("");
-  var actCount=ST.actual?Object.keys(ST.actual).length:0;
-  lines.push("--- RED ENERGY ACTUAL COSTS ---");
-  lines.push("Actual cost days stored: "+actCount);
-  if(actCount>0){var actDates=Object.keys(ST.actual).sort();lines.push("Range: "+actDates[0]+" to "+actDates[actDates.length-1]);}
-  lines.push("");
-  lines.push("=== END REPORT ===");
-  var txt=lines.join("\n");
-  var blob=new Blob([txt],{type:"text/plain"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;a.download="jjsolar-diagnostic-"+todayStr+".txt";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast("Diagnostic report downloaded");
-}
-function exportJSON(){
-  var raw=localStorage.getItem("solar8")||"{}";
-  var n=0;
-  try{var o=JSON.parse(raw);if(o&&o.entries)n=o.entries.length;}catch(e){}
-  var blob=new Blob([raw],{type:"application/json"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;
-  a.download="jj-power-backup-"+localDate()+".json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast(n>0?("Full backup exported ("+n+" days)"):"Full backup exported");
-}
-function exportCSV(){
-  var all=allData();
-  // Build a map of ST.entries for full field access
-  var entryMap={};
-  if(ST.entries){
-    for(var i=0;i<ST.entries.length;i++){
-      entryMap[ST.entries[i].date]=ST.entries[i];
-    }
-  }
-  var rows=["Date,Grid Use (kWh),Feed-in (kWh),Solar (kWh),Batt Charge (kWh),Batt Discharge (kWh),Net Cost ($),Rate,Note"];
-  for(var i=0;i<all.length;i++){
-    var d=all[i];
-    var e=entryMap[d.date];
-    var solar=e?(e.production||0):(d.production||0);
-    var charge=e?(e.charge||0):(d.charge||0);
-    var discharge=e?(e.discharge||0):(d.discharge||0);
-    var rate=e?(e.rate||""):"";
-    var note=(ST.notes&&ST.notes[d.date])?ST.notes[d.date].replace(/,/g," "):"";
-    rows.push([
-      d.date,
-      (d.usage||0).toFixed(2),
-      (d.feedin||0).toFixed(2),
-      solar.toFixed(2),
-      charge.toFixed(2),
-      discharge.toFixed(2),
-      (d.net||0).toFixed(4),
-      rate,
-      note
-    ].join(","));
-  }
-  var csv=rows.join("\n");
-  var blob=new Blob([csv],{type:"text/csv"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;
-  a.download="jj-power-data-"+localDate()+".csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast("Exported "+all.length+" days");
-}
 function closeNP(){document.getElementById("npOv").style.display="none"}
 function npBg(e){if(e.target.id==="npOv")closeNP()}
 
@@ -2449,10 +2330,6 @@ var INFO = {
   "settingsbill": {
     title: "Bill Period",
     body: "Set the start date of your current billing cycle and your monthly spending target. The bill start date tells the app when to begin counting your running total. The monthly target is used to calculate whether you are on track - the progress bar on the Home tab turns red if you are heading over."
-  },
-  "exportdata": {
-    title: "Export Data",
-    body: "Downloads all your daily energy data as a CSV file that opens in Excel or Numbers. Each row is one day with grid use, feed-in, solar production, battery charge and discharge, net cost, and any notes. Useful for your own records, sharing with your solar installer, or doing your own analysis."
   }
 };
 

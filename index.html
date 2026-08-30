@@ -345,22 +345,6 @@ canvas{display:block;width:100%;height:56px}
   <div class="sub" style="margin-bottom:18px">Tap any value to edit</div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="sub">BILL PERIOD</div><button class="info-btn" onclick="showInfo('settingsbill')">i</button></div>
-    <div class="setting-row">
-      <div><div class="setting-lbl">Bill Start Date</div><div class="setting-sub">Current period starts</div></div>
-      <input type="date" id="sBillStart" style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:7px 10px;outline:none" onchange="ST.billStart=this.value;sv();renderHome()">
-    </div>
-    <div class="setting-row" style="border-bottom:none">
-      <div><div class="setting-lbl">Monthly Target</div><div class="setting-sub">Alert threshold</div></div>
-      <div onclick="editVal('target','Monthly Target ($)',ST.target)">
-        <div class="setting-val" style="color:var(--or)" id="sTgt">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div id="targetSeasonNote" style="font-size:11px;padding:2px 2px 0"></div>
-  </div>
-
-  <div class="card">
     <div class="sub" style="margin-bottom:12px">SYSTEM</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><div class="sub">HYBRID INV</div><div style="font-size:13px;font-weight:600;margin-top:3px">SH5.0RS</div><div class="sub">5kW</div></div>
@@ -587,7 +571,7 @@ function escapeHtml(s){
 }
 var _s=ld();
 var ST={
-  billStart:"2026-06-01",target:100,entries:[],actual:{},
+  target:100,entries:[],actual:{},
   bills:null,rates:null,
   battery:{cost:24000,installDate:"2022-08-01"},
   system:{
@@ -597,7 +581,6 @@ var ST={
     priorSavings:13000
   }
 };
-if(_s.billStart)ST.billStart=_s.billStart;
 if(_s.target)ST.target=_s.target;
 if(_s.entries)ST.entries=_s.entries;
 if(_s.actual)ST.actual=_s.actual;
@@ -2127,8 +2110,7 @@ function saveNP(){
 var editCb=null;
 function editVal(key,title,cur){
   editCb=function(v){
-    if(key==="target")ST.target=v;
-    else if(key==="priorSavings"){if(!ST.system)ST.system={};ST.system.priorSavings=v;}
+    if(key==="priorSavings"){if(!ST.system)ST.system={};ST.system.priorSavings=v;}
     else if(key==="solarCost"){if(!ST.system)ST.system={};ST.system.solarCost=v;}
     else if(key==="batt1Cost"){if(!ST.system)ST.system={};ST.system.batt1Cost=v;}
     else if(key==="batt2Cost"){if(!ST.system)ST.system={};ST.system.batt2Cost=v;}
@@ -2178,8 +2160,12 @@ function allData(){
   arr.sort(function(a,b){return a.date<b.date?-1:1});
   return arr;
 }
+function currentMonthStart(){
+  var now=localNow();
+  return new Date(now.getFullYear(),now.getMonth(),1);
+}
 function billData(){
-  var bs=new Date(ST.billStart+"T00:00:00"),all=allData(),res=[];
+  var bs=currentMonthStart(),all=allData(),res=[];
   for(var i=0;i<all.length;i++){if(new Date(all[i].date+"T00:00:00")>=bs)res.push(all[i])}
   return res;
 }
@@ -2211,10 +2197,6 @@ var INFO = {
   "calendar": {
     title: "Calendar",
     body: "Each cell shows one day. The background colour indicates your net cost \u2014 deep green means a credit day, blue means very low cost, amber and orange mean moderate spending, red means high usage. The small dot shows solar production vs what your 10kW Dubbo system should generate that month \u2014 green means excellent output (\u226590% of expected), yellow means moderate (\u226560%), orange means low (\u226530%), red means very poor (<30%). In May your system should produce around 38 kWh on a good day, so most winter days will show orange or red. The temperature and rainfall comes from Dubbo Airport weather data. Tap any day to enter or edit its data."
-  },
-  "settingsbill": {
-    title: "Bill Period",
-    body: "Set the start date of your current billing cycle and your monthly spending target. The bill start date tells the app when to begin counting your running total. The monthly target is used to calculate whether you are on track - the progress bar on the Home tab turns red if you are heading over."
   }
 };
 
@@ -2867,7 +2849,7 @@ function renderHome(){
   var avg=bd.length>0?total/bd.length:0;
   var s7=0;for(var j=Math.max(0,bd.length-7);j<bd.length;j++)s7+=(bd[j].net||0);
   var proj=avg*30,tgt=ST.target||100,pct=Math.min(100,(total/tgt)*100);
-  var bs=new Date(ST.billStart+"T00:00:00");
+  var bs=currentMonthStart();
   var daysSince=Math.floor((localNow()-bs)/86400000)+1;
   document.getElementById("hBill").innerHTML=total<0?"-$"+Math.abs(total).toFixed(2):"$"+total.toFixed(2);
   document.getElementById("hDays").textContent=daysSince+" days in period - "+bd.length+" days of data";
@@ -3406,15 +3388,12 @@ function lockRateStepAll(){
 
 // SETTINGS
 function renderSettings(){
-  var el=document.getElementById("sBillStart");if(el)el.value=ST.billStart||"";
-  document.getElementById("sTgt").textContent="$"+(ST.target||100);
   // Payback settings
   var sys=ST.system||{};
   var sSolar=document.getElementById("sSolarCost");if(sSolar)sSolar.textContent="$"+Math.round(sys.solarCost||13000).toLocaleString();
   var sB1=document.getElementById("sBatt1Cost");if(sB1)sB1.textContent="$"+Math.round(sys.batt1Cost||13000).toLocaleString();
   var sB2=document.getElementById("sBatt2Cost");if(sB2)sB2.textContent="$"+Math.round(sys.batt2Cost||10000).toLocaleString();
   var sPrior=document.getElementById("sPriorSavings");if(sPrior)sPrior.textContent="$"+Math.round(sys.priorSavings||13000).toLocaleString();
-  renderTargetSeasonNote();
   renderFbLastSynced();
 }
 
@@ -3438,27 +3417,6 @@ function renderFbLastSynced(){
   var txt=fbLastSyncedAgoText();
   el.textContent=txt;
   el.style.color=(txt.indexOf("Not signed in")===0||txt.indexOf("not completed")>=0)?"var(--re)":"var(--mu)";
-}
-
-var SEASON_MONTHS={12:"summer",1:"summer",2:"summer",3:"autumn",4:"autumn",5:"autumn",6:"winter",7:"winter",8:"winter",9:"spring",10:"spring",11:"spring"};
-function renderTargetSeasonNote(){
-  var el=document.getElementById("targetSeasonNote");
-  if(!el)return;
-  var bd=billData();
-  if(!bd.length){el.textContent="";return;}
-  var total=0;for(var i=0;i<bd.length;i++)total+=(bd[i].net||0);
-  var avg=total/bd.length,proj=avg*30,tgt=ST.target||100;
-  var now=localNow(),mo=now.getMonth()+1;
-  var moName=now.toLocaleDateString("en-AU",{month:"short",year:"numeric"});
-  var season=SEASON_MONTHS[mo]||"";
-  if(proj<=tgt){el.textContent="";return;}
-  if(season==="winter"){
-    el.textContent=moName+" is tracking ~$"+Math.round(proj)+" vs your $"+tgt+" target - winter months typically run higher.";
-    el.style.color="var(--am)";
-  } else {
-    el.textContent=moName+" is tracking ~$"+Math.round(proj)+" vs your $"+tgt+" target.";
-    el.style.color="var(--re)";
-  }
 }
 
 // UI
@@ -3590,7 +3548,6 @@ function fbBuildRateDocs(ST){
 
 function fbBuildSettingsDoc(ST){
   return {
-    billStart: ST.billStart!==undefined?ST.billStart:null,
     target: ST.target!==undefined?ST.target:null,
     battery: ST.battery||null,
     system: ST.system||null,
@@ -3635,7 +3592,6 @@ async function fbHydrateAndMerge(){
   if (typeof window.dedupeBills === "function") window.dedupeBills();
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
   if (settings){
-    if (_s.billStart===undefined && settings.billStart!==undefined && settings.billStart!==null) ST.billStart = settings.billStart;
     if (_s.target===undefined && settings.target!==undefined && settings.target!==null) ST.target = settings.target;
     if (_s.battery===undefined && settings.battery) ST.battery = settings.battery;
     if (_s.system===undefined && settings.system) ST.system = Object.assign({}, ST.system, settings.system);

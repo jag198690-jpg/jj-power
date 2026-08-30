@@ -155,8 +155,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 /* WEATHER */
 .cwx{font-size:9px;margin-top:3px;line-height:1.4;text-align:center;color:rgba(255,255,255,.75);font-weight:500}
 .info-btn{background:var(--s2);border:1px solid var(--bd);border-radius:50%;width:20px;height:20px;color:var(--mu);font-size:10px;cursor:pointer;padding:0;line-height:18px;text-align:center;flex-shrink:0;font-family:-apple-system,sans-serif;transition:background .15s}.info-btn:active{background:var(--bd)}
-.trng{padding:6px 14px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;font-family:-apple-system,sans-serif;transition:all .15s}
-.trng.on{background:var(--or);border-color:var(--or);color:#000}
 .cwx .rain{color:#60a5fa}
 .cwx .wxAdd{color:rgba(255,255,255,.3);font-weight:700}
 /* TOAST */
@@ -178,7 +176,6 @@ canvas{display:block;width:100%;height:56px}
 <nav class="nav">
   <button class="nt on" onclick="go('home')" id="t-home"><span class="ic">&#9728;</span>HOME</button>
   <button class="nt" onclick="go('cal')" id="t-cal"><span class="ic">&#128197;</span>CALENDAR</button>
-  <button class="nt" onclick="go('trends')" id="t-trends"><span class="ic">&#128200;</span>TRENDS</button>
   <button class="nt" onclick="go('settings')" id="t-settings"><span class="ic">&#9881;</span>SETTINGS</button>
 </nav>
 
@@ -430,11 +427,6 @@ canvas{display:block;width:100%;height:56px}
   </a>
 </div>
 
-
-<!-- ??? TRENDS ??? -->
-<div class="sc" id="sc-trends">
-  <div id="tfFlow"></div>
-</div>
 
 <!-- ??? SETTINGS ??? -->
 <div class="sc" id="sc-settings">
@@ -3865,7 +3857,7 @@ function startApp(){
   setTimeout(function(){fetchWeather(2026,1,null);},800);
   setTimeout(function(){fetchWeather(2025,4,null);},1600);
 }
-function renderAll(){renderHome();renderCal();renderTrends();renderSettings()}
+function renderAll(){renderHome();renderCal();renderSettings()}
 
 //  INSIGHT HELPERS 
 
@@ -4993,192 +4985,6 @@ function calGoTo(yr,mo){
 
 
 
-// TRENDS
-var trendRange="all";
-
-function getTrendMonthlyData(){
-  var all=allData();
-  var cutoff="";
-  if(trendRange==="12"){var d=new Date();d.setMonth(d.getMonth()-12);cutoff=localDate(d).substring(0,7);}
-  var monthly={};
-  for(var i=0;i<all.length;i++){
-    var m=all[i].date.substring(0,7);
-    if(cutoff&&m<cutoff)continue;
-    if(!monthly[m])monthly[m]={u:0,f:0,p:0,ch:0,dis:0,days:0};
-    monthly[m].u+=all[i].usage||0;
-    monthly[m].f+=all[i].feedin||0;
-    monthly[m].p+=all[i].production||0;
-    monthly[m].ch+=all[i].charge||0;
-    monthly[m].dis+=all[i].discharge||0;
-    monthly[m].days++;
-  }
-  if(typeof SG_MONTHLY!=="undefined"){
-    var sgkeys=Object.keys(SG_MONTHLY);
-    for(var si=0;si<sgkeys.length;si++){
-      var sk=sgkeys[si];
-      if(cutoff&&sk<cutoff)continue;
-      if(monthly[sk]&&monthly[sk].p===0&&SG_MONTHLY[sk].prod>0){
-        monthly[sk].p=SG_MONTHLY[sk].prod;
-        monthly[sk].ch=SG_MONTHLY[sk].ch||0;
-        monthly[sk].dis=SG_MONTHLY[sk].dis||0;
-      }
-    }
-  }
-  return monthly;
-}
-
-var EX_SEASON_COLS=["rgba(251,191,36,.85)","rgba(52,211,153,.8)","rgba(96,165,250,.85)","rgba(251,146,60,.85)"];
-
-function seasonOf(mo){
-  if(mo===12||mo<=2)return 0;
-  if(mo>=3&&mo<=5)return 1;
-  if(mo>=6&&mo<=8)return 2;
-  return 3;
-}
-
-var tfMetric="cost";
-var tfSeason="all";
-var TF_SEASON_IDX={summer:0,autumn:1,winter:2,spring:3};
-var TF_MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-var TF_META={
- cost:{name:"Net cost per month",unit:"$",lower:true,take:"Winter carries the cost - grid use climbs when solar drops."},
- solar:{name:"Solar production (kWh)",unit:"",lower:false,take:"Summer generation is roughly 3x winter - as expected in Dubbo."},
- home:{name:"Home consumption (kWh)",unit:"",lower:true,take:"Use stays high year round; climbs in the cold months."},
- battery:{name:"Battery charged (kWh)",unit:"",lower:false,take:"Fills right up in summer; barely tops up in winter."},
- feedin:{name:"Feed-in earnings ($/mo)",unit:"$",lower:false,take:"A summer earner - near zero in winter at 4c. Approx (feed-in kWh times 4c)."},
- exported:{name:"Exported to grid (kWh)",unit:"",lower:false,take:"Big surplus in summer once the battery is full."},
- rainfall:{name:"Rainfall impact on solar",unit:"",lower:false,bands:true,take:"Heavy-rain days make about half what a dry day does."},
- selfsuff:{name:"Self-sufficiency (%)",unit:"%",lower:false,target:95,take:"Above the 95% target most of the year; dips only in deep winter."}
-};
-var TF_CHIPS=[["cost","Cost"],["solar","Solar"],["home","Home"],["battery","Battery"],["feedin","Feed-in"],["exported","Exported"],["rainfall","Rainfall"],["selfsuff","Self-suff"]];
-var TF_SEASONS=[["summer","Summer",EX_SEASON_COLS[0]],["autumn","Autumn",EX_SEASON_COLS[1]],["winter","Winter",EX_SEASON_COLS[2]],["spring","Spring",EX_SEASON_COLS[3]]];
-var TF_CSS=".tf-wrap{margin-bottom:18px}.tf-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px}.tf-sum{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:16px;overflow:hidden;margin-bottom:14px}.tf-sum>div{background:var(--s1);padding:11px 6px;text-align:center}.tf-sum .k{font-size:9px;letter-spacing:.3px;text-transform:uppercase;color:var(--mu);margin-bottom:4px}.tf-sum .v{font-size:18px;font-weight:800;line-height:1;color:var(--tx)}.tf-sum .s{font-size:9px;color:var(--di);margin-top:3px}.tf-chart{display:flex;flex-direction:column;gap:8px}.tf-row{display:flex;align-items:center;gap:10px}.tf-lb{width:46px;flex:0 0 auto;font-size:11px;color:var(--mu);text-align:right;white-space:nowrap}.tf-track{flex:1;height:20px;background:var(--s2);border-radius:6px;position:relative}.tf-fill{display:block;height:100%;border-radius:6px}.tf-mark{position:absolute;top:0;bottom:0;width:2px;background:var(--tx);opacity:.35}.tf-val{width:62px;flex:0 0 auto;font-size:12px;font-weight:700;color:var(--tx);text-align:right}.tf-legend{display:flex;flex-wrap:wrap;gap:11px;margin-top:14px;padding-top:11px;border-top:1px solid var(--bd)}.tf-legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mu)}.tf-legend i{width:9px;height:9px;border-radius:2px;display:inline-block}.tf-take{font-size:12px;color:var(--mu);line-height:1.5;margin-top:12px}";
-
-function tfCol(key){var mo=parseInt(key.substring(5,7),10);return EX_SEASON_COLS[seasonOf(mo)];}
-function tfMonLabel(key){
-  var mo=parseInt(key.substring(5,7),10);
-  var name=TF_MON[mo-1]||key;
-  if(trendRange==="all")return name+" '"+key.substring(2,4);
-  return name;
-}
-function tfFmt(meta,v){if(meta.unit==="$")return "$"+Math.round(v);if(meta.unit==="%")return Math.round(v)+"%";return Math.round(v).toLocaleString();}
-function tfSuffCol(v){return v>=95?"var(--gr)":(v>=85?"var(--am)":"var(--re)");}
-
-function tfMonthlySeries(metric){
-  var md=getTrendMonthlyData();var keys=Object.keys(md).sort();var out=[];
-  var curYM=localDate(new Date()).substring(0,7);
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i],d=md[k],v=0;
-    if(k===curYM)continue;
-    if(metric==="solar")v=d.p;
-    else if(metric==="battery")v=d.ch;
-    else if(metric==="exported")v=d.f;
-    else if(metric==="feedin")v=d.f*0.04;
-    else if(metric==="home")v=d.u+d.p-d.f-d.ch+d.dis;
-    else if(metric==="selfsuff"){var hm=d.u+d.p-d.f-d.ch+d.dis;v=hm>0?(1-d.u/hm)*100:0;}
-    out.push({key:k,label:tfMonLabel(k),col:tfCol(k),val:v});
-  }
-  return out;
-}
-function tfCostSeries(){
-  var bills=ST.bills?ST.bills.slice():[];var cutoff="";
-  if(trendRange==="12"){var db=new Date();db.setMonth(db.getMonth()-12);cutoff=localDate(db).substring(0,7);}
-  var curYM=localDate(new Date()).substring(0,7);
-  var pairs=[];
-  for(var i=0;i<bills.length;i++){var b=bills[i];if(!b.s)continue;var mk=b.s.substring(0,7);if(cutoff&&mk<cutoff)continue;if(mk===curYM)continue;pairs.push({key:mk,label:tfMonLabel(mk),col:tfCol(mk),val:b.actual||0});}
-  pairs.sort(function(a,b){return a.key<b.key?-1:(a.key>b.key?1:0);});
-  return pairs;
-}
-function tfRainBands(){
-  var all=allData();var sums=[0,0,0,0],cnts=[0,0,0,0];
-  for(var i=0;i<all.length;i++){
-    var d=all[i];var wx=(ST.wx&&ST.wx[d.date])?ST.wx[d.date]:null;
-    if(!wx||wx.rain===undefined||wx.rain===null)continue;
-    var prod=d.production||0;if(prod<=0)continue;
-    var rain=wx.rain||0;var bi=rain===0?0:(rain<5?1:(rain<15?2:3));
-    sums[bi]+=prod;cnts[bi]++;
-  }
-  var names=["Dry","Light","Moderate","Heavy"];var out=[];
-  for(var b=0;b<4;b++){out.push({label:names[b],col:"var(--bl)",val:cnts[b]?sums[b]/cnts[b]:0});}
-  return out;
-}
-function tfSummary(meta,series,szLabel){
-  if(meta.bands){
-    var dry=series[0].val,heavy=series[3].val,drop=dry>0?Math.round((1-heavy/dry)*100):0;
-    return '<div class="tf-sum"><div><div class="k">Dry day</div><div class="v" style="color:var(--gr)">'+Math.round(dry)+'</div><div class="s">kWh</div></div><div><div class="k">Heavy day</div><div class="v" style="color:var(--re)">'+Math.round(heavy)+'</div><div class="s">kWh</div></div><div><div class="k">Drop</div><div class="v" style="color:var(--am)">'+drop+'%</div><div class="s">wet vs dry</div></div><div><div class="k">Bands</div><div class="v">4</div><div class="s">by rain</div></div></div>';
-  }
-  var total=0,bi=0,wi=0;
-  for(var i=0;i<series.length;i++){total+=series[i].val;if(meta.lower){if(series[i].val<series[bi].val)bi=i;if(series[i].val>series[wi].val)wi=i;}else{if(series[i].val>series[bi].val)bi=i;if(series[i].val<series[wi].val)wi=i;}}
-  var avg=series.length?total/series.length:0;
-  var totLabel=meta.unit==="%"?"AVG":"TOTAL";var totVal=meta.unit==="%"?tfFmt(meta,avg):tfFmt(meta,total);
-  var bl=series.length?series[bi].label:"-";var wl=series.length?series[wi].label:"-";
-  var scope=(trendRange==="12"?"12 mo":"all")+(szLabel?(" - "+szLabel):"");
-  return '<div class="tf-sum"><div><div class="k">'+totLabel+'</div><div class="v">'+totVal+'</div><div class="s">'+scope+'</div></div><div><div class="k">Avg / mo</div><div class="v" style="color:var(--bl)">'+tfFmt(meta,avg)+'</div><div class="s">&nbsp;</div></div><div><div class="k">Best</div><div class="v" style="color:var(--gr)">'+(series.length?tfFmt(meta,series[bi].val):"-")+'</div><div class="s">'+bl+'</div></div><div><div class="k">Worst</div><div class="v" style="color:var(--re)">'+(series.length?tfFmt(meta,series[wi].val):"-")+'</div><div class="s">'+wl+'</div></div></div>';
-}
-function tfBuild(el){
-  var meta=TF_META[tfMetric];
-  var series=meta.bands?tfRainBands():(tfMetric==="cost"?tfCostSeries():tfMonthlySeries(tfMetric));
-  var szFilter=(!meta.bands&&tfSeason!=="all"&&tfSeason!=="grouped")?tfSeason:null;
-  var szGrouped=(!meta.bands&&tfSeason==="grouped");
-  if(szFilter){
-    var wantIdx=TF_SEASON_IDX[szFilter];
-    series=series.filter(function(s){return seasonOf(parseInt(s.key.substring(5,7),10))===wantIdx;});
-  } else if(szGrouped){
-    series=series.slice().sort(function(a,b){
-      var sa=seasonOf(parseInt(a.key.substring(5,7),10));
-      var sb=seasonOf(parseInt(b.key.substring(5,7),10));
-      if(sa!==sb)return sa-sb;
-      return a.key<b.key?-1:(a.key>b.key?1:0);
-    });
-  }
-  var mx=0;for(var i=0;i<series.length;i++){if(series[i].val>mx)mx=series[i].val;}
-  if(meta.unit==="%")mx=100;
-  if(meta.target&&mx<meta.target)mx=meta.target;
-  var chips="";for(var c=0;c<TF_CHIPS.length;c++){var on=TF_CHIPS[c][0]===tfMetric;chips+='<button class="trng'+(on?" on":"")+'" style="flex:0 0 auto;white-space:nowrap" onclick="tfPick(\''+TF_CHIPS[c][0]+'\')">'+TF_CHIPS[c][1]+'</button>';}
-  var szChips="";
-  if(!meta.bands){
-    var grpOn=tfSeason==="grouped";
-    szChips+='<button class="trng'+(grpOn?" on":"")+'" style="flex:0 0 auto;white-space:nowrap" onclick="tfSeasonPick(\'grouped\')">By Season</button>';
-    for(var sz=0;sz<TF_SEASONS.length;sz++){
-      var szId=TF_SEASONS[sz][0],szOn=tfSeason===szId;
-      szChips+='<button class="trng'+(szOn?" on":"")+'" style="flex:0 0 auto;white-space:nowrap'+(szOn?";background:"+TF_SEASONS[sz][2]+";color:#000":"")+'" onclick="tfSeasonPick(\''+szId+'\')">'+TF_SEASONS[sz][1]+'</button>';
-    }
-  }
-  var rows="";
-  var lastGroupSeason=-1;
-  for(var r=0;r<series.length;r++){
-    var s=series[r];
-    if(szGrouped){
-      var curSeason=seasonOf(parseInt(s.key.substring(5,7),10));
-      if(curSeason!==lastGroupSeason){
-        var szNames=["Summer","Autumn","Winter","Spring"];
-        rows+='<div style="font-size:10px;font-weight:700;letter-spacing:.05em;color:'+EX_SEASON_COLS[curSeason]+';margin:'+(r===0?"0":"12px")+' 0 2px">'+szNames[curSeason].toUpperCase()+'</div>';
-        lastGroupSeason=curSeason;
-      }
-    }
-    var w=mx>0?Math.max(2,Math.round(s.val/mx*100)):2;
-    var mark=meta.target?'<div class="tf-mark" style="left:'+Math.round(meta.target/mx*100)+'%"></div>':"";
-    var vcol=(tfMetric==="selfsuff")?(' style="color:'+tfSuffCol(s.val)+'"'):"";
-    rows+='<div class="tf-row"><div class="tf-lb">'+s.label+'</div><div class="tf-track"><div class="tf-fill" style="width:'+w+'%;background:'+s.col+'"></div>'+mark+'</div><div class="tf-val"'+vcol+'>'+tfFmt(meta,s.val)+'</div></div>';
-  }
-  if(!series.length)rows='<div style="padding:14px;text-align:center;font-size:12px;color:var(--mu)">No data for this season yet.</div>';
-  var legend=meta.bands?'<div class="tf-legend"><span><i style="background:var(--bl)"></i>Avg solar per day by rainfall</span></div>':'<div class="tf-legend"><span><i style="background:'+EX_SEASON_COLS[0]+'"></i>Summer</span><span><i style="background:'+EX_SEASON_COLS[1]+'"></i>Autumn</span><span><i style="background:'+EX_SEASON_COLS[2]+'"></i>Winter</span><span><i style="background:'+EX_SEASON_COLS[3]+'"></i>Spring</span>'+(meta.target?'<span><i style="background:var(--tx);opacity:.35"></i>95% target</span>':"")+'</div>';
-  var range12=trendRange==="12";
-  var takeText=meta.take;
-  if(!range12&&meta.unit==="$"&&rateHistoryThin())takeText+=" Priced at today's rates for all history - add past rate changes in Settings for accuracy.";
-  var szLabel=szFilter?TF_SEASONS[TF_SEASON_IDX[szFilter]][1]:"";
-  var szRow=meta.bands?"":'<div class="tf-chips" style="margin-bottom:10px">'+szChips+'</div>';
-  el.innerHTML='<style>'+TF_CSS+'</style><div class="tf-wrap"><div class="row" style="margin-bottom:14px"><h1>Trends</h1><div style="display:flex;gap:6px"><button class="trng'+(range12?" on":"")+'" onclick="tfRange(\'12\')">12M</button><button class="trng'+(range12?"":" on")+'" onclick="tfRange(\'all\')">All</button></div></div><div class="tf-chips">'+chips+'</div>'+szRow+tfSummary(meta,series,szLabel)+'<div class="sub" style="margin-bottom:8px">'+meta.name.toUpperCase()+(szLabel?" - "+szLabel.toUpperCase():"")+'</div><div class="card"><div class="tf-chart">'+rows+'</div>'+legend+'<div class="tf-take">'+takeText+'</div></div></div>';
-}
-function tfPick(id){tfMetric=id;var el=document.getElementById("tfFlow");if(el){try{tfBuild(el);}catch(e){}}}
-function tfSeasonPick(id){tfSeason=(tfSeason===id)?"all":id;var el=document.getElementById("tfFlow");if(el){try{tfBuild(el);}catch(e){}}}
-function tfRange(r){trendRange=r;renderTrends();}
-function tfSandbox(){var host=document.getElementById("sc-trends");if(!host)return;var el=document.getElementById("tfFlow");if(!el){el=document.createElement("div");el.id="tfFlow";host.insertBefore(el,host.firstChild);}tfBuild(el);}
-
-function renderTrends(){
-  try{tfSandbox();}catch(e){}
-}
-
 function closeMonthDetail(){document.getElementById("monthDetailOv").style.display="none";}
 
 function mdAgg(ym,capDay){
@@ -5412,7 +5218,7 @@ function renderTargetSeasonNote(){
 
 // UI
 function go(t){
-  var tabs=["home","cal","trends","settings"];
+  var tabs=["home","cal","settings"];
   for(var i=0;i<tabs.length;i++){
     document.getElementById("sc-"+tabs[i]).className="sc"+(tabs[i]===t?" on":"");
     document.getElementById("t-"+tabs[i]).className="nt"+(tabs[i]===t?" on":"");

@@ -126,6 +126,36 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
   white-space:nowrap;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 canvas{display:block;width:100%;height:56px}
+/* CHARGES PER MONTH (Home, collapsible) */
+.cpm-head{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.cpm-head span{white-space:nowrap;order:1}
+.cpm-head::after{content:"";flex:1;height:1px;background:var(--bd);order:2}
+.cpm-chevron{order:3;background:var(--s2);border:1px solid var(--bd);border-radius:50%;width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--mu);cursor:pointer;padding:0;transition:transform .2s,background .15s}
+.cpm-chevron svg{transition:transform .2s}
+.cpm-card.expanded .cpm-chevron svg{transform:rotate(180deg)}
+.cpm-peek{font-size:12px;color:var(--mu);margin:-6px 0 2px;font-variant-numeric:tabular-nums}
+.cpm-card.expanded .cpm-peek{display:none}
+.cpm-body{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .25s ease,opacity .2s ease}
+.cpm-inner{overflow:hidden;min-height:0}
+.cpm-card.expanded .cpm-body{grid-template-rows:1fr;opacity:1;margin-top:2px}
+.cpm-year-chips{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.cpm-year-chip{padding:6px 12px;border-radius:20px;border:1.5px solid var(--bd);background:var(--s2);color:var(--mu);font-family:-apple-system,sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.cpm-year-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--di)}
+.cpm-month-list{display:flex;flex-direction:column}
+.cpm-month-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.cpm-month-row:last-child{border-bottom:none}
+.cpm-month-name{width:32px;flex-shrink:0;font-size:12.5px;font-weight:700;color:var(--tx);padding-top:3px;letter-spacing:.01em}
+.cpm-year-bars{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.cpm-year-bar-row{display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cpm-bar-track{position:relative;flex:1;height:17px;background:var(--s2);border-radius:4px;overflow:hidden;min-width:0}
+.cpm-bar-fill{height:100%;border-radius:4px;transition:filter .12s}
+.cpm-year-bar-row:active .cpm-bar-fill{filter:brightness(1.22)}
+.cpm-bar-year{position:absolute;left:5px;top:50%;transform:translateY(-50%);font-size:8.5px;font-weight:800;color:#fff;letter-spacing:.02em;background:rgba(0,0,0,.32);padding:1px 5px;border-radius:4px;pointer-events:none;line-height:1.3;font-variant-numeric:tabular-nums}
+.cpm-bar-value{width:70px;flex-shrink:0;text-align:right;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--tx)}
+.cpm-year-bar-row.empty{cursor:default;opacity:.4}
+.cpm-year-bar-row.empty .cpm-bar-value{font-size:10.5px;font-weight:600;color:var(--di)}
+.cpm-year-bar-row.empty .cpm-bar-track{background:none;border:1px dashed var(--bd)}
+.cpm-legend-note{font-size:10.5px;color:var(--di);margin-top:16px;padding-top:12px;border-top:1px solid var(--bd);line-height:1.5}
 </style>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNDAwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJnIiBjeD0iNTAlIiBjeT0iMzglIiByPSI2MiUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMwZDAwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwZiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ic2ciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmYjhjM2EiIHN0b3Atb3BhY2l0eT0iMC40Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZiOGMzYSIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0idXJsKCNiZykiLz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmI4YzNhIiBzdHJva2Utd2lkdGg9IjMiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjExOCIgcj0iNzAiIGZpbGw9InVybCgjc2cpIi8+CiAgPGcgc3Ryb2tlPSIjZmJiZjI0IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8bGluZSB4MT0iMjAwIiB5MT0iNDQiIHgyPSIyMDAiIHkyPSI2MiIvPgogICAgPGxpbmUgeDE9IjI0OCIgeTE9IjU3IiB4Mj0iMjM4IiB5Mj0iNzIiLz4KICAgIDxsaW5lIHgxPSIyNzgiIHkxPSI5NiIgeDI9IjI2MiIgeTI9IjEwNSIvPgogICAgPGxpbmUgeDE9IjE1MiIgeTE9IjU3IiB4Mj0iMTYyIiB5Mj0iNzIiLz4KICAgIDxsaW5lIHgxPSIxMjIiIHkxPSI5NiIgeDI9IjEzOCIgeTI9IjEwNSIvPgogICAgPGxpbmUgeDE9IjI4OCIgeTE9IjE0MCIgeDI9IjI3MCIgeTI9IjE0NCIvPgogICAgPGxpbmUgeDE9IjExMiIgeTE9IjE0MCIgeDI9IjEzMCIgeTI9IjE0NCIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIxMTgiIHI9IjM4IiBmaWxsPSIjZmI4YzNhIi8+CiAgPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTE4IiByPSIyNyIgZmlsbD0iI2ZiYmYyNCIvPgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjExOCIgcj0iMTUiIGZpbGw9IiNmZWY5ZWUiLz4KICA8cmVjdCB4PSIxMjgiIHk9IjI0MCIgd2lkdGg9IjE0NCIgaGVpZ2h0PSI4OCIgcng9IjUiIGZpbGw9IiMwODEyMWUiLz4KICA8cG9seWdvbiBwb2ludHM9IjExMiwyNDQgMjAwLDE3MCAyODgsMjQ0IiBmaWxsPSIjMGMxYzJlIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIxMTIsMjQ0IDIwMCwxNzAgMjg4LDI0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8cmVjdCB4PSIxNTMiIHk9IjIwMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIxNzgiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIyMDIiIHk9IjE4MSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIyMjUiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8ZyBmaWxsPSIjMjJkM2VlIiBvcGFjaXR5PSIwLjE1Ij4KICAgIDxyZWN0IHg9IjE1MyIgeT0iMjAwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTMiIHJ4PSIxIi8+CiAgICA8cmVjdCB4PSIxNzgiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIvPgogICAgPHJlY3QgeD0iMjAyIiB5PSIxODEiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxMyIgcng9IjEiLz4KICAgIDxyZWN0IHg9IjIyNSIgeT0iMTkwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTMiIHJ4PSIxIi8+CiAgPC9nPgogIDxyZWN0IHg9IjE4MiIgeT0iMjcyIiB3aWR0aD0iMzYiIGhlaWdodD0iNTYiIHJ4PSIzIiBmaWxsPSIjMGMxYzJlIiBzdHJva2U9IiMxYTMwNDgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMjEzIiBjeT0iMzAyIiByPSIzIiBmaWxsPSIjZmI4YzNhIi8+CiAgPHJlY3QgeD0iMTM2IiB5PSIyNTgiIHdpZHRoPSIyOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmYjhjM2EiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0iI2ZiOGMzYSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHJlY3QgeD0iMjM2IiB5PSIyNTgiIHdpZHRoPSIyOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmYjhjM2EiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0iI2ZiOGMzYSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPGxpbmUgeDE9IjkwIiB5MT0iMzMwIiB4Mj0iMzEwIiB5Mj0iMzMwIiBzdHJva2U9IiMxZTMwNDgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iMjAwIiB5PSIzNTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmYjhjM2EiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLHNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiI+SkogUE9XRVI8L3RleHQ+CiAgPHRleHQgeD0iMjAwIiB5PSIzNzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iOSIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzNhNTU3MCIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGxldHRlci1zcGFjaW5nPSI0Ij5EVUJCTyBOU1c8L3RleHQ+Cjwvc3ZnPg==">
   <meta name="apple-mobile-web-app-title" content="J&amp;J Power">
@@ -224,6 +254,20 @@ canvas{display:block;width:100%;height:56px}
       </div>
       <div style="font-size:11px;font-weight:600;margin-top:6px" id="hVsLastYear"></div>
     </div>
+  </div>
+
+  <!-- CHARGES PER MONTH -->
+  <div class="card cpm-card" id="cpmCard">
+    <div class="cpm-head" id="cpmHead" onclick="toggleCpm()">
+      <span>CHARGES PER MONTH</span>
+      <button class="cpm-chevron" id="cpmChevron" aria-label="Expand"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="cpm-peek" id="cpmPeek"></div>
+    <div class="cpm-body" id="cpmBody"><div class="cpm-inner">
+      <div class="cpm-year-chips" id="cpmYearChips"></div>
+      <div class="cpm-month-list" id="cpmMonthList"></div>
+      <div class="cpm-legend-note">Tap any bar to open that month's full breakdown. Months with no data for a year are left blank, not estimated.</div>
+    </div></div>
   </div>
 
   <!-- WEATHER FORECAST -->
@@ -2814,6 +2858,7 @@ function renderHome(){
   if(todayEntry||histToday){statusEl.innerHTML='<span class="pill pill-gr">OK Entered</span>'}
   else{statusEl.innerHTML='<span class="pill pill-or">o Not yet</span>'}
   try{renderInsights();}catch(e){}
+  try{renderChargesPerMonth();}catch(e){}
 }
 
 function renderInsights(){
@@ -3114,6 +3159,131 @@ function mdAgg(ym,capDay){
     if(wx&&wx.rain!==null&&wx.rain!==undefined){a.rain+=wx.rain;a.raindata=true;if(wx.rain>1)a.wet++;}
   }
   return a;
+}
+
+// CHARGES PER MONTH (Home, collapsible)
+var CPM_MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var cpmActiveYears={};
+
+function cpmMonthlyTotals(){
+  var all=allData(),m={};
+  for(var i=0;i<all.length;i++){
+    var ym=all[i].date.substring(0,7);
+    if(!m[ym])m[ym]=0;
+    m[ym]+=(all[i].net||0);
+  }
+  return m;
+}
+
+function cpmYears(monthly){
+  var seen={},ys=[];
+  for(var k in monthly)seen[k.substring(0,4)]=true;
+  for(var y in seen)ys.push(y);
+  ys.sort();
+  return ys;
+}
+
+function cpmColorForYear(y,years){
+  if(y===years[years.length-1])return "var(--or)";
+  var tokens=["var(--bl)","var(--gr)","var(--cy)","var(--am)"];
+  var extra=["#a78bfa","#f472b6","#94a3b8","#4ade80","#38bdf8","#fb923c","#c084fc","#2dd4bf"];
+  var idx=years.indexOf(y);
+  if(idx<tokens.length)return tokens[idx];
+  return extra[(idx-tokens.length)%extra.length];
+}
+
+function cpmEnsureActiveYears(years){
+  for(var i=0;i<years.length;i++){
+    var y=years[i];
+    if(!(y in cpmActiveYears))cpmActiveYears[y]=(i>=years.length-2);
+  }
+}
+
+function buildCpmYearChips(years){
+  var el=document.getElementById("cpmYearChips");
+  if(!el)return;
+  var html="";
+  for(var i=0;i<years.length;i++){
+    var y=years[i],on=cpmActiveYears[y],col=cpmColorForYear(y,years);
+    html+='<button class="cpm-year-chip" data-year="'+y+'" style="'+(on?("background:"+col+";border-color:"+col+";color:#0a0a0a"):"")+'" onclick="cpmToggleYear(\''+y+'\')">'
+      +'<span class="dot" style="background:'+(on?"#0a0a0a":col)+'"></span>'+y+'</button>';
+  }
+  el.innerHTML=html;
+}
+
+function cpmMax(monthly,years){
+  var max=0;
+  for(var m=1;m<=12;m++){
+    var mk=(m<10?"0":"")+m;
+    for(var i=0;i<years.length;i++){
+      if(!cpmActiveYears[years[i]])continue;
+      var v=monthly[years[i]+"-"+mk];
+      if(v&&v>max)max=v;
+    }
+  }
+  return max>0?max:1;
+}
+
+function buildCpmMonthList(monthly,years){
+  var el=document.getElementById("cpmMonthList");
+  if(!el)return;
+  var max=cpmMax(monthly,years),html="";
+  for(var m=1;m<=12;m++){
+    var mk=(m<10?"0":"")+m;
+    html+='<div class="cpm-month-row"><div class="cpm-month-name">'+CPM_MONTHS[m-1]+'</div><div class="cpm-year-bars">';
+    for(var i=0;i<years.length;i++){
+      var y=years[i];
+      if(!cpmActiveYears[y])continue;
+      var ym=y+"-"+mk,v=monthly[ym];
+      if(v!==undefined){
+        var pct=Math.max(3,(v/max)*100),col=cpmColorForYear(y,years);
+        html+='<div class="cpm-year-bar-row" onclick="showMonthDetail(\''+ym+'\')">'
+          +'<div class="cpm-bar-track"><div class="cpm-bar-fill" style="width:'+pct+'%;background:'+col+'"></div><div class="cpm-bar-year">'+y+'</div></div>'
+          +'<div class="cpm-bar-value">'+f$(v)+'</div></div>';
+      } else {
+        html+='<div class="cpm-year-bar-row empty"><div class="cpm-bar-track"></div><div class="cpm-bar-value">no data</div></div>';
+      }
+    }
+    html+='</div></div>';
+  }
+  el.innerHTML=html;
+}
+
+function buildCpmPeek(monthly){
+  var el=document.getElementById("cpmPeek");
+  if(!el)return;
+  var keys=[];
+  for(var k in monthly)keys.push(k);
+  keys.sort();
+  if(!keys.length){el.textContent="No data yet";return;}
+  var last12=keys.slice(-12),sum=0;
+  for(var i=0;i<last12.length;i++)sum+=monthly[last12[i]];
+  var avg=sum/last12.length;
+  var latestKey=keys[keys.length-1],latest=monthly[latestKey];
+  var parts=latestKey.split("-");
+  el.textContent=CPM_MONTHS[parseInt(parts[1],10)-1]+" "+parts[0]+": "+f$(latest)+"  -  avg "+f$(avg)+"/mo over last 12mo";
+}
+
+function cpmToggleYear(y){
+  cpmActiveYears[y]=!cpmActiveYears[y];
+  renderChargesPerMonth();
+}
+
+function toggleCpm(){
+  var card=document.getElementById("cpmCard");
+  if(!card)return;
+  var expanded=card.classList.toggle("expanded");
+  var chev=document.getElementById("cpmChevron");
+  if(chev)chev.setAttribute("aria-label",expanded?"Collapse":"Expand");
+}
+
+function renderChargesPerMonth(){
+  var monthly=cpmMonthlyTotals();
+  var years=cpmYears(monthly);
+  cpmEnsureActiveYears(years);
+  buildCpmYearChips(years);
+  buildCpmMonthList(monthly,years);
+  buildCpmPeek(monthly);
 }
 
 function showMonthDetail(ym){

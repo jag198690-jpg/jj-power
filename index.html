@@ -301,24 +301,6 @@ canvas{display:block;width:100%;height:56px}
     <div class="stat" style="cursor:pointer" onclick="goToFirstMissing()"><span class="stat-l">MISSING</span><div class="stat-v" style="color:var(--re)" id="missNum">0</div><div class="stat-u">tap to fill</div></div>
   </div>
 
-  <!-- LATEST ENTRY -->
-  <div class="row" style="margin-bottom:8px">
-    <div class="sub">LATEST ENTRY <span id="latestDate" style="color:var(--cy)"></span></div>
-  </div>
-  <div class="g3">
-    <div class="stat"><span class="stat-l">NET COST</span><div class="stat-v" style="color:var(--or)" id="tCost">-</div><div class="stat-u">$</div></div>
-    <div class="stat"><span class="stat-l">USAGE</span><div class="stat-v" style="color:var(--bl)" id="tUsage">-</div><div class="stat-u">kWh</div></div>
-    <div class="stat"><span class="stat-l">FEED-IN</span><div class="stat-v" style="color:var(--gr)" id="tFeedin">-</div><div class="stat-u">kWh</div></div>
-  </div>
-  <div class="g3" style="margin-top:8px;margin-bottom:0">
-    <div class="stat"><span class="stat-l">FEED-IN CREDIT</span><div class="stat-v" style="color:var(--gr)" id="tFeedinCredit">-</div><div class="stat-u"></div></div>
-    <div class="stat"><span class="stat-l">HOME USE</span><div class="stat-v" style="color:var(--am)" id="tHomeUse">-</div><div class="stat-u">kWh</div></div>
-    <div class="stat"><span class="stat-l">SOLAR COVERED</span><div class="stat-v" style="color:var(--cy)" id="tSelfConsume">-</div><div class="stat-u">%</div></div>
-  </div>
-  <div class="g3" style="margin-top:8px;margin-bottom:0">
-    <div class="stat"><span class="stat-l">SOLAR SAVED</span><div class="stat-v" style="color:var(--gr)" id="tSolarSaved">-</div><div class="stat-u">$</div></div>
-  </div>
-
   <button id="enterTodayBtn" onclick="openNP(null)" style="width:100%;padding:16px;border-radius:14px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:12px;letter-spacing:.02em">+ ENTER TODAY'S DATA</button>
 
   <!-- WEATHER FORECAST -->
@@ -3681,52 +3663,6 @@ function renderHome(){
   renderPaybackCard();
   fetchForecast();
 
-  var all=allData(),last=all.length?all[all.length-1]:null;
-  if(last){
-    document.getElementById("latestDate").textContent=" "+last.date;
-    document.getElementById("tCost").innerHTML=f$(last.net);
-    document.getElementById("tUsage").textContent=last.usage>0?last.usage.toFixed(1):"";
-    document.getElementById("tFeedin").textContent=last.feedin>0?last.feedin.toFixed(1):"";
-    // Feed-in credit $
-      var creditEl=document.getElementById("tFeedinCredit");
-    if(creditEl){
-      var credit=last.feedin>0?(last.feedin*ratesForDate(last.date).feedin):0;
-      creditEl.textContent=credit>0?"$"+credit.toFixed(2):"$0.00";
-    }
-    // Solar covered % = solar used at home / total home consumption
-    // Home consumption = usage + (solar - feedin)
-    // Solar at home = solar - feedin
-    var selfEl=document.getElementById("tSelfConsume");
-    var homeUseEl=document.getElementById("tHomeUse");
-    if(selfEl){
-      var solar=last.production||0;
-      var feedin=last.feedin||0;
-      var usage=last.usage||0;
-      var charge=last.charge||0;
-      var discharge=last.discharge||0;
-      var solarAtHome=Math.max(0,solar-feedin);
-      var homeConsumption=usage+solar-feedin-charge+discharge;
-      if(homeUseEl){homeUseEl.textContent=homeConsumption>0?homeConsumption.toFixed(1):"-";}
-      if(homeConsumption>0){
-        var coveredPct=Math.round(((homeConsumption-usage)/homeConsumption)*100);
-        if(coveredPct<0)coveredPct=0;
-        if(coveredPct>100)coveredPct=100;
-        selfEl.textContent=coveredPct;
-      } else {
-        selfEl.textContent="-";
-      }
-      // Solar Saved tile
-      var savedEl=document.getElementById("tSolarSaved");
-      if(savedEl){
-        var _solarAtHomeTile=Math.max(0,solar-feedin);
-        var _tRD=ratesForDate(last.date);var _tSR=_tRD.shoulder;var _tFR=_tRD.feedin;
-        var _savedGridTile=_solarAtHomeTile*_tSR;
-        var _feedinCreditTile=feedin*_tFR;
-        var _totalSavedTile=_savedGridTile+_feedinCreditTile;
-        savedEl.textContent=_totalSavedTile>0?_totalSavedTile.toFixed(2):"-";
-      }
-    }
-  }
   // Today status pill
   var todayIso=localDate();
   var todayEntry=getEntry(todayIso)||null;

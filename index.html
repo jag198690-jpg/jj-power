@@ -1746,6 +1746,31 @@ function calcNet(u,f,r,d){
   var rt=d?ratesForDate(d):(ST.rates||RFL);
   return (u*(rt[r]||rt.shoulder))+rt.supply-(f*rt.feedin);
 }
+// What a day's solar was worth: the grid purchase it avoided, plus the feed-in
+// credit earned. Self-consumed solar is valued at the rate that energy would
+// actually have been billed at - blended from the day's real metered
+// peak/shoulder/off-peak mix where Red Energy interval data exists, else the
+// rate band recorded on the entry, else the weekday/weekend default. Valuing
+// it flat at shoulder understated winter evenings (peak) and overstated
+// weekends (off-peak).
+function solarSavedFor(d){
+  if(!d||!d.date)return 0;
+  var rt=ratesForDate(d.date);
+  var fi=d.feedin||0;
+  var atHome=Math.max(0,(d.production||0)-fi);
+  var rate=null;
+  var a=(ST.actual&&ST.actual[d.date])?ST.actual[d.date]:null;
+  if(a&&typeof a==="object"){
+    var pk=a.pk||0,sh=a.sh||0,op=a.op||0,tot=pk+sh+op;
+    if(tot>0)rate=(pk*rt.peak+sh*rt.shoulder+op*rt.offpeak)/tot;
+  }
+  if(rate===null&&d.rate&&typeof rt[d.rate]==="number")rate=rt[d.rate];
+  if(rate===null){
+    var dow=new Date(d.date+"T12:00:00").getDay();
+    rate=(dow===0||dow===6)?rt.offpeak:rt.shoulder;
+  }
+  return atHome*rate+fi*rt.feedin;
+}
 function npCalcUpdate(){
   var u=parseFloat(npVals.usage)||0,f=parseFloat(npVals.feedin)||0;
   var p=parseFloat(npVals.production)||0;
@@ -1922,14 +1947,7 @@ function showDotInfo(iso,prod,exp,label){
     if(dayData.usage!==undefined&&dayData.production!==undefined){
       var _homeUse=(dayData.usage||0)+(dayData.production||0)-(dayData.feedin||0)-(dayData.charge||0)+(dayData.discharge||0);
       rows.push(['Home Consumption',_homeUse.toFixed(1)+' kWh','var(--am)']);
-      // Solar saving = solar used at home * shoulder rate + feedin credit
-      var _solarAtHome=Math.max(0,(dayData.production||0)-(dayData.feedin||0));
-      var _rdsd=ratesForDate(iso);
-      var _sRate=_rdsd.shoulder;
-      var _fRate=_rdsd.feedin;
-      var _savedGrid=_solarAtHome*_sRate;
-      var _feedinCredit=(dayData.feedin||0)*_fRate;
-      var _totalSaved=_savedGrid+_feedinCredit;
+      var _totalSaved=solarSavedFor(dayData);
       if(_totalSaved>0)rows.push(['Solar Saved Today','$'+_totalSaved.toFixed(2),'var(--gr)']);
     }
     if(dayData.feedin!==undefined)rows.push(['Feed-in',(dayData.feedin||0).toFixed(1)+' kWh','var(--gr)']);
@@ -2027,7 +2045,7 @@ function allData(){
   }
   for(var j=0;j<ST.entries.length;j++){
     var e=ST.entries[j];
-    map[e.date]={date:e.date,usage:e.usage,feedin:e.feedin,net:e.net,production:e.production||0,charge:e.charge||0,discharge:e.discharge||0};
+    map[e.date]={date:e.date,usage:e.usage,feedin:e.feedin,net:e.net,production:e.production||0,charge:e.charge||0,discharge:e.discharge||0,rate:e.rate};
   }
   // Cost truth: wherever exact Red Energy metered cost exists, use it as the day's
   // net. The stored/estimated net is only a fallback for days with no meter data.
@@ -2749,8 +2767,7 @@ function renderHome(){
   if(solarSavedTotalEl){
     var _savedTotal=0;
     for(var k=0;k<bd.length;k++){
-      var _sah=Math.max(0,(bd[k].production||0)-(bd[k].feedin||0));
-      var _bRD=ratesForDate(bd[k].date);_savedTotal+=_sah*_bRD.shoulder+(bd[k].feedin||0)*_bRD.feedin;
+      _savedTotal+=solarSavedFor(bd[k]);
     }
     solarSavedTotalEl.textContent=_savedTotal>0?"$"+_savedTotal.toFixed(2):"-";
   }
@@ -2845,7 +2862,7 @@ function renderCal(){
       if(p>0||g>0||all[k].net!==undefined)mHasData=true;
       var selfUse=Math.max(0,p-f);
       mProd+=p;mHome+=selfUse;mExp+=f;mGrid+=g;
-      var _mRD=ratesForDate(all[k].date);mSaved+=selfUse*_mRD.shoulder+f*_mRD.feedin;
+      mSaved+=solarSavedFor(all[k]);
       mNet+=(all[k].net||0);
     }
     if(!mHasData){sumEl.innerHTML="";sumEl.removeAttribute("onclick");sumEl.style.cursor="default";return;}
@@ -3059,7 +3076,7 @@ function mdAgg(ym,capDay){
     a.ch+=d.charge||0;a.dis+=d.discharge||0;a.net+=(d.net||0);
     a.home+=(d.usage||0)+(d.production||0)-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
     var rd=ratesForDate(d.date);
-    a.saved+=Math.max(0,(d.production||0)-(d.feedin||0))*rd.shoulder+(d.feedin||0)*rd.feedin;
+    a.saved+=solarSavedFor(d);
     if(ST.actual&&ST.actual[d.date]){var ac=ST.actual[d.date];a.pk+=ac.pk||0;a.sh+=ac.sh||0;a.op+=ac.op||0;a.supply+=rd.supply;}
     var wx=(typeof WX!=="undefined"&&WX[d.date])?WX[d.date]:null;
     if(wx&&wx.maxT!==null&&wx.maxT!==undefined){a.tmax+=wx.maxT;a.tmin+=(wx.minT||0);a.tdays++;}

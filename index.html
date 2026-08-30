@@ -49,8 +49,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 .stat-l{font-size:9px;letter-spacing:.12em;color:var(--mu);font-weight:600;display:block;margin-bottom:4px}
 .stat-v{font-size:19px;font-weight:700}
 .stat-u{font-size:9px;color:var(--di);margin-top:2px}
-.pb{background:var(--s2);border-radius:4px;height:6px;overflow:hidden;margin:8px 0 4px}
-.pf{height:100%;border-radius:4px;transition:width .5s}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600}
 .pill-gr{background:rgba(52,211,153,.15);color:var(--gr)}
 .pill-or{background:rgba(249,115,22,.15);color:var(--or)}
@@ -216,19 +214,14 @@ canvas{display:block;width:100%;height:56px}
     </div>
   </div>
 
-  <!-- CURRENT BILL -->
+  <!-- CURRENT MONTH -->
   <div class="card" style="background:linear-gradient(145deg,#131e30,#0d1820,#0a1218);border-color:rgba(251,140,58,.3);margin-bottom:16px;box-shadow:0 4px 28px rgba(0,0,0,.5);padding:20px">
-    <div class="sub" style="margin-bottom:6px">CURRENT BILL PERIOD</div>
+    <div class="sub" style="margin-bottom:6px">CURRENT MONTH</div>
     <div style="display:flex;align-items:baseline;gap:8px">
       <div style="font-size:58px;font-weight:800;color:var(--or);line-height:1;letter-spacing:-1px" id="hBill">$0.00</div>
       <div style="font-size:12px;color:var(--mu);padding-bottom:6px">net cost</div>
     </div>
-    <div style="font-size:11px;color:var(--mu);margin-top:2px" id="hDays"></div>
-    <div class="pb"><div class="pf" id="hBar" style="width:0%"></div></div>
-    <div class="row" style="margin-bottom:12px">
-      <span style="font-size:9px;color:var(--di)">$0</span>
-      <span style="font-size:9px;color:var(--di)" id="hTgt"></span>
-    </div>
+    <div style="font-size:11px;color:var(--mu);margin-top:2px;margin-bottom:12px" id="hDays"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
       <div>
         <div class="sub">DAILY AVG</div>
@@ -2841,18 +2834,14 @@ function renderHome(){
   for(var i=0;i<bd.length;i++)total+=(bd[i].net||0);
   var avg=bd.length>0?total/bd.length:0;
   var s7=0;for(var j=Math.max(0,bd.length-7);j<bd.length;j++)s7+=(bd[j].net||0);
-  var proj=avg*30,tgt=ST.target||100,pct=Math.min(100,(total/tgt)*100);
+  var proj=avg*30;
   var bs=currentMonthStart();
   var daysSince=Math.floor((localNow()-bs)/86400000)+1;
   document.getElementById("hBill").innerHTML=total<0?"-$"+Math.abs(total).toFixed(2):"$"+total.toFixed(2);
-  document.getElementById("hDays").textContent=daysSince+" days in period - "+bd.length+" days of data";
+  document.getElementById("hDays").textContent=daysSince+" days this month - "+bd.length+" days of data";
   document.getElementById("hAvg").innerHTML=f$(avg);
   document.getElementById("h7d").innerHTML=f$(s7);
   document.getElementById("hProj").innerHTML=f$(proj);
-  document.getElementById("hTgt").textContent="target $"+tgt;
-  var bar=document.getElementById("hBar");
-  bar.style.width=pct+"%";
-  bar.style.background=pct>90?"var(--re)":pct>65?"var(--am)":"var(--gr)";
   // Actual cost total for period
   var actualTotalEl=document.getElementById("hActualTotal");
   if(actualTotalEl){

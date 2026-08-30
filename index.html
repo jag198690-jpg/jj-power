@@ -342,6 +342,8 @@ canvas{display:block;width:100%;height:56px}
     </div>
     <div id="fbSyncLoggedIn" style="display:none">
       <div style="font-size:12px;color:var(--mu)">Signed in as <span id="fbEmailShown" style="color:var(--tx);font-weight:700"></span>. Changes now sync to the cloud automatically.</div>
+      <button onclick="fbSignOutClick()" style="width:100%;margin-top:12px;padding:11px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:13px;cursor:pointer">Sign out</button>
+      <div style="font-size:10px;color:var(--di);margin-top:6px;text-align:center">Your data stays on this device and in the cloud.</div>
     </div>
     <div id="fbSyncStatus" style="margin-top:10px;font-size:12px;color:var(--mu);text-align:center"></div>
   </div>
@@ -3334,7 +3336,7 @@ import {
   getFirestore, doc, getDoc, getDocs, collection, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 var fbConfig = {
@@ -3488,6 +3490,23 @@ window.gateSignIn = function(){
     status.style.color = "var(--re)";
     status.textContent = err.message;
     btn.disabled = false;
+  });
+};
+
+// Ends the session and drops back to the login gate. Deliberately does NOT
+// clear localStorage: an in-flight or failed sync would mean unsynced days
+// only exist locally, and wiping them on sign-out would destroy real data.
+window.fbSignOutClick = function(){
+  signOut(fbAuth).then(function(){
+    var pw = document.getElementById("gatePassword");
+    if (pw) pw.value = "";
+    var st = document.getElementById("gateStatus");
+    if (st) st.textContent = "";
+    var gb = document.getElementById("gateBtn");
+    if (gb) gb.disabled = false;
+    fbSetStatus("Signed out.");
+  }).catch(function(err){
+    fbSetStatus(err.message, true);
   });
 };
 

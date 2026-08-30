@@ -100,18 +100,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
   background:var(--s2);color:var(--mu);font-family:-apple-system,sans-serif;
   font-size:10px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
 .rb.on{border-color:var(--or);background:rgba(249,115,22,.1);color:var(--or)}
-/* BILL FORM */
-.bill-form{padding:0 16px}
-.bf-row{margin-bottom:14px}
-.bf-lbl{font-size:10px;letter-spacing:.1em;color:var(--mu);font-weight:600;
-  display:block;margin-bottom:6px}
-.bf-inp{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:10px;
-  color:var(--tx);font-family:-apple-system,sans-serif;font-size:17px;
-  padding:12px 14px;outline:none;-webkit-appearance:none;appearance:none}
-.bf-inp:focus{border-color:var(--or)}
-.bf-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.bf-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-.bf-row-3 .bf-inp{padding:12px 6px;font-size:16px}
 .btn{width:100%;padding:15px;border-radius:12px;border:none;
   font-family:-apple-system,sans-serif;font-weight:600;font-size:15px;cursor:pointer}
 .btn-p{background:var(--or);color:#000}
@@ -179,23 +167,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
   white-space:nowrap;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 canvas{display:block;width:100%;height:56px}
-/* YEAR GROUP */
-.yr-hd{font-size:12px;font-weight:700;color:var(--mu);letter-spacing:.1em;
-  padding:10px 0 6px;margin-top:4px}
-.bill-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;
-  padding:14px 16px;margin-bottom:8px}
-.bill-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.bill-period{font-size:14px;font-weight:700}
-.bill-dates{font-size:10px;color:var(--mu);margin-top:2px}
-.bill-amount{font-size:24px;font-weight:700;text-align:right}
-.bill-credit{font-size:10px;color:var(--gr);text-align:right;margin-top:2px}
-.bill-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;
-  padding-top:10px;border-top:1px solid var(--bd)}
-.bs-item{text-align:center}
-.bs-lbl{font-size:8px;color:var(--mu);font-weight:600;display:block}
-.bs-val{font-size:13px;font-weight:600;margin-top:2px}
-.bill-bar{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin:8px 0 0}
-.bill-bar-fill{height:100%;border-radius:2px}
 </style>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNDAwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJnIiBjeD0iNTAlIiBjeT0iMzglIiByPSI2MiUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWMwZDAwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA2MDkwZiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ic2ciIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmYjhjM2EiIHN0b3Atb3BhY2l0eT0iMC40Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZiOGMzYSIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0idXJsKCNiZykiLz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjE4OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmI4YzNhIiBzdHJva2Utd2lkdGg9IjMiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjExOCIgcj0iNzAiIGZpbGw9InVybCgjc2cpIi8+CiAgPGcgc3Ryb2tlPSIjZmJiZjI0IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8bGluZSB4MT0iMjAwIiB5MT0iNDQiIHgyPSIyMDAiIHkyPSI2MiIvPgogICAgPGxpbmUgeDE9IjI0OCIgeTE9IjU3IiB4Mj0iMjM4IiB5Mj0iNzIiLz4KICAgIDxsaW5lIHgxPSIyNzgiIHkxPSI5NiIgeDI9IjI2MiIgeTI9IjEwNSIvPgogICAgPGxpbmUgeDE9IjE1MiIgeTE9IjU3IiB4Mj0iMTYyIiB5Mj0iNzIiLz4KICAgIDxsaW5lIHgxPSIxMjIiIHkxPSI5NiIgeDI9IjEzOCIgeTI9IjEwNSIvPgogICAgPGxpbmUgeDE9IjI4OCIgeTE9IjE0MCIgeDI9IjI3MCIgeTI9IjE0NCIvPgogICAgPGxpbmUgeDE9IjExMiIgeTE9IjE0MCIgeDI9IjEzMCIgeTI9IjE0NCIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIxMTgiIHI9IjM4IiBmaWxsPSIjZmI4YzNhIi8+CiAgPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTE4IiByPSIyNyIgZmlsbD0iI2ZiYmYyNCIvPgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjExOCIgcj0iMTUiIGZpbGw9IiNmZWY5ZWUiLz4KICA8cmVjdCB4PSIxMjgiIHk9IjI0MCIgd2lkdGg9IjE0NCIgaGVpZ2h0PSI4OCIgcng9IjUiIGZpbGw9IiMwODEyMWUiLz4KICA8cG9seWdvbiBwb2ludHM9IjExMiwyNDQgMjAwLDE3MCAyODgsMjQ0IiBmaWxsPSIjMGMxYzJlIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIxMTIsMjQ0IDIwMCwxNzAgMjg4LDI0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8cmVjdCB4PSIxNTMiIHk9IjIwMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIxNzgiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIyMDIiIHk9IjE4MSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8cmVjdCB4PSIyMjUiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIgZmlsbD0iIzA3MTUyNSIgc3Ryb2tlPSIjMjJkM2VlIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8ZyBmaWxsPSIjMjJkM2VlIiBvcGFjaXR5PSIwLjE1Ij4KICAgIDxyZWN0IHg9IjE1MyIgeT0iMjAwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTMiIHJ4PSIxIi8+CiAgICA8cmVjdCB4PSIxNzgiIHk9IjE5MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEzIiByeD0iMSIvPgogICAgPHJlY3QgeD0iMjAyIiB5PSIxODEiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxMyIgcng9IjEiLz4KICAgIDxyZWN0IHg9IjIyNSIgeT0iMTkwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTMiIHJ4PSIxIi8+CiAgPC9nPgogIDxyZWN0IHg9IjE4MiIgeT0iMjcyIiB3aWR0aD0iMzYiIGhlaWdodD0iNTYiIHJ4PSIzIiBmaWxsPSIjMGMxYzJlIiBzdHJva2U9IiMxYTMwNDgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMjEzIiBjeT0iMzAyIiByPSIzIiBmaWxsPSIjZmI4YzNhIi8+CiAgPHJlY3QgeD0iMTM2IiB5PSIyNTgiIHdpZHRoPSIyOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmYjhjM2EiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0iI2ZiOGMzYSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHJlY3QgeD0iMjM2IiB5PSIyNTgiIHdpZHRoPSIyOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmYjhjM2EiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0iI2ZiOGMzYSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPGxpbmUgeDE9IjkwIiB5MT0iMzMwIiB4Mj0iMzEwIiB5Mj0iMzMwIiBzdHJva2U9IiMxZTMwNDgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPHRleHQgeD0iMjAwIiB5PSIzNTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmYjhjM2EiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLHNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiI+SkogUE9XRVI8L3RleHQ+CiAgPHRleHQgeD0iMjAwIiB5PSIzNzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iOSIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzNhNTU3MCIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGxldHRlci1zcGFjaW5nPSI0Ij5EVUJCTyBOU1c8L3RleHQ+Cjwvc3ZnPg==">
   <meta name="apple-mobile-web-app-title" content="J&amp;J Power">
@@ -207,8 +178,6 @@ canvas{display:block;width:100%;height:56px}
 <nav class="nav">
   <button class="nt on" onclick="go('home')" id="t-home"><span class="ic">&#9728;</span>HOME</button>
   <button class="nt" onclick="go('cal')" id="t-cal"><span class="ic">&#128197;</span>CALENDAR</button>
-  <button class="nt" onclick="go('bills')" id="t-bills"><span class="ic">&#129534;</span>BILLS</button>
-  <button class="nt" onclick="go('import')" id="t-import"><span class="ic">&#128229;</span>IMPORT</button>
   <button class="nt" onclick="go('trends')" id="t-trends"><span class="ic">&#128200;</span>TRENDS</button>
   <button class="nt" onclick="go('settings')" id="t-settings"><span class="ic">&#9881;</span>SETTINGS</button>
 </nav>
@@ -545,79 +514,6 @@ canvas{display:block;width:100%;height:56px}
   </a>
 </div>
 
-<!-- ??? BILLS ??? -->
-<div class="sc" id="sc-bills">
-  <div class="row" style="margin-bottom:14px">
-    <div><h1>Bills</h1><div class="sub" id="billSub"></div></div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button id="billsScanBtn" onclick="triggerBillScan()" style="background:var(--s2);border:1px solid var(--bd);color:var(--cy);font-family:-apple-system,sans-serif;font-weight:700;font-size:12px;padding:9px 12px;border-radius:10px;cursor:pointer">SCAN BILL</button>
-      <button id="billsNewBtn" onclick="openBillForm(null)" style="background:var(--or);border:none;color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:12px;padding:9px 14px;border-radius:10px;cursor:pointer">+ NEW</button>
-    </div>
-  </div>
-  <input type="file" id="billScanInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" style="display:none" onchange="handleBillScan(this)">
-  <div id="billScanStatus" style="display:none;text-align:center;font-size:12px;color:var(--cy);padding:0 0 10px;font-weight:600"></div>
-
-  <!-- Summary strip -->
-  <div id="billSummaryStrip" style="margin-bottom:14px"></div>
-
-  <!-- Year filter chips -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px" id="billYearChips"></div>
-
-  <!-- Sort toggle -->
-  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-    <button onclick="toggleBillSort()" id="billSortBtn" style="background:var(--s2);border:1px solid var(--bd);color:var(--mu);font-size:11px;padding:7px 12px;border-radius:9px;cursor:pointer;font-family:-apple-system,sans-serif;font-weight:600">&#8595; Newest first</button>
-  </div>
-
-  <div id="billsByYear"></div>
-
-  <!-- Hidden for JS compat -->
-  <input type="date" id="bFilterFrom" style="display:none">
-  <input type="date" id="bFilterTo" style="display:none">
-  <div style="display:none" id="bTotPaid"></div>
-  <div style="display:none" id="bTotCred"></div>
-</div>
-
-<!-- ??? IMPORT ??? -->
-<div class="sc" id="sc-import">
-  <div class="row" style="margin-bottom:14px">
-    <div><h1>Import</h1><div class="sub">Scan a bill to add it to your history</div></div>
-  </div>
-
-  <div class="card" style="padding:13px;margin-bottom:14px">
-    <div class="sub" style="margin-bottom:8px">BILLS ON FILE</div>
-    <div id="importSummary" style="font-size:13px;color:var(--tx);line-height:1.5">-</div>
-  </div>
-
-  <div class="card" style="padding:18px;margin-bottom:14px;text-align:center">
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px;line-height:1.5">Scan this month's bill, or work back through old bills one at a time to build an accurate history. Claude reads the PDF or photo and fills in the form for you to check before saving.</div>
-    <input type="file" id="importScanInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" style="display:none" onchange="handleBillScan(this)">
-    <button id="importScanBtn" onclick="triggerImportScan()" style="width:100%;padding:15px;border-radius:12px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">SCAN A BILL</button>
-    <button id="importManualBtn" onclick="openBillForm(null)" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--cy);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">Enter manually instead</button>
-    <div id="importScanStatus" style="display:none;text-align:center;font-size:12px;margin-top:12px;font-weight:600"></div>
-  </div>
-
-  <div class="card" style="padding:13px">
-    <div class="sub" style="margin-bottom:8px">RECENTLY IMPORTED</div>
-    <div id="importRecent"></div>
-  </div>
-
-  <div class="card" style="padding:13px;margin-top:14px">
-    <div onclick="toggleBulkImport()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
-      <div class="sub">BULK IMPORT (PASTE DATA)</div>
-      <span id="bulkImportArrow" style="font-size:10px;color:var(--mu);font-weight:600">SHOW &#9660;</span>
-    </div>
-    <div id="bulkImportSection" style="display:none;margin-top:10px">
-      <div style="font-size:11px;color:var(--mu);margin-bottom:8px;line-height:1.5">Paste a list of bills (given to you as data, not typed by hand) and import them all in one go instead of entering each one manually.</div>
-      <textarea id="bulkImportInput" placeholder="Paste bill data here" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-family:monospace;font-size:12px;padding:10px;outline:none;box-sizing:border-box;resize:vertical"></textarea>
-      <button onclick="bulkImportBills()" style="width:100%;margin-top:8px;padding:11px;border-radius:10px;border:none;background:var(--cy);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:12px;cursor:pointer">IMPORT PASTED BILLS</button>
-      <div id="bulkImportStatus" style="display:none;text-align:center;font-size:12px;margin-top:10px;font-weight:600"></div>
-    </div>
-  </div>
-
-  <button id="clearBillsBtn" onclick="clearAllBillsPrompt()" style="width:100%;margin-top:14px;padding:11px;border-radius:12px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.08);color:var(--re);font-family:-apple-system,sans-serif;font-weight:600;font-size:12px;cursor:pointer">
-    Clear all bills and start over
-  </button>
-</div>
 
 <!-- ??? TRENDS ??? -->
 <div class="sc" id="sc-trends">
@@ -956,100 +852,6 @@ canvas{display:block;width:100%;height:56px}
       <div style="padding:4px 4px 2px">
         <input type="text" id="npNote" placeholder="Note (optional - e.g. guests, pool pump...)" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:16px;outline:none;-webkit-user-select:auto;user-select:auto;box-sizing:border-box">
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- ??? BILL FORM OVERLAY ??? -->
-<div class="ov" id="billOv" onclick="billBg(event)">
-  <div class="sheet" style="max-height:90vh;overflow-y:auto">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="billFormTitle">Add New Bill</div>
-    <div class="bill-form">
-      <div class="bf-row">
-        <label class="bf-lbl">BILL PERIOD NAME</label>
-        <input type="text" id="bf-period" class="bf-inp" placeholder="e.g. Jun 2026" autocorrect="off" autocapitalize="off" spellcheck="false">
-      </div>
-      <div class="bf-row-2">
-        <div>
-          <label class="bf-lbl">FROM DATE</label>
-          <input type="date" id="bf-start" class="bf-inp" onchange="autoCalcBillAvgs()">
-        </div>
-        <div>
-          <label class="bf-lbl">TO DATE</label>
-          <input type="date" id="bf-end" class="bf-inp" onchange="autoCalcBillAvgs()">
-        </div>
-      </div>
-      <div class="bf-row-2">
-        <div>
-          <label class="bf-lbl">TOTAL ELECTRICITY CHARGES ($)</label>
-          <input type="number" step="0.01" id="bf-actual" class="bf-inp" placeholder="0.00" oninput="autoCalcBillAvgs()">
-        </div>
-        <div>
-          <label class="bf-lbl">SOLAR CREDIT ($)</label>
-          <input type="number" step="0.01" id="bf-credit" class="bf-inp" placeholder="0.00">
-        </div>
-      </div>
-      <div class="bf-row-2">
-        <div>
-          <label class="bf-lbl">DAILY AVG <span style="font-size:8px;color:var(--gr)">(auto)</span></label>
-          <input type="number" step="0.01" id="bf-daily" class="bf-inp" placeholder="auto">
-        </div>
-        <div>
-          <label class="bf-lbl">WEEKLY AVG <span style="font-size:8px;color:var(--gr)">(auto)</span></label>
-          <input type="number" step="0.01" id="bf-weekly" class="bf-inp" placeholder="auto">
-        </div>
-      </div>
-
-      <div onclick="toggleBillItemized()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--bd);margin-top:2px;cursor:pointer">
-        <label class="bf-lbl" style="margin:0">ITEMISED BREAKDOWN (OPTIONAL)</label>
-        <span id="billItemizedArrow" style="font-size:10px;color:var(--mu);font-weight:600">SHOW &#9660;</span>
-      </div>
-      <div id="billItemizedSection" style="display:none">
-        <div class="bf-row-2">
-          <div>
-            <label class="bf-lbl">SOLAR EXPORTED (kWh)</label>
-            <input type="number" step="0.01" id="bf-solarKwh" class="bf-inp" placeholder="0">
-          </div>
-          <div>
-            <label class="bf-lbl">SOLAR RATE ($/kWh)</label>
-            <input type="number" step="0.0001" id="bf-solarRate" class="bf-inp" placeholder="0.00">
-          </div>
-        </div>
-        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">PEAK &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
-        <div class="bf-row-3">
-          <input type="number" step="0.01" id="bf-pkKwh" class="bf-inp" placeholder="kWh">
-          <input type="number" step="0.0001" id="bf-pkRate" class="bf-inp" placeholder="rate">
-          <input type="number" step="0.01" id="bf-pkChg" class="bf-inp" placeholder="$">
-        </div>
-        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">SHOULDER &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
-        <div class="bf-row-3">
-          <input type="number" step="0.01" id="bf-shKwh" class="bf-inp" placeholder="kWh">
-          <input type="number" step="0.0001" id="bf-shRate" class="bf-inp" placeholder="rate">
-          <input type="number" step="0.01" id="bf-shChg" class="bf-inp" placeholder="$">
-        </div>
-        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">OFF-PEAK &#8212; kWh / rate ($/kWh) / charge ($)</label></div>
-        <div class="bf-row-3">
-          <input type="number" step="0.01" id="bf-opKwh" class="bf-inp" placeholder="kWh">
-          <input type="number" step="0.0001" id="bf-opRate" class="bf-inp" placeholder="rate">
-          <input type="number" step="0.01" id="bf-opChg" class="bf-inp" placeholder="$">
-        </div>
-        <div class="bf-row" style="margin-bottom:6px"><label class="bf-lbl" style="margin-bottom:2px">SERVICE TO PROPERTY &#8212; days / rate ($/day) / charge ($)</label></div>
-        <div class="bf-row-3">
-          <input type="number" step="1" id="bf-svcDays" class="bf-inp" placeholder="days">
-          <input type="number" step="0.0001" id="bf-svcRate" class="bf-inp" placeholder="rate">
-          <input type="number" step="0.01" id="bf-svcChg" class="bf-inp" placeholder="$">
-        </div>
-        <div class="bf-row">
-          <label class="bf-lbl">GST ($)</label>
-          <input type="number" step="0.01" id="bf-gst" class="bf-inp" placeholder="0.00">
-        </div>
-      </div>
-
-      <input type="hidden" id="bf-idx" value="-1">
-      <button class="btn btn-p" onclick="saveBillForm()" style="margin-bottom:10px">SAVE BILL</button>
-      <button class="btn btn-s" onclick="closeBillForm()">CANCEL</button>
-      <div style="height:8px"></div>
     </div>
   </div>
 </div>
@@ -2932,386 +2734,6 @@ function saveNP(){
   showToast("Saved \u2014 "+f$(net));
 }
 
-// BILL FORM
-var billEditIdx=-1;
-var BILL_ITM_FIELDS=["solarKwh","solarRate","pkKwh","pkRate","pkChg","shKwh","shRate","shChg","opKwh","opRate","opChg","svcDays","svcRate","svcChg","gst"];
-function toggleBillItemized(force){
-  var el=document.getElementById("billItemizedSection");
-  var ar=document.getElementById("billItemizedArrow");
-  if(!el)return;
-  var open=(force===true)||(force===undefined&&el.style.display==="none");
-  el.style.display=open?"block":"none";
-  if(ar)ar.textContent=open?"HIDE \u25b2":"SHOW \u25bc";
-}
-function openBillForm(idx){
-  if(guestMode){showToast("View only - guest access");return;}
-  billEditIdx=idx;
-  var title=document.getElementById("billFormTitle");
-  var hasItm=false;
-  if(idx===null){
-    title.textContent="Add New Bill";
-    document.getElementById("bf-period").value="";
-    document.getElementById("bf-start").value="";
-    document.getElementById("bf-end").value="";
-    document.getElementById("bf-actual").value="";
-    document.getElementById("bf-credit").value="";
-    document.getElementById("bf-daily").value="";
-    document.getElementById("bf-weekly").value="";
-    document.getElementById("bf-idx").value="-1";
-    for(var i=0;i<BILL_ITM_FIELDS.length;i++){
-      var clearEl=document.getElementById("bf-"+BILL_ITM_FIELDS[i]);
-      if(clearEl)clearEl.value="";
-    }
-  } else {
-    var b=ST.bills[idx];
-    title.textContent="Edit Bill \u2014 "+b.p;
-    document.getElementById("bf-period").value=b.p||"";
-    document.getElementById("bf-start").value=b.s||"";
-    document.getElementById("bf-end").value=b.e||"";
-    document.getElementById("bf-actual").value=b.actual||"";
-    document.getElementById("bf-credit").value=b.credit||"";
-    document.getElementById("bf-daily").value=b.dailyAvg||"";
-    document.getElementById("bf-weekly").value=b.weeklyAvg||"";
-    document.getElementById("bf-idx").value=idx;
-    for(var i=0;i<BILL_ITM_FIELDS.length;i++){
-      var k=BILL_ITM_FIELDS[i];
-      var el=document.getElementById("bf-"+k);
-      if(!el)continue;
-      var v=b[k];
-      el.value=(v!==undefined&&v!==null)?v:"";
-      if(v!==undefined&&v!==null&&v!=="")hasItm=true;
-    }
-  }
-  toggleBillItemized(hasItm);
-  document.getElementById("billOv").style.display="flex";
-}
-function closeBillForm(){document.getElementById("billOv").style.display="none"}
-function billBg(e){if(e.target.id==="billOv")closeBillForm()}
-function saveBillForm(){
-  var p=document.getElementById("bf-period").value.trim();
-  var s=document.getElementById("bf-start").value;
-  var e=document.getElementById("bf-end").value;
-  var a=parseFloat(document.getElementById("bf-actual").value)||0;
-  var cr=parseFloat(document.getElementById("bf-credit").value)||0;
-  var da=parseFloat(document.getElementById("bf-daily").value)||0;
-  var wk=parseFloat(document.getElementById("bf-weekly").value)||0;
-  if(!p){showToast("Enter a period name");return}
-  // Calculate days if dates provided
-  var days=30;
-  if(s&&e){days=Math.round((new Date(e)-new Date(s))/86400000)+1}
-  // Auto-calc daily avg if not provided
-  if(!da&&a&&days)da=parseFloat((a/days).toFixed(2));
-  if(!wk&&da)wk=parseFloat((da*7).toFixed(2));
-  var bill={p:p,s:s,e:e,days:days,actual:a,credit:cr,dailyAvg:da,weeklyAvg:wk};
-  for(var i=0;i<BILL_ITM_FIELDS.length;i++){
-    var fk=BILL_ITM_FIELDS[i];
-    var fel=document.getElementById("bf-"+fk);
-    if(!fel||fel.value==="")continue;
-    var fv=parseFloat(fel.value);
-    if(!isNaN(fv))bill[fk]=fv;
-  }
-  var idx=parseInt(document.getElementById("bf-idx").value);
-  if(idx>=0)ST.bills[idx]=bill;else ST.bills.push(bill);
-  sv();renderBills();renderTrends();renderImportTab();closeBillForm();
-  showToast(idx>=0?"Bill updated":"Bill added");
-}
-
-// SCAN AN ACTUAL BILL (photo/screenshot -> pre-filled Add Bill form)
-var BILL_MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function billPeriodLabel(dateStr){
-  if(!dateStr||dateStr.length<7)return"";
-  var mo=parseInt(dateStr.substring(5,7),10);
-  var yr=dateStr.substring(2,4);
-  return(BILL_MON[mo-1]||"")+" '"+yr;
-}
-function triggerBillScan(){
-  if(guestMode){showToast("View only - guest access");return;}
-  document.getElementById("billScanInput").value="";
-  document.getElementById("billScanInput").click();
-}
-function triggerImportScan(){
-  if(guestMode){showToast("View only - guest access");return;}
-  document.getElementById("importScanInput").value="";
-  document.getElementById("importScanInput").click();
-}
-function setBillScanStatus(msg,col){
-  var ids=["billScanStatus","importScanStatus"];
-  for(var i=0;i<ids.length;i++){
-    var el=document.getElementById(ids[i]);
-    if(!el)continue;
-    if(!msg){el.style.display="none";continue;}
-    el.textContent=msg;
-    el.style.color=col||"var(--cy)";
-    el.style.display="block";
-  }
-}
-function pdfFileToPageImages(file,maxPages,cb,errCb){
-  if(typeof pdfjsLib==="undefined"){errCb("PDF support did not load - try again, or send a screenshot instead");return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-    pdfjsLib.getDocument({data:e.target.result}).promise.then(function(pdf){
-      var numPages=Math.min(pdf.numPages,maxPages);
-      var images=[];
-      function renderPage(pageNum){
-        if(pageNum>numPages){cb(images);return;}
-        pdf.getPage(pageNum).then(function(page){
-          var viewport=page.getViewport({scale:1.5});
-          var canvas=document.createElement("canvas");
-          canvas.width=viewport.width;
-          canvas.height=viewport.height;
-          page.render({canvasContext:canvas.getContext("2d"),viewport:viewport}).promise.then(function(){
-            images.push(canvas.toDataURL("image/png").split(",")[1]);
-            renderPage(pageNum+1);
-          }).catch(function(err){errCb("Could not render PDF page "+pageNum+": "+err.message);});
-        }).catch(function(err){errCb("Could not read PDF page "+pageNum+": "+err.message);});
-      }
-      renderPage(1);
-    }).catch(function(err){errCb("Could not open that PDF: "+err.message);});
-  };
-  reader.readAsArrayBuffer(file);
-}
-function sendBillImagesToClaude(images,mtype){
-  if(!images.length){setBillScanStatus("Could not read any pages from that file","var(--re)");return;}
-  var AKEY=localStorage.getItem("solarApiKey")||"";
-  if(!AKEY){setBillScanStatus("No API key - add it in Settings","var(--re)");return;}
-  setBillScanStatus("Asking Claude to read the bill...");
-  var prompt="These are page(s) from an Australian electricity bill (e.g. Red Energy). The itemised Electricity Charges table is usually on page 2, not page 1, and lists tariff lines such as 'Total Solar', 'Total Peak', 'Total Shoulder', 'Total Off Peak' and 'Service to Property Charge', each with a Usage (kWh or days), Rate ($/kWh or $/day) and Charge ($) column, plus a GST line. Extract ONLY these values as a JSON object with these exact keys - use null for anything genuinely not shown on the bill, never guess or estimate a value: start (billing period start date, YYYY-MM-DD), end (billing period end date, YYYY-MM-DD), actual (the dollar amount labelled 'Total Electricity Charges' - NOT 'Amount Due' or 'Total Amount Due', since that can be reduced by credit carried over from a previous bill and does not reflect this period's actual usage cost), credit (the 'Total Solar' line's Charge, as a positive number - it is shown as a negative charge on the bill, report it here positive), solarKwh ('Total Solar' Usage in kWh), solarRate ('Total Solar' Rate per kWh as a positive number), pkKwh ('Total Peak' Usage in kWh), pkRate ('Total Peak' Rate per kWh excl. GST), pkChg ('Total Peak' Charge in dollars excl. GST), shKwh ('Total Shoulder' Usage in kWh), shRate ('Total Shoulder' Rate per kWh excl. GST), shChg ('Total Shoulder' Charge in dollars excl. GST), opKwh ('Total Off Peak' Usage in kWh), opRate ('Total Off Peak' Rate per kWh excl. GST), opChg ('Total Off Peak' Charge in dollars excl. GST), svcDays ('Service to Property Charge' number of days), svcRate ('Service to Property Charge' Rate per day excl. GST), svcChg ('Service to Property Charge' Charge in dollars excl. GST), gst (the GST line's dollar amount). Some bills may not itemise every one of these lines - use null rather than estimating. Return ONLY the raw JSON object, no markdown, no explanation.";
-  var content=[];
-  for(var i=0;i<images.length;i++)content.push({type:"image",source:{type:"base64",media_type:mtype,data:images[i]}});
-  content.push({type:"text",text:prompt});
-  var body=JSON.stringify({model:"claude-sonnet-4-6",max_tokens:500,messages:[{role:"user",content:content}]});
-  fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-api-key":AKEY,
-      "anthropic-version":"2023-06-01",
-      "anthropic-dangerous-direct-browser-access":"true"
-    },
-    body:body
-  }).then(function(r){return r.json();}).then(function(data){
-    try{
-      if(data.error){setBillScanStatus("API: "+data.error.message,"var(--re)");return;}
-      if(!data.content||!data.content.length){setBillScanStatus("Empty response: "+JSON.stringify(data).slice(0,80),"var(--re)");return;}
-      var txt="";
-      for(var i=0;i<data.content.length;i++){if(data.content[i].type==="text")txt+=data.content[i].text;}
-      txt=txt.replace(/```[a-z]*/g,"").replace(/```/g,"").trim();
-      var parsed=JSON.parse(txt);
-      openBillForm(null);
-      if(parsed.start)document.getElementById("bf-start").value=parsed.start;
-      if(parsed.end)document.getElementById("bf-end").value=parsed.end;
-      if(parsed.actual!==undefined&&parsed.actual!==null)document.getElementById("bf-actual").value=parsed.actual;
-      if(parsed.credit!==undefined&&parsed.credit!==null)document.getElementById("bf-credit").value=parsed.credit;
-      var gotItm=false;
-      for(var fi=0;fi<BILL_ITM_FIELDS.length;fi++){
-        var fk=BILL_ITM_FIELDS[fi];
-        var fel=document.getElementById("bf-"+fk);
-        if(fel&&parsed[fk]!==undefined&&parsed[fk]!==null){fel.value=parsed[fk];gotItm=true;}
-      }
-      if(gotItm)toggleBillItemized(true);
-      var lbl=billPeriodLabel(parsed.end||parsed.start);
-      if(lbl)document.getElementById("bf-period").value=lbl;
-      try{autoCalcBillAvgs();}catch(ex){}
-      setBillScanStatus("Filled from bill - check every field before saving","var(--gr)");
-      setTimeout(function(){setBillScanStatus("");},4000);
-    }catch(ex){
-      setBillScanStatus("Could not read that bill - enter it manually. ("+ex.message+")","var(--re)");
-    }
-  }).catch(function(){setBillScanStatus("Network error - check connection","var(--re)");});
-}
-function handleBillScan(input){
-  if(!input.files||!input.files[0])return;
-  var file=input.files[0];
-  var isPdf=(file.type==="application/pdf")||/\.pdf$/i.test(file.name||"");
-  if(isPdf){
-    setBillScanStatus("Reading PDF...");
-    pdfFileToPageImages(file,3,function(images){
-      sendBillImagesToClaude(images,"image/png");
-    },function(errMsg){
-      setBillScanStatus(errMsg,"var(--re)");
-    });
-    return;
-  }
-  var mtype=file.type||"image/jpeg";
-  var okTypes=["image/png","image/jpeg","image/webp","image/gif"];
-  if(okTypes.indexOf(mtype)<0){
-    setBillScanStatus("Unsupported file type ("+mtype+") - use a PDF, screenshot, or photo","var(--re)");
-    return;
-  }
-  setBillScanStatus("Reading image...");
-  var reader=new FileReader();
-  reader.onload=function(e){
-    sendBillImagesToClaude([e.target.result.split(",")[1]],mtype);
-  };
-  reader.readAsDataURL(file);
-}
-
-// EDIT SHEET
-var editCb=null;
-function editVal(key,title,cur){
-  editCb=function(v){
-    if(key==="target")ST.target=v;
-    else if(key==="threshVal"){ST.threshVal=v;ST.threshMode="manual";}
-    else if(key==="priorSavings"){if(!ST.system)ST.system={};ST.system.priorSavings=v;}
-    else if(key==="solarCost"){if(!ST.system)ST.system={};ST.system.solarCost=v;}
-    else if(key==="batt1Cost"){if(!ST.system)ST.system={};ST.system.batt1Cost=v;}
-    else if(key==="batt2Cost"){if(!ST.system)ST.system={};ST.system.batt2Cost=v;}
-    else {ST.rates[key]=v;
-      if(ST.rateHistory&&ST.rateHistory.length&&["peak","shoulder","offpeak","supply","feedin"].indexOf(key)>=0){ST.rateHistory[ST.rateHistory.length-1][key]=v;}
-    }
-    sv();renderAll();showToast("Updated");
-  };
-  document.getElementById("editTitle").textContent=title;
-  document.getElementById("editSub").textContent="Current value: "+(typeof cur==="number"?cur.toFixed(4):cur);
-  var inp=document.getElementById("editInp");
-  inp.value=cur||"";
-  document.getElementById("editOv").style.display="flex";
-  setTimeout(function(){inp.focus();inp.select()},150);
-}
-function closeEdit(){document.getElementById("editOv").style.display="none";editCb=null}
-function editBg(e){if(e.target.id==="editOv")closeEdit()}
-function confirmEdit(){
-  var v=parseFloat(document.getElementById("editInp").value);
-  if(isNaN(v)){showToast("Enter a valid number");return}
-  if(editCb)editCb(v);
-  closeEdit();
-}
-document.getElementById("editInp").addEventListener("keydown",function(e){if(e.key==="Enter")confirmEdit()});
-
-// DATA HELPERS
-function billDedupeKey(b,fallback){
-  // Prefer the start date - it is a normalised ISO string with no risk of
-  // the free-text period label differing invisibly (e.g. iOS Safari's
-  // smart-punctuation silently swapping a straight apostrophe for a curly
-  // one on manual entry, which used to defeat exact-string matching here).
-  if(b&&b.s)return"s:"+String(b.s).trim();
-  var p=String(b&&b.p?b.p:("bill"+fallback));
-  p=p.replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/\s+/g," ").trim().toLowerCase();
-  return"p:"+p;
-}
-function dedupeBills(){
-  if(!ST.bills||!ST.bills.length)return;
-  var seen={},out=[],changed=false;
-  for(var i=0;i<ST.bills.length;i++){
-    var b=ST.bills[i];
-    var key=billDedupeKey(b,i);
-    if(seen[key]){changed=true;continue;}
-    seen[key]=true;
-    out.push(b);
-  }
-  if(changed){ST.bills=out;sv();}
-}
-window.dedupeBills=dedupeBills;
-function renderImportTab(){
-  var sumEl=document.getElementById("importSummary");
-  var recEl=document.getElementById("importRecent");
-  if(!sumEl||!recEl)return;
-  var bills=ST.bills||[];
-  if(!bills.length){
-    sumEl.textContent="No bills recorded yet";
-    recEl.innerHTML='<div style="color:var(--mu);text-align:center;padding:24px;font-size:13px">Scan your first bill above to get started</div>';
-    return;
-  }
-  var oldest=null,newest=null;
-  for(var i=0;i<bills.length;i++){
-    var b=bills[i];
-    if(!b.s)continue;
-    if(!oldest||b.s<oldest.s)oldest=b;
-    if(!newest||b.s>newest.s)newest=b;
-  }
-  var rangeTxt=(oldest&&newest)?(billPeriodLabel(oldest.s)+" \u2192 "+billPeriodLabel(newest.e||newest.s)):"";
-  sumEl.textContent=bills.length+" bill"+(bills.length===1?"":"s")+(rangeTxt?" \u2014 "+rangeTxt:"");
-
-  var list=[];
-  for(var i=0;i<bills.length;i++)list.push({b:bills[i],i:i});
-  list.sort(function(x,y){return(y.b.s||"")>(x.b.s||"")?1:-1;});
-  var max=Math.min(list.length,8);
-  var html="";
-  for(var i=0;i<max;i++){
-    var b=list[i].b,idx=list[i].i;
-    html+='<div onclick="openBillForm('+idx+')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;cursor:pointer'+(i<max-1?';border-bottom:1px solid var(--bd)':'')+'">';
-    html+='<div><div style="font-size:13px;font-weight:600">'+(b.p||"")+'</div><div style="font-size:10px;color:var(--mu)">'+(b.s||"?")+' to '+(b.e||"?")+'</div></div>';
-    html+='<div style="font-size:14px;font-weight:700;color:var(--tx)">$'+Math.round(b.actual||0)+'</div>';
-    html+='</div>';
-  }
-  recEl.innerHTML=html;
-}
-function clearAllBillsPrompt(){
-  if(guestMode){showToast("View only - guest access");return;}
-  var n=(ST.bills||[]).length;
-  if(!n){showToast("No bills to clear");return;}
-  document.getElementById("clearBillsMsg").textContent="This deletes all "+n+" bill"+(n===1?"":"s")+" on file, on every synced device, so you can re-import your history from scratch. This cannot be undone.";
-  document.getElementById("clearBillsStatus").textContent="";
-  document.getElementById("clearBillsOv").style.display="flex";
-}
-function clearAllBillsGo(){
-  var btn=document.getElementById("clearBillsConfirmBtn");
-  var statusEl=document.getElementById("clearBillsStatus");
-  btn.disabled=true;
-  statusEl.style.color="var(--mu)";
-  statusEl.textContent="Clearing...";
-  var p=(typeof window.fbDeleteAllBillDocs==="function")?window.fbDeleteAllBillDocs():Promise.resolve();
-  p.then(function(){
-    ST.bills=[];
-    sv();
-    renderBills();renderTrends();renderImportTab();
-    document.getElementById("clearBillsOv").style.display="none";
-    btn.disabled=false;
-    showToast("All bills cleared");
-  }).catch(function(err){
-    btn.disabled=false;
-    statusEl.style.color="var(--re)";
-    statusEl.textContent="Could not clear the cloud copy: "+err.message+" - try again, or check your connection";
-  });
-}
-function toggleBulkImport(force){
-  var el=document.getElementById("bulkImportSection");
-  var ar=document.getElementById("bulkImportArrow");
-  if(!el)return;
-  var open=(force===true)||(force===undefined&&el.style.display==="none");
-  el.style.display=open?"block":"none";
-  if(ar)ar.textContent=open?"HIDE \u25b2":"SHOW \u25bc";
-}
-function bulkImportBills(){
-  if(guestMode){showToast("View only - guest access");return;}
-  var statusEl=document.getElementById("bulkImportStatus");
-  function setStatus(msg,col){
-    if(!msg){statusEl.style.display="none";return;}
-    statusEl.textContent=msg;statusEl.style.color=col||"var(--cy)";statusEl.style.display="block";
-  }
-  var raw=document.getElementById("bulkImportInput").value.trim();
-  if(!raw){setStatus("Paste the bill data first","var(--re)");return;}
-  var arr;
-  try{arr=JSON.parse(raw);}catch(ex){setStatus("Could not read that - make sure the whole block was pasted","var(--re)");return;}
-  if(!Array.isArray(arr)){setStatus("Expected a list of bills","var(--re)");return;}
-  var existingKeys={};
-  for(var i=0;i<ST.bills.length;i++)existingKeys[billDedupeKey(ST.bills[i],i)]=true;
-  var added=0,skipped=0;
-  for(var i=0;i<arr.length;i++){
-    var b=arr[i];
-    if(!b||!b.p||!b.s){skipped++;continue;}
-    var key=billDedupeKey(b,i);
-    if(existingKeys[key]){skipped++;continue;}
-    var days=parseInt(b.days,10);
-    if(!days&&b.s&&b.e)days=Math.round((new Date(b.e)-new Date(b.s))/86400000)+1;
-    if(!days)days=30;
-    var a=parseFloat(b.actual)||0;
-    var cr=parseFloat(b.credit)||0;
-    var da=b.dailyAvg?parseFloat(b.dailyAvg):(a&&days?parseFloat((a/days).toFixed(2)):0);
-    var wk=b.weeklyAvg?parseFloat(b.weeklyAvg):(da?parseFloat((da*7).toFixed(2)):0);
-    var bill={p:String(b.p),s:b.s||"",e:b.e||"",days:days,actual:a,credit:cr,dailyAvg:da,weeklyAvg:wk};
-    for(var fi=0;fi<BILL_ITM_FIELDS.length;fi++){
-      var fk=BILL_ITM_FIELDS[fi];
-      if(b[fk]!==undefined&&b[fk]!==null)bill[fk]=b[fk];
-    }
-    ST.bills.push(bill);
-    existingKeys[key]=true;
-    added++;
-  }
-  if(added){sv();renderBills();renderTrends();renderImportTab();}
-  document.getElementById("bulkImportInput").value="";
-  setStatus(added+" bill"+(added===1?"":"s")+" added"+(skipped?", "+skipped+" skipped (duplicate or invalid)":""),added?"var(--gr)":"var(--re)");
-}
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}
   return null;
@@ -4108,39 +3530,6 @@ function saveThreshMode(val){
   showToast(val==="manual"?"Manual threshold active":"Rolling 6-month avg active");
 }
 
-//  BILLS SORT
-var billSortAsc=false; // default newest first
-
-function toggleBillSort(){
-  billSortAsc=!billSortAsc;
-  var btn=document.getElementById("billSortBtn");
-  if(btn)btn.innerHTML=billSortAsc?"^ Oldest":"v Newest";
-  renderBills();
-}
-
-// BILL FILTER
-
-// BILL FORM AUTO-CALC
-function autoCalcBillAvgs(){
-  var a=parseFloat(document.getElementById("bf-actual").value)||0;
-  var s=document.getElementById("bf-start").value;
-  var e=document.getElementById("bf-end").value;
-  var days=30;
-  if(s&&e){
-    var diff=Math.round((new Date(e)-new Date(s))/86400000)+1;
-    if(diff>0)days=diff;
-  }
-  if(a>0){
-    var da=parseFloat((a/days).toFixed(2));
-    var wk=parseFloat((da*7).toFixed(2));
-    // Only auto-fill if field is empty or was previously auto-filled
-    var dEl=document.getElementById("bf-daily");
-    var wEl=document.getElementById("bf-weekly");
-    if(!dEl.dataset.manual)dEl.value=da;
-    if(!wEl.dataset.manual)wEl.value=wk;
-  }
-}
-
 // HISTORICAL EDIT
 function openHistEdit(){
   if(guestMode){showToast("View only - guest access");return;}
@@ -4652,7 +4041,6 @@ function migratePinsToHash(cb){
   }
 }
 function init(){
-  dedupeBills();
   if(sessionStorage.getItem("solarGuestMode")==="1")guestMode=true;
   migratePinsToHash(function(){
     if(sessionStorage.getItem("solarUnlocked")){
@@ -4677,12 +4065,6 @@ function startApp(){
     if(enterBtn)enterBtn.style.display="none";
     var settingsTab=document.getElementById("t-settings");
     if(settingsTab)settingsTab.style.display="none";
-    var importTab=document.getElementById("t-import");
-    if(importTab)importTab.style.display="none";
-    var billsNewBtn=document.getElementById("billsNewBtn");
-    if(billsNewBtn)billsNewBtn.style.display="none";
-    var billsScanBtn=document.getElementById("billsScanBtn");
-    if(billsScanBtn)billsScanBtn.style.display="none";
     var badge=document.getElementById("guestBadge");
     if(badge)badge.style.display="inline-block";
   }
@@ -4779,7 +4161,7 @@ function lockPinKey(k){
   }
   if(lockPinBuffer.length>=4){setTimeout(function(){submitLockPin();},100);}
 }
-function renderAll(){renderHome();renderCal();renderBills();renderTrends();renderSettings();renderImportTab()}
+function renderAll(){renderHome();renderCal();renderTrends();renderSettings()}
 
 //  INSIGHT HELPERS 
 
@@ -5906,206 +5288,6 @@ function calGoTo(yr,mo){
 
 
 
-// BILLS - grouped by year with year chip filter
-var billYearFilter="all";
-function setBillYearFilter(yr){
-  billYearFilter=yr;
-  renderBills();
-}
-
-function renderBills(){
-  var allBills=ST.bills;
-  if(!allBills||!allBills.length){
-    document.getElementById("billsByYear").innerHTML='<div style="color:var(--mu);text-align:center;padding:40px;font-size:13px">No bills yet \u2014 tap + NEW to add one</div>';
-    return;
-  }
-
-  // Build year chips
-  var allYears=[];
-  for(var i=0;i<allBills.length;i++){
-    var yr=allBills[i].s?allBills[i].s.substring(0,4):"";
-    if(yr&&allYears.indexOf(yr)<0)allYears.push(yr);
-  }
-  allYears.sort();
-  var chipsEl=document.getElementById("billYearChips");
-  if(chipsEl){
-    var ch='<button onclick="setBillYearFilter(\'all\')" style="padding:6px 14px;border-radius:20px;border:1px solid '+(billYearFilter==="all"?"var(--or)":"var(--bd)")+';background:'+(billYearFilter==="all"?"var(--or)":"var(--s2)")+';color:'+(billYearFilter==="all"?"#000":"var(--mu)")+';font-size:11px;font-weight:700;cursor:pointer;font-family:-apple-system,sans-serif;white-space:nowrap">All</button>';
-    for(var i=0;i<allYears.length;i++){
-      var y=allYears[i];
-      var on=(billYearFilter===y);
-      ch+='<button onclick="setBillYearFilter(\''+y+'\')" style="padding:6px 14px;border-radius:20px;border:1px solid '+(on?"var(--or)":"var(--bd)")+';background:'+(on?"var(--or)":"var(--s2)")+';color:'+(on?"#000":"var(--mu)")+';font-size:11px;font-weight:700;cursor:pointer;font-family:-apple-system,sans-serif;white-space:nowrap">'+y+'</button>';
-    }
-    chipsEl.innerHTML=ch;
-  }
-
-  // Filter bills
-  var bills=[];
-  for(var i=0;i<allBills.length;i++){
-    var b=allBills[i];
-    if(billYearFilter!=="all"&&b.s&&b.s.substring(0,4)!==billYearFilter)continue;
-    bills.push(b);
-  }
-
-  // Summary strip
-  var tp=0,tc=0,bestAmt=9999,worstAmt=0,bestB=null,worstB=null,avgSum=0;
-  for(var i=0;i<bills.length;i++){
-    var a=bills[i].actual||0;
-    tp+=a;tc+=bills[i].credit||0;
-    avgSum+=bills[i].dailyAvg||0;
-    if(a>0&&a<bestAmt){bestAmt=a;bestB=bills[i];}
-    if(a>worstAmt){worstAmt=a;worstB=bills[i];}
-  }
-  var avgBill=bills.length?tp/bills.length:0;
-  var stripEl=document.getElementById("billSummaryStrip");
-  if(stripEl){
-    var s='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:14px 16px">';
-    s+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px">';
-    s+='<div style="text-align:center"><div style="font-size:8px;color:var(--mu);margin-bottom:3px">TOTAL</div><div style="font-size:17px;font-weight:800;color:var(--tx)">$'+Math.round(tp)+'</div><div style="font-size:8px;color:var(--di)">'+bills.length+' bills</div></div>';
-    s+='<div style="text-align:center"><div style="font-size:8px;color:var(--mu);margin-bottom:3px">AVG BILL</div><div style="font-size:17px;font-weight:800;color:var(--cy)">$'+Math.round(avgBill)+'</div><div style="font-size:8px;color:var(--di)">per period</div></div>';
-    if(bestB){s+='<div style="text-align:center"><div style="font-size:8px;color:var(--mu);margin-bottom:3px">BEST</div><div style="font-size:17px;font-weight:800;color:var(--gr)">$'+Math.round(bestAmt)+'</div><div style="font-size:8px;color:var(--di)">'+bestB.p.split(" ")[0]+'</div></div>';}
-    if(worstB){s+='<div style="text-align:center"><div style="font-size:8px;color:var(--mu);margin-bottom:3px">WORST</div><div style="font-size:17px;font-weight:800;color:var(--re)">$'+Math.round(worstAmt)+'</div><div style="font-size:8px;color:var(--di)">'+worstB.p.split(" ")[0]+'</div></div>';}
-    s+='</div>';
-    // Credits bar
-    if(tc>0){
-      s+='<div style="display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid var(--bd)">';
-      s+='<div style="font-size:9px;color:var(--mu)">SOLAR CREDITS</div>';
-      s+='<div style="font-size:13px;font-weight:700;color:var(--gr)">$'+tc.toFixed(2)+'</div>';
-      s+='<div style="font-size:9px;color:var(--di)">total exported</div></div>';
-    }
-    s+='</div>';
-    stripEl.innerHTML=s;
-  }
-
-  document.getElementById("billSub").textContent=bills.length+" bills";
-
-  // Build index of all bills by month for last-year lookup
-  var billByMonth={};
-  for(var i=0;i<allBills.length;i++){
-    if(allBills[i].s)billByMonth[allBills[i].s.substring(0,7)]=allBills[i];
-  }
-
-  var maxB=0.01;
-  for(var i=0;i<bills.length;i++)if((bills[i].actual||0)>maxB)maxB=bills[i].actual;
-
-  // Sort
-  var sorted=bills.slice();
-  if(billSortAsc){sorted.sort(function(a,b){return(a.s||"")>(b.s||"")?1:-1});}
-  else{sorted.sort(function(a,b){return(a.s||"")<(b.s||"")?1:-1});}
-
-  // Group by year
-  var years={};
-  for(var i=0;i<sorted.length;i++){
-    var b=sorted[i];
-    var yr=b.s?b.s.substring(0,4):"?";
-    if(!years[yr])years[yr]=[];
-    years[yr].push({b:b,i:allBills.indexOf(b)});
-  }
-  var ykeys=Object.keys(years).sort();
-  if(!billSortAsc)ykeys.reverse();
-
-  var html="";
-  for(var yi=0;yi<ykeys.length;yi++){
-    var yr=ykeys[yi];
-    if(billYearFilter==="all"){
-      // Year total
-      var ytotal=0;
-      for(var ii=0;ii<years[yr].length;ii++)ytotal+=years[yr][ii].b.actual||0;
-      html+='<div class="yr-hd" style="display:flex;justify-content:space-between;align-items:center">';
-      html+='<span>'+yr+'</span><span style="color:var(--or);font-size:12px">$'+Math.round(ytotal)+'</span></div>';
-    }
-    var items=years[yr];
-    for(var ii=0;ii<items.length;ii++){
-      var b=items[ii].b,idx=items[ii].i;
-      var a=b.actual||0;
-      var col=a>250?"var(--re)":a>100?"var(--am)":a>40?"var(--cy)":"var(--gr)";
-      var pct=Math.round((a/maxB)*100);
-
-      // vs last year
-      var lyrStr="";
-      var moNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      if(b.s){
-        var bMo=b.s.substring(0,7);
-        var bYr=parseInt(bMo.substring(0,4));
-        var bMoNum=parseInt(bMo.substring(5,7));
-        var lyrMo=(bYr-1)+"-"+bMo.substring(5,7);
-        var lyrBill=billByMonth[lyrMo];
-        if(lyrBill&&lyrBill.actual>0){
-          var diff=a-lyrBill.actual;
-          var diffPct=Math.round(Math.abs(diff)/lyrBill.actual*100);
-          var better=diff<0;
-          var vsCol=better?"var(--gr)":"var(--re)";
-          var prefix=better?"saved $":"up $";
-          lyrStr='<div style="font-size:10px;color:'+vsCol+';margin-top:4px">'+(better?"v ":"^ ")+prefix+Math.abs(diff).toFixed(0)+' ('+diffPct+'%) vs '+moNames[bMoNum-1]+' '+(bYr-1)+'</div>';
-        }
-      }
-
-      html+='<div class="bill-card" onclick="openBillForm('+idx+')" style="cursor:pointer">';
-      // Top row
-      html+='<div class="bill-top">';
-      html+='<div><div class="bill-period">'+escapeHtml(b.p)+'</div>';
-      html+='<div class="bill-dates">'+(b.s||"")+(b.e?" - "+b.e:"")+(b.days?" ("+b.days+"d)":"")+'</div>';
-      html+=lyrStr+'</div>';
-      html+='<div style="text-align:right"><div class="bill-amount" style="color:'+col+'">$'+a.toFixed(0)+'</div>';
-      html+='<div class="bill-credit">$'+(b.credit||0).toFixed(2)+' credit</div></div>';
-      html+='</div>';
-      // Progress bar
-      html+='<div class="bill-bar"><div class="bill-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';
-      // Stats row
-      html+='<div class="bill-stats">';
-      html+='<div class="bs-item"><span class="bs-lbl">DAILY AVG</span><div class="bs-val" style="color:var(--cy)">$'+(b.dailyAvg||0).toFixed(2)+'</div></div>';
-      html+='<div class="bs-item"><span class="bs-lbl">WEEKLY AVG</span><div class="bs-val" style="color:var(--bl)">$'+(b.weeklyAvg||0).toFixed(2)+'</div></div>';
-      html+='<div class="bs-item"><span class="bs-lbl">DAYS</span><div class="bs-val" style="color:var(--mu)">'+(b.days||0)+'</div></div>';
-      html+='</div>';
-      // Daily cost bar chart (sparkline replacement)
-      html+='<div id="bsp-'+idx+'" style="margin-top:10px;height:44px;width:100%"></div>';
-      html+='</div>';
-    }
-  }
-  document.getElementById("billsByYear").innerHTML=html;
-
-  // Draw daily bar charts
-  var allD=allData();
-  var allMap={};
-  for(var i=0;i<allD.length;i++)allMap[allD[i].date]=allD[i].net;
-  for(var i=0;i<allBills.length;i++){
-    var b=allBills[i];
-    var el=document.getElementById("bsp-"+i);
-    if(!el||!b.s||!b.e)continue;
-    var pts=[],dates=[];
-    var cur=new Date(b.s+"T00:00:00");
-    var end2=new Date(b.e+"T00:00:00");
-    while(cur<=end2){
-      var ds=localDate(cur);
-      pts.push(allMap[ds]!==undefined?allMap[ds]:null);
-      dates.push(ds);
-      cur.setDate(cur.getDate()+1);
-    }
-    if(pts.length<2)continue;
-    var known=[];
-    for(var j=0;j<pts.length;j++){if(pts[j]!==null)known.push(pts[j]);}
-    if(!known.length)continue;
-    var mx=Math.max.apply(null,known)||1;
-    var mn=Math.min.apply(null,known);
-    var H=44,n=pts.length;
-    var barW=Math.max(1,Math.floor((el.offsetWidth||300)/n)-1);
-    var totalW=n*(barW+1);
-    var svg='<svg width="100%" height="'+H+'" viewBox="0 0 '+totalW+' '+H+'" preserveAspectRatio="none" style="display:block;border-radius:6px;overflow:hidden">';
-    for(var j=0;j<pts.length;j++){
-      if(pts[j]===null){
-        svg+='<rect x="'+(j*(barW+1))+'" y="0" width="'+barW+'" height="'+H+'" fill="rgba(255,255,255,.03)"/>';
-        continue;
-      }
-      var v=pts[j];
-      var barH=Math.max(2,Math.round(Math.abs(v)/mx*(H-4)))+2;
-      var by=H-barH;
-      var bc=v<=0?"rgba(52,211,153,.75)":v<3?"rgba(34,211,238,.7)":v<8?"rgba(251,191,36,.75)":"rgba(248,113,113,.75)";
-      svg+='<rect x="'+(j*(barW+1))+'" y="'+by+'" width="'+barW+'" height="'+barH+'" fill="'+bc+'"/>';
-    }
-    svg+='</svg>';
-    el.innerHTML=svg;
-  }
-}
-
 // TRENDS
 var trendRange="all";
 
@@ -6525,7 +5707,7 @@ function renderTargetSeasonNote(){
 
 // UI
 function go(t){
-  var tabs=["home","cal","bills","import","trends","settings"];
+  var tabs=["home","cal","trends","settings"];
   for(var i=0;i<tabs.length;i++){
     document.getElementById("sc-"+tabs[i]).className="sc"+(tabs[i]===t?" on":"");
     document.getElementById("t-"+tabs[i]).className="nt"+(tabs[i]===t?" on":"");
@@ -6854,20 +6036,6 @@ window.fbBackgroundSync = function(){
   }catch(e){ /* never let a sync error affect the app */ }
 };
 
-// Deletes every bill document from Firestore (not just the local array),
-// so a wipe-and-rebuild doesn't get silently undone by fbHydrateAndMerge
-// pulling the old bills back in on the next load. No-op if not signed in.
-window.fbDeleteAllBillDocs = function(){
-  if (!fbAuth.currentUser) return Promise.resolve();
-  return getDocs(collection(fbDb, fbBasePath, "bills")).then(function(snap){
-    if (snap.empty) return;
-    var batch = writeBatch(fbDb);
-    snap.forEach(function(d){ batch.delete(d.ref); });
-    return batch.commit();
-  }).then(function(){
-    fbLastSnapshot.bills = {};
-  });
-};
 </script>
 
 
@@ -6983,19 +6151,6 @@ window.fbDeleteAllBillDocs = function(){
     <div style="display:flex;gap:8px">
       <button onclick="document.getElementById('resetPinOv').style.display='none'" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>
       <button onclick="submitResetVerify()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Verify</button>
-    </div>
-  </div>
-</div>
-
-<!-- CLEAR ALL BILLS CONFIRM -->
-<div id="clearBillsOv" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--s1);border-radius:20px;padding:24px;width:100%;max-width:340px;border:1px solid var(--bd)">
-    <div style="font-size:16px;font-weight:700;color:var(--re);margin-bottom:8px">Clear all bills?</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="clearBillsMsg">This deletes every bill on file.</div>
-    <div id="clearBillsStatus" style="font-size:11px;color:var(--re);margin-bottom:12px;min-height:16px"></div>
-    <div style="display:flex;gap:8px">
-      <button onclick="document.getElementById('clearBillsOv').style.display='none'" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:-apple-system,sans-serif;font-weight:600;font-size:14px;cursor:pointer">Cancel</button>
-      <button onclick="clearAllBillsGo()" id="clearBillsConfirmBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--re);color:#fff;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Delete All</button>
     </div>
   </div>
 </div>

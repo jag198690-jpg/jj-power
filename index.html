@@ -294,13 +294,6 @@ canvas{display:block;width:100%;height:56px}
     </div>
   </div>
 
-  <!-- SYSTEM SNAPSHOT -->
-  <div class="g3" style="margin-bottom:12px">
-    <div class="stat"><span class="stat-l">SOLAR COVERED</span><div class="stat-v" style="color:var(--gr)" id="selfConsumePct">-</div><div class="stat-u">%</div></div>
-    <div class="stat"><span class="stat-l">BATTERY 14D</span><div class="stat-v" id="battTrendMini">-</div><div class="stat-u" id="battTrendSub">kWh net</div></div>
-    <div class="stat" style="cursor:pointer" onclick="goToFirstMissing()"><span class="stat-l">MISSING</span><div class="stat-v" style="color:var(--re)" id="missNum">0</div><div class="stat-u">tap to fill</div></div>
-  </div>
-
   <button id="enterTodayBtn" onclick="openNP(null)" style="width:100%;padding:16px;border-radius:14px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:12px;letter-spacing:.02em">+ ENTER TODAY'S DATA</button>
 
   <!-- WEATHER FORECAST -->
@@ -2553,23 +2546,6 @@ function billData(){
   for(var i=0;i<all.length;i++){if(new Date(all[i].date+"T00:00:00")>=bs)res.push(all[i])}
   return res;
 }
-function missingDays(){
-  var map={},all=allData();
-  for(var i=0;i<all.length;i++)map[all[i].date]=1;
-  var start=new Date("2023-07-07T00:00:00");
-  var yday=localNow();yday.setDate(yday.getDate()-1);
-  var miss=[];
-  for(var d=new Date(start);d<=yday;d.setDate(d.getDate()+1)){
-    var iso=localDate(d);
-    if(!map[iso])miss.push(iso);
-  }
-  return miss;
-}
-function goToFirstMissing(){
-  var m=missingDays();
-  go("cal");
-  if(m.length)setTimeout(function(){openNP(m[0]);},80);
-}
 // System was down 30 Sep - 19 Oct 2023: 0 solar/charge/discharge recorded
 // with normal (high) grid draw. Real data - kept in history and bills - but
 // excluded from solar/battery performance aggregates so a known equipment
@@ -3670,9 +3646,6 @@ function renderHome(){
   var statusEl=document.getElementById("todayStatus");
   if(todayEntry||histToday){statusEl.innerHTML='<span class="pill pill-gr">OK Entered</span>'}
   else{statusEl.innerHTML='<span class="pill pill-or">o Not yet</span>'}
-  // Missing days
-  var miss=missingDays();
-  document.getElementById("missNum").textContent=miss.length;
   try{renderInsights();}catch(e){}
 }
 
@@ -3694,14 +3667,9 @@ function renderInsights(){
 
   //  Self consumption
   var sc=getSelfConsumption();
-  var scEl=document.getElementById("selfConsumePct");
   var scFullEl=document.getElementById("selfConsumePctFull");
   var scSub=document.getElementById("selfConsumeSub");
   var scCol=sc.pct>60?"var(--gr)":sc.pct>40?"var(--am)":"var(--re)";
-  if(scEl){
-    scEl.textContent=sc.pct;
-    scEl.style.color=scCol;
-  }
   if(scFullEl){
     scFullEl.textContent=sc.pct+"%";
     scFullEl.style.color=scCol;

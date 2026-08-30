@@ -256,44 +256,6 @@ canvas{display:block;width:100%;height:56px}
     </div>
   </div>
 
-  <!-- CUMULATIVE SAVINGS + PAYBACK -->
-  <div class="card" style="background:linear-gradient(145deg,#0d1f18,#0a1a14,#081210);border-color:rgba(52,211,153,.3);margin-bottom:14px;padding:20px;box-shadow:0 4px 28px rgba(0,0,0,.5)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="sub">SAVINGS LOGGED SINCE 2023</div>
-      <button class="info-btn" onclick="showInfo('totalsavings')">i</button>
-    </div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-      <div style="font-size:52px;font-weight:800;color:var(--gr);line-height:1;letter-spacing:-1px" id="hTotalSaved">$0</div>
-      <div style="font-size:12px;color:var(--mu);padding-bottom:5px">saved from solar, from your actual data</div>
-    </div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:6px" id="hTotalSavedSub"></div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:14px;padding-top:8px;border-top:1px dashed rgba(52,211,153,.2)" id="hEstTotalIncl"></div>
-    <!-- Payback progress bar -->
-    <div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <div style="font-size:10px;color:var(--mu)">SYSTEM PAYBACK</div>
-        <div style="font-size:10px;font-weight:700;color:var(--gr)" id="hPaybackPct">0%</div>
-      </div>
-      <div style="background:rgba(52,211,153,.12);border-radius:6px;height:8px;overflow:hidden">
-        <div id="hPaybackBar" style="height:100%;background:var(--gr);border-radius:6px;width:0%;transition:width .6s"></div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:12px;padding-top:10px;border-top:1px solid rgba(52,211,153,.15)">
-      <div>
-        <div class="sub">INVESTED</div>
-        <div style="font-size:17px;font-weight:700;color:var(--tx);margin-top:2px" id="hTotalInvested">$36,000</div>
-      </div>
-      <div style="text-align:center">
-        <div class="sub">REMAINING</div>
-        <div style="font-size:17px;font-weight:700;color:var(--am);margin-top:2px" id="hPaybackRemaining">-</div>
-      </div>
-      <div style="text-align:right">
-        <div class="sub">EST. PAYBACK</div>
-        <div style="font-size:17px;font-weight:700;color:var(--cy);margin-top:2px" id="hPaybackDate">-</div>
-      </div>
-    </div>
-  </div>
-
   <button id="enterTodayBtn" onclick="openNP(null)" style="width:100%;padding:16px;border-radius:14px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:12px;letter-spacing:.02em">+ ENTER TODAY'S DATA</button>
 
   <!-- WEATHER FORECAST -->
@@ -305,41 +267,6 @@ canvas{display:block;width:100%;height:56px}
     <div style="color:var(--mu);font-size:12px;text-align:center;padding:8px">Loading forecast...</div>
   </div>
 
-  <!-- MORE DETAIL DISCLOSURE -->
-  <div class="card" style="padding:13px;margin-bottom:12px;cursor:pointer;text-align:center" onclick="toggleHomeMore()">
-    <span class="sub" id="homeMoreArrow">MORE v</span>
-  </div>
-  <div id="homeMoreSection" style="display:none">
-
-  <!-- INSIGHTS ROW 2: Solar covered -->
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div class="sub">SOLAR COVERED</div>
-    <div style="font-size:28px;font-weight:700;color:var(--gr);margin:4px 0 2px" id="selfConsumePctFull">-</div>
-    <div style="font-size:10px;color:var(--mu)">of home energy from solar</div>
-    <div style="font-size:10px;color:var(--di);margin-top:5px" id="selfConsumeSub">-</div>
-  </div>
-
-  <!-- INSIGHTS ROW 4: Running bill vs last year -->
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div class="sub" style="margin-bottom:8px">RUNNING BILL vs LAST YEAR</div>
-    <div style="font-size:10px;color:var(--mu);margin-bottom:10px" id="runningBillSub">Same period last year</div>
-    <div id="runningBillChart"></div>
-  </div>
-
-  <!-- INSIGHTS ROW 5d: Home consumption -->
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="sub">HOME CONSUMPTION</div><button class="info-btn" onclick="showInfo('homecons')">i</button></div>
-    <div style="font-size:10px;color:var(--mu);margin-bottom:10px">Total energy your home actually used (Solar + Grid - Feed-in)</div>
-    <div id="homeConsCard"></div>
-  </div>
-
-  <!-- INSIGHTS ROW 5e: Weekly energy summary -->
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div class="sub" style="margin-bottom:8px">WEEKLY ENERGY SUMMARY</div>
-    <div id="weeklyEnergyCard"></div>
-  </div>
-
-  </div>
 </div>
 
 <!-- ??? CALENDAR ??? -->
@@ -2000,9 +1927,6 @@ function ratesForDate(d){
 }
 // True when there is only one rate period on record, so every historical
 // day is priced at today's rates rather than what was actually charged then.
-function rateHistoryThin(){
-  return !ST.rateHistory||ST.rateHistory.length<=1;
-}
 function calcNet(u,f,r,d){
   var rt=d?ratesForDate(d):(ST.rates||RFL);
   return (u*(rt[r]||rt.shoulder))+rt.supply-(f*rt.feedin);
@@ -2566,129 +2490,6 @@ function isOddDay(d){
 }
 function f$(v){return v<0?"-$"+Math.abs(v).toFixed(2):"$"+v.toFixed(2)}
 
-// HOME CONSUMPTION
-function renderHomeConsumption(){
-  var el=document.getElementById("homeConsCard");
-  if(!el)return;
-  var all=allData();
-  var bs=new Date(ST.billStart+"T00:00:00");
-  var bd=[];
-  for(var i=0;i<all.length;i++){
-    if(new Date(all[i].date+"T00:00:00")>=bs)bd.push(all[i]);
-  }
-  if(!bd.length){el.innerHTML='<div style="font-size:11px;color:var(--mu)">No data yet</div>';return;}
-
-  // Calculate home consumption per day
-  var totalHome=0,totalSolar=0,totalGrid=0,totalFeedin=0,daysWithProd=0;
-  for(var i=0;i<bd.length;i++){
-    var d=bd[i];
-    var prod=d.production||0;
-    var home=d.usage+prod-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
-    totalHome+=home;
-    totalSolar+=prod;
-    totalGrid+=d.usage;
-    totalFeedin+=d.feedin;
-    if(prod>0)daysWithProd++;
-  }
-  var avgHome=bd.length>0?totalHome/bd.length:0;
-  var avgSolar=daysWithProd>0?totalSolar/daysWithProd:0;
-  var solarPct=totalHome>0?Math.round((totalSolar-totalFeedin)/totalHome*100):0;
-
-  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
-  h+='<div style="padding:10px;background:var(--s2);border-radius:10px;text-align:center">';
-  h+='<div style="font-size:9px;color:var(--mu)">AVG HOME USE/DAY</div>';
-  h+='<div style="font-size:24px;font-weight:700;color:var(--tx);margin:3px 0">'+avgHome.toFixed(1)+'</div>';
-  h+='<div style="font-size:9px;color:var(--mu)">kWh</div></div>';
-  h+='<div style="padding:10px;background:var(--s2);border-radius:10px;text-align:center">';
-  h+='<div style="font-size:9px;color:var(--mu)">SOLAR SUPPLIED</div>';
-  h+='<div style="font-size:24px;font-weight:700;color:var(--gr);margin:3px 0">'+solarPct+'%</div>';
-  h+='<div style="font-size:9px;color:var(--mu)">of home needs</div></div></div>';
-
-  // Energy flow breakdown bar
-  var maxVal=Math.max(totalSolar,totalGrid,totalFeedin,1);
-  var items=[
-    {label:"Solar generated",val:totalSolar,col:"var(--am)"},
-    {label:"Grid purchased",val:totalGrid,col:"var(--re)"},
-    {label:"Exported",val:totalFeedin,col:"var(--cy)"},
-    {label:"Home consumed",val:totalHome,col:"var(--gr)"}
-  ];
-  for(var i=0;i<items.length;i++){
-    var it=items[i];
-    var pct=Math.round((it.val/maxVal)*100);
-    h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">';
-    h+='<div style="width:80px;font-size:9px;color:var(--mu)">'+it.label+'</div>';
-    h+='<div style="flex:1;height:16px;background:var(--s2);border-radius:3px;overflow:hidden">';
-    h+='<div style="width:'+pct+'%;height:100%;background:'+it.col+';opacity:.8;border-radius:3px"></div></div>';
-    h+='<div style="width:38px;font-size:9px;color:var(--mu);text-align:right">'+it.val.toFixed(0)+'kWh</div>';
-    h+='</div>';
-  }
-  h+='<div style="font-size:9px;color:var(--di);margin-top:4px">Based on '+bd.length+' days this bill period'+(daysWithProd<bd.length?' ('+daysWithProd+' with solar data)':'')+'</div>';
-  el.innerHTML=h;
-}
-
-// WEEKLY ENERGY SUMMARY
-function renderWeeklyEnergy(){
-  var el=document.getElementById("weeklyEnergyCard");
-  if(!el)return;
-  var all=allData();
-  if(!all.length){el.innerHTML='<div style="font-size:11px;color:var(--mu)">No data yet</div>';return;}
-
-  // Get last 4 weeks
-  var now=localNow();
-  var weeks=[];
-  for(var w=0;w<4;w++){
-    var wEnd=new Date(now);wEnd.setDate(now.getDate()-w*7);
-    var wStart=new Date(wEnd);wStart.setDate(wEnd.getDate()-6);
-    var wEndStr=localDate(wEnd);
-    var wStartStr=localDate(wStart);
-    var wData={solar:0,grid:0,feedin:0,home:0,cost:0,charge:0,discharge:0,days:0};
-    for(var i=0;i<all.length;i++){
-      var d=all[i];
-      if(d.date>=wStartStr&&d.date<=wEndStr){
-        var prod=d.production||0;
-        wData.solar+=prod;
-        wData.grid+=d.usage;
-        wData.feedin+=d.feedin;
-        wData.home+=d.usage+prod-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
-        wData.cost+=(d.net||0);
-        wData.charge+=d.charge||0;
-        wData.discharge+=d.discharge||0;
-        wData.days++;
-      }
-    }
-    if(wData.days>0)weeks.push({label:w===0?"This week":w===1?"Last week":wStart.toLocaleDateString("en-AU",{day:"numeric",month:"short"}),data:wData});
-  }
-
-  if(!weeks.length){el.innerHTML='<div style="font-size:11px;color:var(--mu)">Not enough data yet</div>';return;}
-
-  var h='';
-  for(var w=0;w<weeks.length;w++){
-    var wk=weeks[w],d=wk.data;
-    var isThis=w===0;
-    h+='<div style="padding:10px;background:var(--s2);border-radius:10px;margin-bottom:8px">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    h+='<div style="font-size:11px;font-weight:700;color:'+(isThis?"var(--or)":"var(--tx)")+'">'+wk.label+'</div>';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--cy)">$'+d.cost.toFixed(2)+'</div></div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">';
-    var stats=[
-      {l:"Solar",v:d.solar.toFixed(0)+"kWh",c:"var(--am)"},
-      {l:"Grid",v:d.grid.toFixed(0)+"kWh",c:"var(--re)"},
-      {l:"Export",v:d.feedin.toFixed(0)+"kWh",c:"var(--cy)"},
-      {l:"Home used",v:d.home.toFixed(0)+"kWh",c:"var(--gr)"},
-      {l:"Batt chg",v:d.charge.toFixed(0)+"kWh",c:"var(--bl)"},
-      {l:"Batt dis",v:d.discharge.toFixed(0)+"kWh",c:"var(--pu)"}
-    ];
-    for(var si=0;si<stats.length;si++){
-      var st=stats[si];
-      h+='<div style="text-align:center;padding:5px 3px;background:var(--bg);border-radius:6px">';
-      h+='<div style="font-size:8px;color:var(--mu)">'+st.l+'</div>';
-      h+='<div style="font-size:11px;font-weight:600;color:'+st.c+'">'+st.v+'</div></div>';
-    }
-    h+='</div></div>';
-  }
-  el.innerHTML=h;
-}
-
 // EXPECTED DAILY PRODUCTION BY MONTH (10kW system, Dubbo NSW)
 var EXPECTED_PROD={1:72.6,2:66.1,3:53.2,4:51.7,5:38.7,6:32.5,7:31.9,8:41.9,9:56.7,10:59.7,11:68.3,12:71.0};
 
@@ -2750,14 +2551,6 @@ function calcTariffImpact(){
 
 // INFO BUBBLES
 var INFO = {
-  "totalsavings": {
-    title: "Total Savings Since Install",
-    body: "The total money your solar system has saved you since installation. This combines an estimate for the period before your app data started (May 2021 to Jul 2023) with precise calculations from your actual daily data. The payback tracker shows how much of your $36,000 system cost has been recovered. You can adjust the pre-data estimate and system costs in Settings."
-  },
-  "homecons": {
-    title: "Home Consumption",
-    body: "The total energy your home actually used each day, calculated as Solar Generated plus Grid Purchased minus Feed-in Exported. This is your real demand. The Solar Supplied percentage shows how much of that demand was met by your own solar and battery rather than the grid."
-  },
   "calendar": {
     title: "Calendar",
     body: "Each cell shows one day. The background colour indicates your net cost \u2014 deep green means a credit day, blue means very low cost, amber and orange mean moderate spending, red means high usage. The small dot shows solar production vs what your 10kW Dubbo system should generate that month \u2014 green means excellent output (\u226590% of expected), yellow means moderate (\u226560%), orange means low (\u226530%), red means very poor (<30%). In May your system should produce around 38 kWh on a good day, so most winter days will show orange or red. The temperature and rainfall comes from Dubbo Airport weather data. Tap any day to enter or edit its data."
@@ -2806,7 +2599,6 @@ function applyTheme(){
   if(btn)btn.textContent=isLight?"Light mode":"Dark mode";
 }
 
-// HISTORICAL EDIT
 // WEATHER DATA CACHE - BOM Dubbo Airport station 065070 (actual data)
 // Apr 2025 - May 2026: real station data baked in
 // Other months: Open-Meteo fallback
@@ -3304,102 +3096,7 @@ function getSameMonthLastYear(){
 
 
 
-function getSelfConsumption(){
-  var bd=billData();
-  if(!bd.length)return{pct:0,totalFeedin:0,totalUsage:0,totalProduction:0,label:"-"};
-  var totalFeedin=0,totalUsage=0,totalProduction=0,totalCharge=0,totalDischarge=0,daysWithProduction=0;
-  for(var i=0;i<bd.length;i++){
-    totalFeedin+=bd[i].feedin||0;
-    totalUsage+=bd[i].usage||0;
-    totalCharge+=bd[i].charge||0;
-    totalDischarge+=bd[i].discharge||0;
-    if(bd[i].production>0){totalProduction+=bd[i].production;daysWithProduction++;}
-  }
-  var selfPct,label;
-  if(totalProduction>0){
-    // Self-sufficiency: solar used at home / total home consumption
-    var solarAtHome=Math.max(0,totalProduction-totalFeedin);
-    var homeConsTotal=totalUsage+totalProduction-totalFeedin-totalCharge+totalDischarge;
-    selfPct=homeConsTotal>0?Math.min(100,Math.max(0,Math.round(((homeConsTotal-totalUsage)/homeConsTotal)*100))):0;
-    label="Solar "+Math.round(totalProduction)+"kWh  Home covered "+Math.round(homeConsTotal-totalUsage)+"kWh  Grid "+Math.round(totalUsage)+"kWh";
-  } else {
-    // No production data - estimate from grid vs feedin
-    var total=totalFeedin+totalUsage;
-    selfPct=total>0?Math.round((totalFeedin/total)*100):0;
-    label="Est. Grid "+Math.round(totalUsage)+"kWh vs Export "+Math.round(totalFeedin)+"kWh";
-  }
-  return{
-    pct:selfPct,
-    totalFeedin:Math.round(totalFeedin),
-    totalUsage:Math.round(totalUsage),
-    totalProduction:Math.round(totalProduction),
-    daysWithProduction:daysWithProduction,
-    label:label
-  };
-}
 
-function getRunningBillVsLastYear(){
-  var all=allData();
-  var bs=new Date(ST.billStart+"T00:00:00");
-  var now=localNow();
-  var todayStr=localDate(now);
-  var bsStr=ST.billStart;
-  // Count days inclusive from bill start to today
-  var dayOfPeriod=Math.round((new Date(todayStr+"T12:00:00")-new Date(bsStr+"T12:00:00"))/86400000);
-
-  // Build last year's bill lookup by start date month
-  var lyBillMap={};
-  if(ST.bills){
-    for(var bi=0;bi<ST.bills.length;bi++){
-      var bl=ST.bills[bi];
-      if(bl.s)lyBillMap[bl.s.substring(0,7)]=bl;
-    }
-  }
-
-  // Build day-by-day running totals for current period
-  var curRunning=[],lyRunning=[];
-  var curTotal=0,lyTotal=0;
-
-  // Check if we have an actual bill for last year's same month
-  // Build lyMonthKey directly from billStart string to avoid timezone shifts
-  var bsParts=ST.billStart.split("-");
-  var lyYear=parseInt(bsParts[0],10)-1;
-  var lyMonthKey=lyYear+"-"+bsParts[1];
-  var lyBsDate=new Date(lyYear+"-"+bsParts[1]+"-"+bsParts[2]+"T00:00:00");
-  var lyActualBill=lyBillMap[lyMonthKey]||null;
-
-  for(var d=0;d<=dayOfPeriod;d++){
-    var curDate=new Date(bs);curDate.setDate(bs.getDate()+d);
-    var curStr=localDate(curDate);
-    var curVal=0;
-    for(var i=0;i<all.length;i++){if(all[i].date===curStr){curVal=all[i].net;break;}}
-    curTotal+=curVal;
-    curRunning.push({day:d,total:curTotal,date:curStr});
-
-    // Last year: use actual bill daily avg if available, else use H array daily data
-    var lyVal=0;
-    if(lyActualBill&&lyActualBill.dailyAvg){
-      lyVal=lyActualBill.dailyAvg;
-    } else {
-      var lyDate=new Date(lyBsDate);lyDate.setDate(lyBsDate.getDate()+d);
-      var lyStr=localDate(lyDate);
-      for(var i=0;i<all.length;i++){if(all[i].date===lyStr){lyVal=all[i].net;break;}}
-    }
-    lyTotal+=lyVal;
-    lyRunning.push({day:d,total:lyTotal,date:""});
-  }
-
-  var diff=curTotal-lyTotal;
-  var pct=lyTotal>0?((diff/lyTotal)*100).toFixed(0):0;
-  return {
-    cur:curRunning, ly:lyRunning,
-    curTotal:curTotal, lyTotal:lyTotal,
-    diff:diff, pct:pct,
-    days:dayOfPeriod+1,
-    bsMonth:bs.toLocaleDateString("en-AU",{month:"long"}),
-    lyYear:(bs.getFullYear()-1)
-  };
-}
 
 
 
@@ -3518,84 +3215,6 @@ function renderForecast(data){
   }
 }
 
-// PAYBACK CARD
-function calcTotalSaved(){
-  var all=allData();
-  var dataSaved=0;
-  for(var i=0;i<all.length;i++){
-    var d=all[i];
-    if(!d.production)continue;
-    if(isOutageDay(d.date))continue;
-    var _rd=ratesForDate(d.date);
-    var sah=Math.max(0,(d.production||0)-(d.feedin||0));
-    dataSaved+=sah*_rd.shoulder+(d.feedin||0)*_rd.feedin;
-  }
-  var sys=ST.system||{};
-  var prior=sys.priorSavings||13000;
-  return {dataSaved:dataSaved,prior:prior,total:dataSaved+prior};
-}
-
-function renderPaybackCard(){
-  var savedEl=document.getElementById("hTotalSaved");
-  var subEl=document.getElementById("hTotalSavedSub");
-  var estEl=document.getElementById("hEstTotalIncl");
-  var pctEl=document.getElementById("hPaybackPct");
-  var barEl=document.getElementById("hPaybackBar");
-  var remEl=document.getElementById("hPaybackRemaining");
-  var dateEl=document.getElementById("hPaybackDate");
-  var invEl=document.getElementById("hTotalInvested");
-  if(!savedEl)return;
-  var sys=ST.system||{};
-  var totalCost=(sys.solarCost||13000)+(sys.batt1Cost||13000)+(sys.batt2Cost||10000);
-  var s=calcTotalSaved();
-  // Two figures, never blended: the headline is only what's logged in actual
-  // data since tracking started. The payback timeline below separately adds
-  // an estimate for pre-tracking savings, labelled as such.
-  var loggedSaved=s.dataSaved;
-  var estTotal=s.total;
-  var pct=Math.min(100,Math.round((estTotal/totalCost)*100));
-  var remaining=Math.max(0,totalCost-estTotal);
-  savedEl.textContent="$"+Math.round(loggedSaved).toLocaleString();
-  if(invEl)invEl.textContent="$"+Math.round(totalCost).toLocaleString();
-  if(subEl){
-    var all=allData();
-    var dataStart=all.length?all[0].date:"7 Jul 2023";
-    var rateNote=rateHistoryThin()?" Priced at today's rates for all history - add past rate changes in Settings for accuracy.":"";
-    subEl.textContent="From "+all.length+" days of data logged since "+dataStart+"."+rateNote;
-  }
-  if(estEl){
-    estEl.textContent="Payback below adds a $"+Math.round(s.prior).toLocaleString()+" estimate for pre-tracking savings - est. total $"+Math.round(estTotal).toLocaleString()+".";
-  }
-  if(pctEl)pctEl.textContent=pct+"%";
-  if(barEl)barEl.style.width=pct+"%";
-  if(remEl)remEl.textContent=remaining>0?"$"+Math.round(remaining).toLocaleString():"PAID OFF!";
-  if(dateEl){
-    var all=allData();
-    var daysWithSolar=0,rateSaved=0;
-    for(var i=0;i<all.length;i++){
-      if(all[i].production>0&&!isOutageDay(all[i].date)){
-        var sah=Math.max(0,(all[i].production||0)-(all[i].feedin||0));
-        var _pRD=ratesForDate(all[i].date);rateSaved+=sah*_pRD.shoulder+(all[i].feedin||0)*_pRD.feedin;
-        daysWithSolar++;
-      }
-    }
-    var dailyRate=daysWithSolar>0?rateSaved/daysWithSolar:0;
-    if(dailyRate>0&&remaining>0){
-      var daysLeft=Math.ceil(remaining/dailyRate);
-      var paybackDt=new Date();
-      paybackDt.setDate(paybackDt.getDate()+daysLeft);
-      var payYr=paybackDt.getFullYear();
-      var payMo=paybackDt.toLocaleDateString("en-AU",{month:"short"});
-      dateEl.textContent=payMo+" "+payYr;
-    } else if(remaining<=0){
-      dateEl.textContent="Done!";
-      dateEl.style.color="var(--gr)";
-    } else {
-      dateEl.textContent="-";
-    }
-  }
-}
-
 // HOME
 function renderHome(){
   var bd=billData(),total=0;
@@ -3635,8 +3254,6 @@ function renderHome(){
     solarSavedTotalEl.textContent=_savedTotal>0?"$"+_savedTotal.toFixed(2):"-";
   }
 
-  // CUMULATIVE SAVINGS + PAYBACK
-  renderPaybackCard();
   fetchForecast();
 
   // Today status pill
@@ -3665,76 +3282,6 @@ function renderInsights(){
     if(hVlyEl2){hVlyEl2.textContent="No data for "+smly.month+" last year yet";hVlyEl2.style.color="var(--mu)";}
   }
 
-  //  Self consumption
-  var sc=getSelfConsumption();
-  var scFullEl=document.getElementById("selfConsumePctFull");
-  var scSub=document.getElementById("selfConsumeSub");
-  var scCol=sc.pct>60?"var(--gr)":sc.pct>40?"var(--am)":"var(--re)";
-  if(scFullEl){
-    scFullEl.textContent=sc.pct+"%";
-    scFullEl.style.color=scCol;
-    if(scSub)scSub.textContent=sc.label;
-  }
-
-  //  Day of week analysis
-  var rbv=getRunningBillVsLastYear();
-  var rbEl=document.getElementById("runningBillChart");
-  var rbSub=document.getElementById("runningBillSub");
-  if(rbEl){
-    if(rbSub)rbSub.textContent=rbv.days+" days into period - vs same "+rbv.days+" days in "+rbv.lyYear;
-    var diff=rbv.diff;
-    var diffCol=diff<0?"var(--gr)":"var(--re)";
-    var arrow=diff<0?"v ":"^ ";
-    var rh="";
-    // Summary row
-    rh+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
-    rh+='<div style="text-align:center;padding:10px;background:var(--s2);border-radius:10px">';
-    rh+='<div style="font-size:10px;color:var(--mu);margin-bottom:4px">THIS YEAR</div>';
-    rh+='<div style="font-size:28px;font-weight:700;color:var(--or)">$'+rbv.curTotal.toFixed(0)+'</div>';
-    rh+='<div style="font-size:9px;color:var(--mu);margin-top:3px">'+rbv.days+' days</div>';
-    rh+='</div>';
-    rh+='<div style="text-align:center;padding:10px;background:var(--s2);border-radius:10px">';
-    rh+='<div style="font-size:10px;color:var(--mu);margin-bottom:4px">LAST YEAR</div>';
-    rh+='<div style="font-size:28px;font-weight:700;color:var(--mu)">$'+rbv.lyTotal.toFixed(0)+'</div>';
-    rh+='<div style="font-size:9px;color:var(--mu);margin-top:3px">same period</div>';
-    rh+='</div></div>';
-    // Variance
-    rh+='<div style="text-align:center;padding:10px;background:var(--s2);border-radius:10px;margin-bottom:12px">';
-    rh+='<div style="font-size:22px;font-weight:700;color:'+diffCol+'">'+arrow+'$'+Math.abs(diff).toFixed(2)+' ('+Math.abs(rbv.pct)+'%)</div>';
-    rh+='<div style="font-size:10px;color:var(--mu);margin-top:3px">'+(diff<0?'cheaper':'more expensive')+' than same period last year</div>';
-    rh+='</div>';
-    // Day by day running total bars - sample every N days
-    var step=Math.max(1,Math.floor(rbv.cur.length/10));
-    var maxVal=Math.max(rbv.curTotal,rbv.lyTotal,1);
-    rh+='<div style="font-size:9px;color:var(--mu);margin-bottom:6px">RUNNING TOTAL DAY BY DAY</div>';
-    for(var ri=0;ri<rbv.cur.length;ri+=step){
-      var cv=rbv.cur[ri].total,lv=rbv.ly[ri].total;
-      var cpct=Math.round((cv/maxVal)*100),lpct=Math.round((lv/maxVal)*100);
-      var lbl="Day "+(ri+1);
-      rh+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">';
-      rh+='<div style="width:34px;font-size:8px;color:var(--mu)">'+lbl+'</div>';
-      rh+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
-      rh+='<div style="height:8px;background:var(--s2);border-radius:2px;overflow:hidden">';
-      rh+='<div style="width:'+cpct+'%;height:100%;background:var(--or);opacity:.8;border-radius:2px"></div></div>';
-      rh+='<div style="height:8px;background:var(--s2);border-radius:2px;overflow:hidden">';
-      rh+='<div style="width:'+lpct+'%;height:100%;background:rgba(74,122,155,.6);border-radius:2px"></div></div>';
-      rh+='</div>';
-      rh+='<div style="width:30px;font-size:8px;color:var(--mu);text-align:right">$'+cv.toFixed(0)+'</div>';
-      rh+='</div>';
-    }
-    rh+='<div style="display:flex;gap:12px;margin-top:6px">';
-    rh+='<span style="font-size:9px;color:var(--or)">* This year</span>';
-    rh+='<span style="font-size:9px;color:rgba(74,122,155,.8)">* Last year</span>';
-    rh+='</div>';
-    rbEl.innerHTML=rh;
-  }
-
-
-  //  Home consumption
-  try{renderHomeConsumption();}catch(e){}
-
-  //  Weekly energy summary
-  try{renderWeeklyEnergy();}catch(e){}
 }
 
 
@@ -4220,14 +3767,7 @@ function go(t){
   }
   window.scrollTo(0,0);
 }
-function toggleHomeMore(){
-  var el=document.getElementById("homeMoreSection");
-  if(!el)return;
-  var open=el.style.display!=="none";
-  el.style.display=open?"none":"block";
-  var ar=document.getElementById("homeMoreArrow");
-  if(ar)ar.textContent=open?"MORE v":"LESS ^";
-}
+
 function toggleSettingsAdvanced(){
   var el=document.getElementById("settingsAdvSection");
   if(!el)return;

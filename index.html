@@ -406,6 +406,31 @@ canvas{display:block;width:100%;height:56px}
   <div style="font-size:10px;color:var(--mu);margin:-6px 0 10px;padding:7px 10px;background:var(--s2);border-radius:8px;line-height:1.5">
     <span style="color:#34d399;font-weight:700">%</span> = solar covered home use &nbsp;&#8212;&nbsp; <span style="color:#34d399">70%+</span> great &nbsp;<span style="color:#fbbf24">40–70%</span> good &nbsp;<span style="color:#fb923c">&lt;40%</span> low
   </div>
+
+  <div class="card" style="padding:13px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">HIGH USAGE THRESHOLD</div><button class="info-btn" onclick="showInfo('settingsthresh')">i</button></div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-lbl">Threshold Mode</div>
+        <div class="setting-sub">How to flag high-cost days</div>
+      </div>
+      <select id="threshMode" onchange="saveThreshMode(this.value)" style="background:var(--s2);border:1px solid var(--bd);color:var(--tx);font-size:16px;padding:7px 10px;border-radius:9px;outline:none;font-family:-apple-system,sans-serif">
+        <option value="rolling">Rolling 6-month avg</option>
+        <option value="manual">Manual value</option>
+      </select>
+    </div>
+    <div id="threshManualRow" class="setting-row" style="border-bottom:none;display:none">
+      <div><div class="setting-lbl">Manual Threshold ($)</div><div class="setting-sub">Flag days above this cost</div></div>
+      <div onclick="editVal('threshVal','High Usage Threshold ($)',ST.threshVal||5)">
+        <div class="setting-val" style="color:var(--re)" id="s-threshVal">-</div>
+        <div class="setting-val-sub">tap to edit</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding:10px;background:var(--s2);border-radius:9px;font-size:11px;color:var(--mu)">
+      Current threshold: <span style="color:var(--re);font-weight:700" id="threshDisplay">-</span> &bull; Days above this are highlighted red on the calendar
+    </div>
+  </div>
+
   <div id="calMonthSummary" style="margin:-2px 0 10px"></div>
   <div class="cal-grid" id="calDow">
     <div class="cdow">M</div><div class="cdow">T</div><div class="cdow">W</div>
@@ -564,30 +589,6 @@ canvas{display:block;width:100%;height:56px}
         <div><div class="setting-lbl">Pre-Data Savings</div><div class="setting-sub">May 2021 to Jul 2023 estimate</div></div>
         <div style="text-align:right"><div class="setting-val" id="sPriorSavings">$18,000</div></div>
       </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="sub">HIGH USAGE THRESHOLD</div><button class="info-btn" onclick="showInfo('settingsthresh')">i</button></div>
-    <div class="setting-row">
-      <div>
-        <div class="setting-lbl">Threshold Mode</div>
-        <div class="setting-sub">How to flag high-cost days on calendar</div>
-      </div>
-      <select id="threshMode" onchange="saveThreshMode(this.value)" style="background:var(--s2);border:1px solid var(--bd);color:var(--tx);font-size:16px;padding:7px 10px;border-radius:9px;outline:none;font-family:-apple-system,sans-serif">
-        <option value="rolling">Rolling 6-month avg</option>
-        <option value="manual">Manual value</option>
-      </select>
-    </div>
-    <div id="threshManualRow" class="setting-row" style="border-bottom:none;display:none">
-      <div><div class="setting-lbl">Manual Threshold ($)</div><div class="setting-sub">Flag days above this cost</div></div>
-      <div onclick="editVal('threshVal','High Usage Threshold ($)',ST.threshVal||5)">
-        <div class="setting-val" style="color:var(--re)" id="s-threshVal">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding:10px;background:var(--s2);border-radius:9px;font-size:11px;color:var(--mu)">
-      Current threshold: <span style="color:var(--re);font-weight:700" id="threshDisplay">-</span> &bull; Days above this are highlighted red on the calendar
     </div>
   </div>
 
@@ -3331,9 +3332,6 @@ function applyTheme(){
 
 function saveThreshMode(val){
   ST.threshMode=val;sv();
-  var manRow=document.getElementById("threshManualRow");
-  if(manRow)manRow.style.display=val==="manual"?"flex":"none";
-  renderSettings();
   renderCal();
   showToast(val==="manual"?"Manual threshold active":"Rolling 6-month avg active");
 }
@@ -4697,7 +4695,20 @@ function heatBorder(cost,date){
   return"rgba(239,68,68,.6)";
 }
 
+function renderThreshold(){
+  var tMode=ST.threshMode?ST.threshMode:"rolling";
+  var tEl=document.getElementById("threshMode");
+  if(tEl){tEl.value=tMode;}
+  var manRow=document.getElementById("threshManualRow");
+  if(manRow)manRow.style.display=tMode==="manual"?"flex":"none";
+  var tVal=getThreshold();
+  var tDisp=document.getElementById("threshDisplay");
+  if(tDisp)tDisp.textContent="$"+tVal.toFixed(2)+(tMode==="rolling"?" (6-mo avg)":" (manual)");
+  var tValEl=document.getElementById("s-threshVal");
+  if(tValEl)tValEl.textContent="$"+(ST.threshVal||5).toFixed(2);
+}
 function renderCal(){
+  renderThreshold();
   var now=new Date(),today=localDate(now);
   var map={},prodMap={},scMap={},entryMap={},all=allData();
   for(var i=0;i<all.length;i++){
@@ -5095,17 +5106,6 @@ function renderSettings(){
   var sB1=document.getElementById("sBatt1Cost");if(sB1)sB1.textContent="$"+Math.round(sys.batt1Cost||13000).toLocaleString();
   var sB2=document.getElementById("sBatt2Cost");if(sB2)sB2.textContent="$"+Math.round(sys.batt2Cost||10000).toLocaleString();
   var sPrior=document.getElementById("sPriorSavings");if(sPrior)sPrior.textContent="$"+Math.round(sys.priorSavings||13000).toLocaleString();
-  // Threshold - read from ST explicitly
-  var tMode=ST.threshMode?ST.threshMode:"rolling";
-  var tEl=document.getElementById("threshMode");
-  if(tEl){tEl.value=tMode;}
-  var manRow=document.getElementById("threshManualRow");
-  if(manRow)manRow.style.display=tMode==="manual"?"flex":"none";
-  var tVal=getThreshold();
-  var tDisp=document.getElementById("threshDisplay");
-  if(tDisp)tDisp.textContent="$"+tVal.toFixed(2)+(tMode==="rolling"?" (6-mo avg)":" (manual)");
-  var tValEl=document.getElementById("s-threshVal");
-  if(tValEl)tValEl.textContent="$"+(ST.threshVal||5).toFixed(2);
   var apiStatusEl=document.getElementById("apiKeyStatus");
   if(apiStatusEl){
     var hasKey=!!localStorage.getItem("solarApiKey");

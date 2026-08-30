@@ -467,6 +467,17 @@ var RFL={peak:0.4175,shoulder:0.3349,offpeak:0.2692,supply:1.4539,feedin:0.04};
 var SK="solar8";
 function ld(){try{return JSON.parse(localStorage.getItem(SK)||"{}")}catch(e){return{}}}
 function sv(){try{localStorage.setItem(SK,JSON.stringify(ST))}catch(e){}try{if(typeof window.fbBackgroundSync==="function")window.fbBackgroundSync();}catch(e){}}
+// Stamps a date as edited on this device, right now. Firestore keeps one
+// document per date (entry + metered actual + weather all live in it), so a
+// single timestamp per date is enough to decide which device's version of
+// that date is the more recent one. Only real user edits and imports call
+// this - baked-in seed history stays unstamped on purpose, so a genuine edit
+// from either phone always beats untouched seed data.
+function touchDay(date){
+  if(!date)return;
+  if(!ST.upd)ST.upd={};
+  ST.upd[date]=Date.now();
+}
 // Always use Australian Eastern time for dates
 function localDate(d){
   var dt=d||localNow();
@@ -495,10 +506,11 @@ function escapeHtml(s){
 }
 var _s=ld();
 var ST={
-  entries:[],actual:{},
+  entries:[],actual:{},upd:{},
   rates:null
 };
 if(_s.entries)ST.entries=_s.entries;
+if(_s.upd)ST.upd=_s.upd;
 if(_s.actual)ST.actual=_s.actual;
 if(_s.rates)ST.rates=_s.rates;
 if(_s.rateHistory)ST.rateHistory=_s.rateHistory;
@@ -2032,6 +2044,7 @@ function saveNP(){
   var idx=-1;
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date){idx=i;break}}
   if(idx>=0)ST.entries[idx]=entry;else ST.entries.push(entry);
+  touchDay(date);
   if(noteVal){if(!ST.notes)ST.notes={};ST.notes[date]=noteVal;}else{if(!ST.notes)ST.notes={};delete ST.notes[date];}sv();renderAll();closeNP();
   showToast("Saved \u2014 "+f$(net));
 }
@@ -2298,6 +2311,7 @@ function saveWxEdit(){
   if(!ST.wx)ST.wx={};
   ST.wx[wxEditDate]=entry;
   WX[wxEditDate]=entry;
+  touchDay(wxEditDate);
   var savedDate=wxEditDate;
   sv();
   closeWxEdit();
@@ -2367,6 +2381,7 @@ function parseSungrowCsv(text){
       ST.entries.push(entry);
       newCount++;
     }
+    touchDay(iso);
     count++;
   }
   if(count===0){statusEl.style.color="var(--re)";statusEl.textContent="No valid rows found in that file.";return;}
@@ -2443,6 +2458,7 @@ function parseRedEnergyCsv(text){
       op:parseFloat(daily[iso].op.toFixed(3)),
       gen:parseFloat(daily[iso].gen.toFixed(3))
     };
+    touchDay(iso);
     count++;
     // Ground-truth the headline figures from the meter. Red Energy is authoritative
     // for grid / feed-in / cost only; solar production and battery charge/discharge
@@ -2561,6 +2577,7 @@ function parseBomCsv(){
     imported++;
     // Save to ST for persistence
     ST.wx[isoDate]=wxRow;
+    touchDay(isoDate);
   }
 
   if(imported===0){
@@ -3384,6 +3401,11 @@ function fbBuildDayDocs(ST){
       out[d2].wxManual = w.manual ? true : null;
     }
   }
+  // One stamp per date, covering the entry, metered actual and weather that
+  // all share this document. null means never edited on a device (seed data).
+  for (var d3 in out){
+    out[d3].updatedAt = (ST.upd && typeof ST.upd[d3] === "number") ? ST.upd[d3] : null;
+  }
   return out;
 }
 
@@ -3418,33 +3440,53 @@ function fbBuildSettingsDoc(ST){
 async function fbHydrateAndMerge(){
   fbSetStatus("Pulling your data from the cloud...");
   var daysSnap = await getDocs(collection(fbDb, fbBasePath, "days"));
-  var entries = []; var actual = {}; var wx = {};
+  var entries = []; var actual = {}; var wx = {}; var remoteUpd = {};
   daysSnap.forEach(function(dsnap){
     var v = dsnap.data(); var date = dsnap.id;
     entries.push({date:date, usage:v.usage, feedin:v.feedin, net:v.net, production:v.production, charge:v.charge, discharge:v.discharge, rate:v.rate});
     if (v.cost!==undefined && v.cost!==null) actual[date] = {cost:v.cost, pk:v.pk, sh:v.sh, op:v.op, gen:v.gen};
     if (v.rain!==undefined && v.rain!==null) wx[date] = {minT:v.minT, maxT:v.maxT, rain:v.rain, manual:v.wxManual?true:undefined};
+    if (typeof v.updatedAt === "number") remoteUpd[date] = v.updatedAt;
   });
   var rateSnap = await getDocs(collection(fbDb, fbBasePath, "rateHistory"));
   var rateHistory = []; rateSnap.forEach(function(r){ rateHistory.push(r.data()); });
   var settingsDoc = await getDoc(doc(fbDb, fbBasePath, "settings", "app"));
   var settings = settingsDoc.exists() ? settingsDoc.data() : {};
 
-  // Merge remote into ST safely: remote fills gaps, never overwrites a local
-  // entry that already exists.
+  // Merge remote into ST, last-write-wins per date. Each day document carries
+  // an updatedAt stamped only when that date was really edited on some device,
+  // so a correction made on one phone now reaches the other. The old rule was
+  // gap-fill only, which meant the first device to save a date owned it
+  // forever - the second phone could never correct it. An unstamped date (0)
+  // is baked-in seed history, so any genuine edit from either phone beats it.
+  if (!ST.upd) ST.upd = {};
+  if (!ST.actual) ST.actual = {};
+  if (!ST.wx) ST.wx = {};
   var localMap = {};
   for (var i=0;i<ST.entries.length;i++) localMap[ST.entries[i].date] = i;
-  var added = 0;
+  var added = 0, updated = 0;
   for (var j=0;j<entries.length;j++){
-    if (localMap[entries[j].date] === undefined){ ST.entries.push(entries[j]); added++; }
+    var rEnt = entries[j], rDate = rEnt.date;
+    if (!rDate) continue;
+    var li = localMap[rDate];
+    var localTs  = (typeof ST.upd[rDate] === "number") ? ST.upd[rDate] : 0;
+    var remoteTs = (typeof remoteUpd[rDate] === "number") ? remoteUpd[rDate] : 0;
+    var takeRemote = (li === undefined) || (remoteTs > localTs);
+    if (li === undefined){ ST.entries.push(rEnt); added++; }
+    else if (takeRemote){ ST.entries[li] = rEnt; updated++; }
+    if (takeRemote){
+      if (remoteTs) ST.upd[rDate] = remoteTs;
+      if (actual[rDate]) ST.actual[rDate] = actual[rDate];
+      if (wx[rDate]) ST.wx[rDate] = wx[rDate];
+    } else {
+      // Older remote still fills genuine gaps, and may replace a locally
+      // auto-seeded weather placeholder (never a real import or correction).
+      if (actual[rDate] && !ST.actual[rDate]) ST.actual[rDate] = actual[rDate];
+      if (wx[rDate] && (!ST.wx[rDate] || ST.wx[rDate].seed)) ST.wx[rDate] = wx[rDate];
+    }
   }
-  if (!ST.actual) ST.actual = {};
+  // Dates the cloud has actual/weather for but no day entry at all.
   for (var dk in actual){ if (!ST.actual[dk]) ST.actual[dk] = actual[dk]; }
-  if (!ST.wx) ST.wx = {};
-  // A locally auto-seeded placeholder (copied from the baked-in BOM_WX
-  // fallback, never a real import or correction) is allowed to be replaced
-  // by whatever the cloud has - otherwise the first device to seed a date
-  // permanently blocks every other device's real weather data for it.
   for (var wk in wx){ if (!ST.wx[wk] || ST.wx[wk].seed) ST.wx[wk] = wx[wk]; }
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
   if (settings){
@@ -3462,7 +3504,7 @@ async function fbHydrateAndMerge(){
   };
   try{ localStorage.setItem("fbLastSyncedAt", String(Date.now())); }catch(e){}
   try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
-  fbSetStatus("Synced. " + added + " day(s) pulled from the cloud.");
+  fbSetStatus("Synced. " + added + " day(s) pulled, " + updated + " updated from the cloud.");
 }
 
 window.fbConnectClick = function(){

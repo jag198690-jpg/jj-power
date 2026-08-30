@@ -2650,7 +2650,7 @@ function renderWeeklyEnergy(){
         wData.grid+=d.usage;
         wData.feedin+=d.feedin;
         wData.home+=d.usage+prod-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
-        wData.cost+=d.net;
+        wData.cost+=(d.net||0);
         wData.charge+=d.charge||0;
         wData.discharge+=d.discharge||0;
         wData.days++;
@@ -3295,7 +3295,7 @@ function getSameMonthLastYear(){
   if(!curBill){
     var bd=billData();
     if(bd.length>0){
-      var tot=0;for(var i=0;i<bd.length;i++)tot+=bd[i].net;
+      var tot=0;for(var i=0;i<bd.length;i++)tot+=(bd[i].net||0);
       curBill={actual:tot,p:"Current period",days:bd.length,dailyAvg:tot/bd.length};
     }
   }
@@ -3599,9 +3599,9 @@ function renderPaybackCard(){
 // HOME
 function renderHome(){
   var bd=billData(),total=0;
-  for(var i=0;i<bd.length;i++)total+=bd[i].net;
+  for(var i=0;i<bd.length;i++)total+=(bd[i].net||0);
   var avg=bd.length>0?total/bd.length:0;
-  var s7=0;for(var j=Math.max(0,bd.length-7);j<bd.length;j++)s7+=bd[j].net;
+  var s7=0;for(var j=Math.max(0,bd.length-7);j<bd.length;j++)s7+=(bd[j].net||0);
   var proj=avg*30,tgt=ST.target||100,pct=Math.min(100,(total/tgt)*100);
   var bs=new Date(ST.billStart+"T00:00:00");
   var daysSince=Math.floor((localNow()-bs)/86400000)+1;
@@ -3797,7 +3797,7 @@ function renderCal(){
       var selfUse=Math.max(0,p-f);
       mProd+=p;mHome+=selfUse;mExp+=f;mGrid+=g;
       var _mRD=ratesForDate(all[k].date);mSaved+=selfUse*_mRD.shoulder+f*_mRD.feedin;
-      if(all[k].net!==undefined)mNet+=all[k].net;
+      mNet+=(all[k].net||0);
     }
     if(!mHasData){sumEl.innerHTML="";sumEl.removeAttribute("onclick");sumEl.style.cursor="default";return;}
     function cell(lbl,val,col){return '<div style="flex:1;text-align:center;padding:2px 0"><div style="font-size:9px;color:var(--mu);letter-spacing:.3px">'+lbl+'</div><div style="font-size:15px;font-weight:700;color:'+col+'">'+val+'</div></div>';}
@@ -4196,7 +4196,7 @@ function renderTargetSeasonNote(){
   if(!el)return;
   var bd=billData();
   if(!bd.length){el.textContent="";return;}
-  var total=0;for(var i=0;i<bd.length;i++)total+=bd[i].net;
+  var total=0;for(var i=0;i<bd.length;i++)total+=(bd[i].net||0);
   var avg=total/bd.length,proj=avg*30,tgt=ST.target||100;
   var now=localNow(),mo=now.getMonth()+1;
   var moName=now.toLocaleDateString("en-AU",{month:"short",year:"numeric"});

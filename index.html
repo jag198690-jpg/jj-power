@@ -333,7 +333,7 @@ canvas{display:block;width:100%;height:56px}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
     <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
     <div id="fbSyncLoggedOut">
-      <div style="font-size:12px;color:var(--mu);margin-bottom:10px">You're signed in on this device already - this is here in case you ever need to reconnect. Your data stays backed up to the cloud automatically.</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Not signed in, so nothing is syncing to the cloud right now. Reconnect below to resume automatic backup.</div>
       <form id="fbLoginForm" onsubmit="event.preventDefault();fbConnectClick();return false;">
       <input id="fbEmail" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
       <input id="fbPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">

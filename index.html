@@ -363,75 +363,6 @@ canvas{display:block;width:100%;height:56px}
   </div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="sub">ENERGY RATES</div><button class="info-btn" onclick="showInfo('settingsrates')">i</button></div>
-    <div class="setting-row">
-      <div><div class="setting-lbl">Shoulder &mdash; Weekdays</div><div class="setting-sub">Mon&ndash;Fri rate</div></div>
-      <div onclick="editVal('shoulder','Shoulder Rate ($/kWh)',ST.rates.shoulder)">
-        <div class="setting-val" style="color:var(--or)" id="r-shoulder">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div class="setting-row">
-      <div><div class="setting-lbl">Off-Peak &mdash; Weekends</div><div class="setting-sub">Sat&ndash;Sun rate</div></div>
-      <div onclick="editVal('offpeak','Off-Peak Rate ($/kWh)',ST.rates.offpeak)">
-        <div class="setting-val" style="color:var(--bl)" id="r-offpeak">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div class="setting-row">
-      <div><div class="setting-lbl">Daily Supply</div><div class="setting-sub">Fixed daily charge</div></div>
-      <div onclick="editVal('supply','Daily Supply Charge ($)',ST.rates.supply)">
-        <div class="setting-val" style="color:var(--mu)" id="r-supply">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div class="setting-row" style="border-bottom:none">
-      <div><div class="setting-lbl">Feed-in Tariff</div><div class="setting-sub">Solar export rate</div></div>
-      <div onclick="editVal('feedin','Feed-in Tariff ($/kWh)',ST.rates.feedin)">
-        <div class="setting-val" style="color:var(--gr)" id="r-feedin">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="padding:13px;margin-bottom:12px;cursor:pointer;text-align:center" onclick="toggleSettingsAdvanced()">
-    <span class="sub" id="settingsAdvArrow">ADVANCED v</span>
-  </div>
-  <div id="settingsAdvSection" style="display:none">
-
-  <div class="card" style="padding:13px 16px;font-size:11px;color:var(--mu);line-height:1.7">
-    <strong style="color:var(--tx)">Formula:</strong> (kWh &#215; rate) + daily supply &#8722; (feed-in &#215; tariff)<br>
-    Weekday vs weekend auto-selected when you enter data.<br>
-    <span style="color:var(--re)">Buy:Sell ratio = <span id="ratioLbl">-</span></span>
-  </div>
-
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">TARIFF CHANGE CALCULATOR</div><button class="info-btn" onclick="showInfo('tariffcalc')">i</button></div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:12px">If your rates change, how does it affect your annual bill?</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <div>
-        <div style="font-size:9px;color:var(--mu);margin-bottom:4px">SHOULDER RATE</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button onclick="adjTariff('shoulder',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:18px;cursor:pointer">-</button>
-          <div style="flex:1;text-align:center;font-size:14px;font-weight:700" id="tcShoulderPct">0%</div>
-          <button onclick="adjTariff('shoulder',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:18px;cursor:pointer">+</button>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:9px;color:var(--mu);margin-bottom:4px">OFF-PEAK RATE</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button onclick="adjTariff('offpeak',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:18px;cursor:pointer">-</button>
-          <div style="flex:1;text-align:center;font-size:14px;font-weight:700" id="tcOffpeakPct">0%</div>
-          <button onclick="adjTariff('offpeak',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:18px;cursor:pointer">+</button>
-        </div>
-      </div>
-    </div>
-    <div id="tariffCalcResult" style="padding:10px;background:var(--s2);border-radius:10px;font-size:12px;color:var(--mu);text-align:center">Adjust rates above to see impact</div>
-  </div>
-
-  </div>
-
-  <div class="card">
     <div class="sub" style="margin-bottom:12px">SYSTEM</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><div class="sub">HYBRID INV</div><div style="font-size:13px;font-weight:600;margin-top:3px">SH5.0RS</div><div class="sub">5kW</div></div>
@@ -2437,12 +2368,6 @@ function editVal(key,title,cur){
     else if(key==="solarCost"){if(!ST.system)ST.system={};ST.system.solarCost=v;}
     else if(key==="batt1Cost"){if(!ST.system)ST.system={};ST.system.batt1Cost=v;}
     else if(key==="batt2Cost"){if(!ST.system)ST.system={};ST.system.batt2Cost=v;}
-    else {ST.rates[key]=v;
-      if(["peak","shoulder","offpeak","supply","feedin"].indexOf(key)>=0){
-        var _todayRt=ratesForDate(localDate());
-        if(_todayRt)_todayRt[key]=v;
-      }
-    }
     sv();renderAll();showToast("Updated");
   };
   document.getElementById("editTitle").textContent=title;
@@ -2517,62 +2442,6 @@ function f$(v){return v<0?"-$"+Math.abs(v).toFixed(2):"$"+v.toFixed(2)}
 // EXPECTED DAILY PRODUCTION BY MONTH (10kW system, Dubbo NSW)
 var EXPECTED_PROD={1:72.6,2:66.1,3:53.2,4:51.7,5:38.7,6:32.5,7:31.9,8:41.9,9:56.7,10:59.7,11:68.3,12:71.0};
 
-// TARIFF CALCULATOR
-var tcAdj={shoulder:0,offpeak:0};
-function adjTariff(type, delta){
-  tcAdj[type]=(tcAdj[type]||0)+delta;
-  if(tcAdj[type]<-50)tcAdj[type]=-50;
-  if(tcAdj[type]>50)tcAdj[type]=50;
-  document.getElementById("tcShoulderPct").textContent=(tcAdj.shoulder>=0?"+":"")+tcAdj.shoulder+"%";
-  document.getElementById("tcOffpeakPct").textContent=(tcAdj.offpeak>=0?"+":"")+tcAdj.offpeak+"%";
-  document.getElementById("tcShoulderPct").style.color=tcAdj.shoulder>0?"var(--re)":tcAdj.shoulder<0?"var(--gr)":"var(--tx)";
-  document.getElementById("tcOffpeakPct").style.color=tcAdj.offpeak>0?"var(--re)":tcAdj.offpeak<0?"var(--gr)":"var(--tx)";
-  calcTariffImpact();
-}
-function calcTariffImpact(){
-  var all=allData();
-  if(!all.length)return;
-  // Use last 12 months of data
-  var cutoff=new Date();cutoff.setFullYear(cutoff.getFullYear()-1);
-  var cutStr=localDate(cutoff);
-  var recent=[];
-  for(var i=0;i<all.length;i++){if(all[i].date>=cutStr)recent.push(all[i]);}
-  if(!recent.length)recent=all;
-
-  var r=ST.rates;
-  var curTotal=0,newTotal=0;
-  var newShoulder=r.shoulder*(1+tcAdj.shoulder/100);
-  var newOffpeak=r.offpeak*(1+tcAdj.offpeak/100);
-
-  for(var i=0;i<recent.length;i++){
-    var d=recent[i];
-    var dow=new Date(d.date+"T12:00:00").getDay();
-    var isWknd=(dow===0||dow===6);
-    var curRate=isWknd?r.offpeak:r.shoulder;
-    var newRate=isWknd?newOffpeak:newShoulder;
-    curTotal+=d.usage*curRate+r.supply-d.feedin*r.feedin;
-    newTotal+=d.usage*newRate+r.supply-d.feedin*r.feedin;
-  }
-
-  // Annualise
-  var days=recent.length;
-  var curAnnual=days>0?(curTotal/days)*365:0;
-  var newAnnual=days>0?(newTotal/days)*365:0;
-  var diff=newAnnual-curAnnual;
-  var diffStr=(diff>=0?"+$":"$")+Math.abs(diff).toFixed(0);
-  var col=diff>0?"var(--re)":diff<0?"var(--gr)":"var(--tx)";
-  var el=document.getElementById("tariffCalcResult");
-  if(el){
-    el.innerHTML='<div style="font-size:10px;color:var(--mu);margin-bottom:6px">Based on last '+days+' days usage</div>'+
-      '<div style="display:flex;justify-content:space-around">' +
-      '<div style="text-align:center"><div style="font-size:9px;color:var(--mu)">CURRENT /yr</div><div style="font-size:18px;font-weight:700;color:var(--tx)">$'+curAnnual.toFixed(0)+'</div></div>'+
-      '<div style="text-align:center"><div style="font-size:9px;color:var(--mu)">NEW /yr</div><div style="font-size:18px;font-weight:700;color:'+col+'">$'+newAnnual.toFixed(0)+'</div></div>'+
-      '<div style="text-align:center"><div style="font-size:9px;color:var(--mu)">CHANGE</div><div style="font-size:18px;font-weight:700;color:'+col+'">'+diffStr+'</div></div>'+
-      '</div>'+
-      '<div style="font-size:9px;color:var(--mu);margin-top:6px">New shoulder: $'+newShoulder.toFixed(4)+'/kWh  Off-peak: $'+newOffpeak.toFixed(4)+'/kWh</div>';
-  }
-}
-
 // INFO BUBBLES
 var INFO = {
   "calendar": {
@@ -2582,14 +2451,6 @@ var INFO = {
   "settingsbill": {
     title: "Bill Period",
     body: "Set the start date of your current billing cycle and your monthly spending target. The bill start date tells the app when to begin counting your running total. The monthly target is used to calculate whether you are on track - the progress bar on the Home tab turns red if you are heading over."
-  },
-  "settingsrates": {
-    title: "Energy Rates",
-    body: "Your current electricity tariff rates. Shoulder rate applies on weekdays, off-peak on weekends. The daily supply charge is the fixed fee you pay regardless of usage. Feed-in tariff is what you earn per kWh exported to the grid. All net cost calculations in the app use these values, so keep them updated if your retailer changes your rates."
-  },
-  "tariffcalc": {
-    title: "Tariff Change Calculator",
-    body: "If your energy retailer changes your rates, use this to see the annual impact before it hits your bill. Adjust the shoulder and off-peak rates up or down by a percentage and the calculator shows how much more or less you would pay per year based on your actual usage history. Useful for comparing retailer offers."
   },
   "exportdata": {
     title: "Export Data",
@@ -3785,14 +3646,8 @@ function lockRateStepAll(){
 
 // SETTINGS
 function renderSettings(){
-  var r=ST.rates;
   var el=document.getElementById("sBillStart");if(el)el.value=ST.billStart||"";
   document.getElementById("sTgt").textContent="$"+(ST.target||100);
-  document.getElementById("r-shoulder").textContent="$"+(r.shoulder||0).toFixed(4);
-  document.getElementById("r-offpeak").textContent="$"+(r.offpeak||0).toFixed(4);
-  document.getElementById("r-supply").textContent="$"+(r.supply||0).toFixed(4);
-  document.getElementById("r-feedin").textContent="$"+(r.feedin||0).toFixed(4);
-  document.getElementById("ratioLbl").textContent=((r.shoulder||0.3349)/(r.feedin||0.04)).toFixed(1)+" : 1";
   // Payback settings
   var sys=ST.system||{};
   var sSolar=document.getElementById("sSolarCost");if(sSolar)sSolar.textContent="$"+Math.round(sys.solarCost||13000).toLocaleString();
@@ -3862,14 +3717,6 @@ function go(t){
   window.scrollTo(0,0);
 }
 
-function toggleSettingsAdvanced(){
-  var el=document.getElementById("settingsAdvSection");
-  if(!el)return;
-  var open=el.style.display!=="none";
-  el.style.display=open?"none":"block";
-  var ar=document.getElementById("settingsAdvArrow");
-  if(ar)ar.textContent=open?"ADVANCED v":"ADVANCED ^";
-}
 function showToast(msg){
   var t=document.getElementById("toast");
   t.innerHTML=msg;t.className="toast on";

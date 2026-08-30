@@ -306,6 +306,16 @@ canvas{display:block;width:100%;height:56px}
     <span style="color:#34d399;font-weight:700">%</span> = solar covered home use &nbsp;&#8212;&nbsp; <span style="color:#34d399">70%+</span> great &nbsp;<span style="color:#fbbf24">40–70%</span> good &nbsp;<span style="color:#fb923c">&lt;40%</span> low
   </div>
 
+  <div class="card" style="padding:13px;margin-bottom:12px;cursor:pointer" onclick="openRateLock()">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="sub">ENERGY RATES</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:2px" id="rateLockStatus">-</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--or)">LOCK &#9654;</div>
+    </div>
+  </div>
+
   <div id="calMonthSummary" style="margin:-2px 0 10px"></div>
   <div class="cal-grid" id="calDow">
     <div class="cdow">M</div><div class="cdow">T</div><div class="cdow">W</div>
@@ -388,17 +398,6 @@ canvas{display:block;width:100%;height:56px}
     <span class="sub" id="settingsAdvArrow">ADVANCED v</span>
   </div>
   <div id="settingsAdvSection" style="display:none">
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="sub">RATE CHANGES</div></div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px;line-height:1.5">Add a new rate set effective from a date. Days before it keep their old rates; days from that date use the new rates. Your history stays frozen.</div>
-    <div id="rateHistoryList" style="margin-bottom:12px"></div>
-    <div style="font-size:11px;color:var(--tx);font-weight:600;margin-bottom:8px">Add a rate change</div>
-    <div style="margin-bottom:8px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Effective from</div><input type="date" id="nrFrom" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Peak $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="nrPeak" placeholder="0.4175" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div><div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Shoulder $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="nrShoulder" placeholder="0.3349" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div><div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Off-Peak $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="nrOffpeak" placeholder="0.2692" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div></div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Supply $/day</div><input type="number" inputmode="decimal" step="0.0001" id="nrSupply" placeholder="1.4539" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div><div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Feed-in $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="nrFeedin" placeholder="0.04" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div></div>
-    <button onclick="addRatePeriod()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer;touch-action:manipulation">Add Rate Change</button>
-  </div>
 
   <div class="card" style="padding:13px 16px;font-size:11px;color:var(--mu);line-height:1.7">
     <strong style="color:var(--tx)">Formula:</strong> (kWh &#215; rate) + daily supply &#8722; (feed-in &#215; tariff)<br>
@@ -599,6 +598,28 @@ canvas{display:block;width:100%;height:56px}
       <button class="btn btn-s" onclick="closeEdit()">CANCEL</button>
       <button class="btn btn-p" onclick="confirmEdit()">SAVE</button>
     </div>
+  </div>
+</div>
+
+<div class="ov" id="rateLockOv" onclick="rateLockBg(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="edit-title" id="rlTitle"></div>
+    <div class="edit-sub" id="rlSub"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px">
+      <div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Peak $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="rlPeak" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
+      <div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Shoulder $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="rlShoulder" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
+      <div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Off-Peak $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="rlOffpeak" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 16px">
+      <div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Supply $/day</div><input type="number" inputmode="decimal" step="0.0001" id="rlSupply" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
+      <div style="flex:1;min-width:90px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">Feed-in $/kWh</div><input type="number" inputmode="decimal" step="0.0001" id="rlFeedin" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="closeRateLock()">CLOSE</button>
+      <button class="btn btn-p" onclick="lockRateStep()">LOCK &amp; NEXT</button>
+    </div>
+    <button onclick="lockRateStepAll()" style="width:calc(100% - 32px);margin:10px 16px 0;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--or);font-family:-apple-system,sans-serif;font-weight:700;font-size:12px;cursor:pointer">LOCK THESE RATES FOR ALL REMAINING MONTHS</button>
   </div>
 </div>
 
@@ -2417,7 +2438,10 @@ function editVal(key,title,cur){
     else if(key==="batt1Cost"){if(!ST.system)ST.system={};ST.system.batt1Cost=v;}
     else if(key==="batt2Cost"){if(!ST.system)ST.system={};ST.system.batt2Cost=v;}
     else {ST.rates[key]=v;
-      if(ST.rateHistory&&ST.rateHistory.length&&["peak","shoulder","offpeak","supply","feedin"].indexOf(key)>=0){ST.rateHistory[ST.rateHistory.length-1][key]=v;}
+      if(["peak","shoulder","offpeak","supply","feedin"].indexOf(key)>=0){
+        var _todayRt=ratesForDate(localDate());
+        if(_todayRt)_todayRt[key]=v;
+      }
     }
     sv();renderAll();showToast("Updated");
   };
@@ -3309,6 +3333,7 @@ function heatBorder(cost,date){
 }
 
 function renderCal(){
+  renderRateLockStatus();
   var now=new Date(),today=localDate(now);
   var map={},prodMap={},scMap={},entryMap={},all=allData();
   for(var i=0;i<all.length;i++){
@@ -3643,52 +3668,122 @@ function showMonthDetail(ym){
   document.getElementById("monthDetailOv").style.display="flex";
 }
 
-
-// SETTINGS
-function addRatePeriod(){
-  var d=document.getElementById("nrFrom").value;
-  if(!d){showToast("Pick an effective date");return;}
-  var pk=parseFloat(document.getElementById("nrPeak").value);
-  var sh=parseFloat(document.getElementById("nrShoulder").value);
-  var op=parseFloat(document.getElementById("nrOffpeak").value);
-  var su=parseFloat(document.getElementById("nrSupply").value);
-  var fi=parseFloat(document.getElementById("nrFeedin").value);
-  if([pk,sh,op,su,fi].some(function(x){return isNaN(x);})){showToast("Fill all five rate fields");return;}
+// MONTHLY RATE LOCK
+var RATE_LOCK_START="2023-07";
+var rateLockQueue=[],rateLockIdx=0;
+function monthKeyList(){
+  var keys=[];
+  var now=localNow();
+  var y=parseInt(RATE_LOCK_START.slice(0,4),10),m=parseInt(RATE_LOCK_START.slice(5,7),10);
+  var endY=now.getFullYear(),endM=now.getMonth()+1;
+  while(y<endY||(y===endY&&m<=endM)){
+    keys.push(y+"-"+(m<10?"0"+m:""+m));
+    m++;
+    if(m>12){m=1;y++;}
+  }
+  return keys;
+}
+function lockedMonthSet(){
+  var set={},rh=ST.rateHistory||[];
+  for(var i=0;i<rh.length;i++){
+    var f=rh[i].from;
+    if(f&&/^\d{4}-\d{2}-01$/.test(f))set[f.slice(0,7)]=true;
+  }
+  return set;
+}
+function monthsNeedingLock(){
+  var all=monthKeyList(),locked=lockedMonthSet(),need=[];
+  for(var i=0;i<all.length;i++){if(!locked[all[i]])need.push(all[i]);}
+  return need;
+}
+function monthLabel(monthKey){
+  var parts=monthKey.split("-");
+  var d=new Date(parseInt(parts[0],10),parseInt(parts[1],10)-1,1);
+  return d.toLocaleDateString("en-AU",{month:"long",year:"numeric"});
+}
+function renderRateLockStatus(){
+  var el=document.getElementById("rateLockStatus");
+  if(!el)return;
+  var need=monthsNeedingLock();
+  if(!need.length){
+    el.textContent="All months locked in";
+    el.style.color="var(--gr)";
+  } else {
+    el.textContent=need.length+" month"+(need.length>1?"s":"")+" need"+(need.length>1?"":"s")+" rate lock-in";
+    el.style.color="var(--am)";
+  }
+}
+function openRateLock(){
+  rateLockQueue=monthsNeedingLock();
+  rateLockIdx=0;
+  if(!rateLockQueue.length){showToast("All months are locked in");return;}
+  document.getElementById("rateLockOv").style.display="flex";
+  renderRateLockStep();
+}
+function closeRateLock(){
+  document.getElementById("rateLockOv").style.display="none";
+}
+function rateLockBg(e){if(e.target.id==="rateLockOv")closeRateLock();}
+function renderRateLockStep(){
+  var monthKey=rateLockQueue[rateLockIdx];
+  var rt=ratesForDate(monthKey+"-01")||ST.rates||RFL;
+  document.getElementById("rlTitle").textContent="Lock rates for "+monthLabel(monthKey);
+  document.getElementById("rlSub").textContent="Month "+(rateLockIdx+1)+" of "+rateLockQueue.length+" - copied from the previous locked month, edit if it changed";
+  document.getElementById("rlPeak").value=rt.peak;
+  document.getElementById("rlShoulder").value=rt.shoulder;
+  document.getElementById("rlOffpeak").value=rt.offpeak;
+  document.getElementById("rlSupply").value=rt.supply;
+  document.getElementById("rlFeedin").value=rt.feedin;
+}
+function upsertMonthRate(monthKey,pk,sh,op,su,fi){
+  var from=monthKey+"-01";
   if(!ST.rateHistory)ST.rateHistory=[];
-  var i,kept=[];
-  for(i=0;i<ST.rateHistory.length;i++){if(ST.rateHistory[i].from!==d)kept.push(ST.rateHistory[i]);}
-  kept.push({from:d,peak:pk,shoulder:sh,offpeak:op,supply:su,feedin:fi});
+  var kept=[];
+  for(var i=0;i<ST.rateHistory.length;i++){if(ST.rateHistory[i].from!==from)kept.push(ST.rateHistory[i]);}
+  kept.push({from:from,peak:pk,shoulder:sh,offpeak:op,supply:su,feedin:fi});
   kept.sort(function(a,b){return a.from<b.from?-1:1;});
   ST.rateHistory=kept;
-  var last=ST.rateHistory[ST.rateHistory.length-1];
-  ST.rates={peak:last.peak,shoulder:last.shoulder,offpeak:last.offpeak,supply:last.supply,feedin:last.feedin};
-  sv();renderAll();showToast("Rate change added from "+d);
 }
-function removeRatePeriod(idx){
-  if(!ST.rateHistory||ST.rateHistory.length<=1){showToast("Keep at least one rate period");return;}
-  ST.rateHistory.splice(idx,1);
-  var last=ST.rateHistory[ST.rateHistory.length-1];
-  ST.rates={peak:last.peak,shoulder:last.shoulder,offpeak:last.offpeak,supply:last.supply,feedin:last.feedin};
-  sv();renderAll();showToast("Rate period removed");
+function readRateLockFields(){
+  var pk=parseFloat(document.getElementById("rlPeak").value);
+  var sh=parseFloat(document.getElementById("rlShoulder").value);
+  var op=parseFloat(document.getElementById("rlOffpeak").value);
+  var su=parseFloat(document.getElementById("rlSupply").value);
+  var fi=parseFloat(document.getElementById("rlFeedin").value);
+  if([pk,sh,op,su,fi].some(function(x){return isNaN(x);})){showToast("Fill all five rate fields");return null;}
+  return{peak:pk,shoulder:sh,offpeak:op,supply:su,feedin:fi};
 }
-function renderRateHistory(){
-  var el=document.getElementById("rateHistoryList");
-  if(!el)return;
-  var rh=ST.rateHistory||[];
-  if(!rh.length){el.innerHTML='<div style="font-size:11px;color:var(--mu)">No rate periods yet.</div>';return;}
-  var h="",i;
-  for(i=0;i<rh.length;i++){
-    var p=rh[i];
-    var fromLbl=(p.from==="2000-01-01")?"From the start":("From "+p.from);
-    var isLast=(i===rh.length-1);
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--s2);border-radius:8px;margin-bottom:6px'+(isLast?";border:1px solid var(--or)":"")+'">';
-    h+='<div><div style="font-size:12px;color:var(--tx);font-weight:600">'+fromLbl+(isLast?'  (current)':'')+'</div>';
-    h+='<div style="font-size:10px;color:var(--mu);margin-top:2px">Pk $'+p.peak.toFixed(4)+'  Sh $'+p.shoulder.toFixed(4)+'  Op $'+p.offpeak.toFixed(4)+'  Sup $'+p.supply.toFixed(4)+'  FiT $'+p.feedin.toFixed(4)+'</div></div>';
-    if(rh.length>1)h+='<div onclick="removeRatePeriod('+i+')" style="font-size:11px;color:var(--re);padding:4px 8px;cursor:pointer">remove</div>';
-    h+='</div>';
+function finishRateLock(lastMonthKey){
+  var rt=ratesForDate(localDate());
+  if(rt)ST.rates={peak:rt.peak,shoulder:rt.shoulder,offpeak:rt.offpeak,supply:rt.supply,feedin:rt.feedin};
+  sv();renderAll();
+  closeRateLock();
+  showToast("Rates locked through "+monthLabel(lastMonthKey));
+}
+function lockRateStep(){
+  if(!rateLockQueue.length)return;
+  var v=readRateLockFields();
+  if(!v)return;
+  var monthKey=rateLockQueue[rateLockIdx];
+  upsertMonthRate(monthKey,v.peak,v.shoulder,v.offpeak,v.supply,v.feedin);
+  rateLockIdx++;
+  if(rateLockIdx<rateLockQueue.length){
+    renderRateLockStep();
+  } else {
+    finishRateLock(monthKey);
   }
-  el.innerHTML=h;
 }
+function lockRateStepAll(){
+  if(!rateLockQueue.length)return;
+  var v=readRateLockFields();
+  if(!v)return;
+  for(var i=rateLockIdx;i<rateLockQueue.length;i++){
+    upsertMonthRate(rateLockQueue[i],v.peak,v.shoulder,v.offpeak,v.supply,v.feedin);
+  }
+  finishRateLock(rateLockQueue[rateLockQueue.length-1]);
+}
+
+// SETTINGS
 function renderSettings(){
   var r=ST.rates;
   var el=document.getElementById("sBillStart");if(el)el.value=ST.billStart||"";
@@ -3698,7 +3793,6 @@ function renderSettings(){
   document.getElementById("r-supply").textContent="$"+(r.supply||0).toFixed(4);
   document.getElementById("r-feedin").textContent="$"+(r.feedin||0).toFixed(4);
   document.getElementById("ratioLbl").textContent=((r.shoulder||0.3349)/(r.feedin||0.04)).toFixed(1)+" : 1";
-  renderRateHistory();
   // Payback settings
   var sys=ST.system||{};
   var sSolar=document.getElementById("sSolarCost");if(sSolar)sSolar.textContent="$"+Math.round(sys.solarCost||13000).toLocaleString();

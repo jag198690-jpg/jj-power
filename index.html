@@ -331,7 +331,8 @@ canvas{display:block;width:100%;height:56px}
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
-    <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
+    <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:4px"></div>
+    <div id="fbCoverage" style="font-size:11px;margin-bottom:10px"></div>
     <div id="fbSyncLoggedOut">
       <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Not signed in, so nothing is syncing to the cloud right now. Reconnect below to resume automatic backup.</div>
       <form id="fbLoginForm" onsubmit="event.preventDefault();fbConnectClick();return false;">
@@ -3306,6 +3307,7 @@ function lockRateStepAll(){
 // SETTINGS
 function renderSettings(){
   renderFbLastSynced();
+  try{ if (typeof window.renderFbCoverage === "function") window.renderFbCoverage(); }catch(e){}
 }
 
 function fbLastSyncedAgoText(){
@@ -3322,6 +3324,23 @@ function fbLastSyncedAgoText(){
   var diffD=Math.floor(diffH/24);
   return"Backed up "+diffD+" day"+(diffD===1?"":"s")+" ago.";
 }
+// Cloud coverage: how many of this device's days the cloud also has. Shown so
+// there is a factual answer to "is it safe to stop shipping the seed history
+// inside the page" - it is only safe at 100%.
+window.renderFbCoverage = function(){
+  var el = document.getElementById("fbCoverage");
+  if (!el) return;
+  var info = window.fbCoverageInfo;
+  if (!info || !info.total){ el.textContent = ""; return; }
+  var gap = info.total - info.covered;
+  if (gap === 0){
+    el.textContent = "Cloud has all " + info.total + " days on this device.";
+    el.style.color = "var(--gr)";
+  } else {
+    el.textContent = gap + " of " + info.total + " days not in the cloud yet.";
+    el.style.color = "var(--am)";
+  }
+};
 function renderFbLastSynced(){
   var el=document.getElementById("fbLastSyncedDisplay");
   if(!el)return;
@@ -3502,6 +3521,25 @@ async function fbHydrateAndMerge(){
   try{ sv(); }catch(e){}
   try{ if (typeof renderAll === "function") renderAll(); }catch(e){}
   try{ if (typeof startApp === "function") startApp(); }catch(e){}
+
+  // How much of what this device holds also exists in the cloud. This is the
+  // number to check before ever deleting the baked-in seed history from the
+  // page: while it is short of 100% some days live only on this device.
+  try{
+    var remoteDates = {};
+    for (var rr=0; rr<entries.length; rr++) remoteDates[entries[rr].date] = 1;
+    var localAll = allData(), covered = 0;
+    for (var ai=0; ai<localAll.length; ai++){ if (remoteDates[localAll[ai].date]) covered++; }
+    window.fbCoverageInfo = {covered: covered, total: localAll.length};
+    if (typeof window.renderFbCoverage === "function") window.renderFbCoverage();
+  }catch(e){}
+
+  // A cloud pull that replaced days already on this device is worth seeing -
+  // last-write-wins trusts each device's clock, so a phone running fast can
+  // win a same-day edit. Silent overwrites would be invisible otherwise.
+  if (updated > 0){
+    try{ showToast(updated + " day(s) updated from the cloud"); }catch(e){}
+  }
 
   fbLastSnapshot = {
     days: JSON.parse(JSON.stringify(fbBuildDayDocs(ST))),

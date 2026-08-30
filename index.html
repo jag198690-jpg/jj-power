@@ -209,7 +209,7 @@ canvas{display:block;width:100%;height:56px}
         <div style="font-size:20px;font-weight:700;color:var(--bl);margin-top:2px" id="h7d">-</div>
       </div>
       <div style="text-align:right">
-        <div class="sub">PROJ /30d</div>
+        <div class="sub" id="hProjLbl">PROJ /30d</div>
         <div style="font-size:20px;font-weight:700;color:var(--mu);margin-top:2px" id="hProj">-</div>
       </div>
     </div>
@@ -2763,11 +2763,17 @@ function renderHome(){
   var s7start=Math.max(0,bd.length-7),s7=0,s7n=0;
   for(var j=s7start;j<bd.length;j++){s7+=(bd[j].net||0);s7n++;}
   var s7avg=s7n>0?s7/s7n:0;
-  var proj=avg*30;
-  var bs=currentMonthStart();
-  var daysSince=Math.floor((localNow()-bs)/86400000)+1;
+  // Project across the real length of this month, not a flat 30. Day-of-month
+  // is read off the calendar rather than derived from a millisecond difference,
+  // which was off by one across a DST change (NSW switches in Oct and Apr).
+  var hNow=localNow();
+  var daysInMonth=new Date(hNow.getFullYear(),hNow.getMonth()+1,0).getDate();
+  var dayOfMonth=hNow.getDate();
+  var proj=avg*daysInMonth;
   document.getElementById("hBill").innerHTML=total<0?"-$"+Math.abs(total).toFixed(2):"$"+total.toFixed(2);
-  document.getElementById("hDays").textContent=daysSince+" days this month - "+bd.length+" days of data";
+  document.getElementById("hDays").textContent="Day "+dayOfMonth+" of "+daysInMonth+" - "+bd.length+" days of data";
+  var projLbl=document.getElementById("hProjLbl");
+  if(projLbl)projLbl.textContent="PROJ /"+daysInMonth+"d";
   document.getElementById("hAvg").innerHTML=f$(avg);
   document.getElementById("h7d").innerHTML=f$(s7avg);
   document.getElementById("hProj").innerHTML=f$(proj);

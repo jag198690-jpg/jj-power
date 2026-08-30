@@ -120,7 +120,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 .cday.fut{opacity:.2}
 .cday.ent{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.25)}
 .cday.mis{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.25)}
-.cday.high{background:rgba(248,113,113,.2);border-color:rgba(248,113,113,.5)}
 .cday.tod{border-color:var(--or)!important;border-width:2px}
 .cdn{font-size:11px;font-weight:700;align-self:flex-start;padding-left:3px;line-height:1;margin-bottom:2px}
 .cdc{font-size:13px;font-weight:800;line-height:1;margin-top:3px}
@@ -389,7 +388,6 @@ canvas{display:block;width:100%;height:56px}
   <div style="margin-bottom:10px">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.3)"></div><span class="sub">Entered</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(248,113,113,.2);border:1px solid rgba(248,113,113,.5)"></div><span class="sub">High</span></div>
       <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:3px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25)"></div><span class="sub">Missing</span></div>
       <div style="display:flex;align-items:center;gap:3px">
         <div style="width:5px;height:5px;border-radius:50%;background:#34d399"></div>
@@ -405,30 +403,6 @@ canvas{display:block;width:100%;height:56px}
   </div>
   <div style="font-size:10px;color:var(--mu);margin:-6px 0 10px;padding:7px 10px;background:var(--s2);border-radius:8px;line-height:1.5">
     <span style="color:#34d399;font-weight:700">%</span> = solar covered home use &nbsp;&#8212;&nbsp; <span style="color:#34d399">70%+</span> great &nbsp;<span style="color:#fbbf24">40–70%</span> good &nbsp;<span style="color:#fb923c">&lt;40%</span> low
-  </div>
-
-  <div class="card" style="padding:13px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">HIGH USAGE THRESHOLD</div><button class="info-btn" onclick="showInfo('settingsthresh')">i</button></div>
-    <div class="setting-row">
-      <div>
-        <div class="setting-lbl">Threshold Mode</div>
-        <div class="setting-sub">How to flag high-cost days</div>
-      </div>
-      <select id="threshMode" onchange="saveThreshMode(this.value)" style="background:var(--s2);border:1px solid var(--bd);color:var(--tx);font-size:16px;padding:7px 10px;border-radius:9px;outline:none;font-family:-apple-system,sans-serif">
-        <option value="rolling">Rolling 6-month avg</option>
-        <option value="manual">Manual value</option>
-      </select>
-    </div>
-    <div id="threshManualRow" class="setting-row" style="border-bottom:none;display:none">
-      <div><div class="setting-lbl">Manual Threshold ($)</div><div class="setting-sub">Flag days above this cost</div></div>
-      <div onclick="editVal('threshVal','High Usage Threshold ($)',ST.threshVal||5)">
-        <div class="setting-val" style="color:var(--re)" id="s-threshVal">-</div>
-        <div class="setting-val-sub">tap to edit</div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding:10px;background:var(--s2);border-radius:9px;font-size:11px;color:var(--mu)">
-      Current threshold: <span style="color:var(--re);font-weight:700" id="threshDisplay">-</span> &bull; Days above this are highlighted red on the calendar
-    </div>
   </div>
 
   <div id="calMonthSummary" style="margin:-2px 0 10px"></div>
@@ -787,7 +761,6 @@ var _s=ld();
 var ST={
   billStart:"2026-06-01",target:100,entries:[],actual:{},
   bills:null,rates:null,
-  threshMode:"rolling",threshVal:5.00,
   battery:{cost:24000,installDate:"2022-08-01"},
   system:{
     solarCost:13000,solarDate:"2021-05-01",
@@ -805,8 +778,6 @@ if(_s.rates)ST.rates=_s.rates;
 if(_s.rateHistory)ST.rateHistory=_s.rateHistory;
 if(_s.notes)ST.notes=_s.notes;
 if(_s.wx)ST.wx=_s.wx;
-if(_s.threshMode)ST.threshMode=_s.threshMode;
-if(_s.threshVal)ST.threshVal=_s.threshVal;
 if(_s.battery)ST.battery=_s.battery;
 if(_s.system)ST.system=Object.assign({},ST.system,_s.system);
 // Pre-load Sungrow data from CSV exports (May 2024 - Dec 2025)
@@ -1924,11 +1895,9 @@ for(var _si=0;_si<_sg.length;_si++){
   for(var _sj=0;_sj<ST.entries.length;_sj++){if(ST.entries[_sj].date===_sd.date){_sf=true;break;}}
   if(!_sf)ST.entries.push(_sd);
 }
-if(_s.threshMode)ST.threshMode=_s.threshMode;
 if(_s.battery)ST.battery=_s.battery;
 if(_s.notes)ST.notes=_s.notes;
 if(_s.theme)ST.theme=_s.theme;
-if(_s.threshVal)ST.threshVal=_s.threshVal;
 ST.bills=(_s.bills&&_s.bills.length)?_s.bills:JSON.parse(JSON.stringify(BDFL));
 ST.rates=(_s.rates&&_s.rates.shoulder)?_s.rates:JSON.parse(JSON.stringify(RFL));
 // One-time data correction V1: grid/feed/net rebuilt from Red Energy meter + iSolarCloud
@@ -2305,7 +2274,6 @@ function exportDiagnostic(){
   lines.push("Off-peak rate: $"+(ST.rates?ST.rates.offpeak:"?"));
   lines.push("Supply charge: $"+(ST.rates?ST.rates.supply:"?"));
   lines.push("Feed-in rate: $"+(ST.rates?ST.rates.feedin:"?"));
-  lines.push("Threshold mode: "+ST.threshMode+" / $"+ST.threshVal);
   lines.push("");
   lines.push("--- DATA SUMMARY ---");
   lines.push("Total days in allData(): "+all.length);
@@ -2543,6 +2511,37 @@ function saveNP(){
   showToast("Saved \u2014 "+f$(net));
 }
 
+// EDIT SHEET
+var editCb=null;
+function editVal(key,title,cur){
+  editCb=function(v){
+    if(key==="target")ST.target=v;
+    else if(key==="priorSavings"){if(!ST.system)ST.system={};ST.system.priorSavings=v;}
+    else if(key==="solarCost"){if(!ST.system)ST.system={};ST.system.solarCost=v;}
+    else if(key==="batt1Cost"){if(!ST.system)ST.system={};ST.system.batt1Cost=v;}
+    else if(key==="batt2Cost"){if(!ST.system)ST.system={};ST.system.batt2Cost=v;}
+    else {ST.rates[key]=v;
+      if(ST.rateHistory&&ST.rateHistory.length&&["peak","shoulder","offpeak","supply","feedin"].indexOf(key)>=0){ST.rateHistory[ST.rateHistory.length-1][key]=v;}
+    }
+    sv();renderAll();showToast("Updated");
+  };
+  document.getElementById("editTitle").textContent=title;
+  document.getElementById("editSub").textContent="Current value: "+(typeof cur==="number"?cur.toFixed(4):cur);
+  var inp=document.getElementById("editInp");
+  inp.value=cur||"";
+  document.getElementById("editOv").style.display="flex";
+  setTimeout(function(){inp.focus();inp.select()},150);
+}
+function closeEdit(){document.getElementById("editOv").style.display="none";editCb=null}
+function editBg(e){if(e.target.id==="editOv")closeEdit()}
+function confirmEdit(){
+  var v=parseFloat(document.getElementById("editInp").value);
+  if(isNaN(v)){showToast("Enter a valid number");return}
+  if(editCb)editCb(v);
+  closeEdit();
+}
+document.getElementById("editInp").addEventListener("keydown",function(e){if(e.key==="Enter")confirmEdit()});
+
 function getEntry(date){
   for(var i=0;i<ST.entries.length;i++){if(ST.entries[i].date===date)return ST.entries[i]}
   return null;
@@ -2635,27 +2634,6 @@ function streak(){
   return{current:s,best:best};
 }
 function f$(v){return v<0?"-$"+Math.abs(v).toFixed(2):"$"+v.toFixed(2)}
-
-//  THRESHOLD 
-function rolling6MonthAvg(){
-  var all=allData();
-  var now=localNow();
-  var sixMoAgo=new Date(now);sixMoAgo.setMonth(sixMoAgo.getMonth()-6);
-  var sixStr=localDate(sixMoAgo);
-  var recent=[],total=0;
-  for(var i=0;i<all.length;i++){
-    if(all[i].date>=sixStr&&all[i].date<localDate(now)){
-      recent.push(all[i]);total+=all[i].net;
-    }
-  }
-  return recent.length>0?parseFloat((total/recent.length).toFixed(2)):5.00;
-}
-
-function getThreshold(){
-  var mode=ST.threshMode||"rolling";
-  if(mode==="manual")return parseFloat(ST.threshVal)||5.00;
-  return rolling6MonthAvg();
-}
 
 // HOME CONSUMPTION
 function renderHomeConsumption(){
@@ -3290,10 +3268,6 @@ var INFO = {
     title: "Energy Rates",
     body: "Your current electricity tariff rates. Shoulder rate applies on weekdays, off-peak on weekends. The daily supply charge is the fixed fee you pay regardless of usage. Feed-in tariff is what you earn per kWh exported to the grid. All net cost calculations in the app use these values, so keep them updated if your retailer changes your rates."
   },
-  "settingsthresh": {
-    title: "High Usage Threshold",
-    body: "Days above this daily cost are highlighted with a red border on the calendar. In rolling mode the threshold automatically adjusts to your 6-month average so it always reflects your current normal. In manual mode you set a fixed dollar value. Use this to quickly spot unusually expensive days in the calendar view."
-  },
   "tariffcalc": {
     title: "Tariff Change Calculator",
     body: "If your energy retailer changes your rates, use this to see the annual impact before it hits your bill. Adjust the shoulder and off-peak rates up or down by a percentage and the calculator shows how much more or less you would pay per year based on your actual usage history. Useful for comparing retailer offers."
@@ -3328,12 +3302,6 @@ function applyTheme(){
   else document.body.classList.remove("light");
   var btn=document.getElementById("themeBtn");
   if(btn)btn.textContent=isLight?"Light mode":"Dark mode";
-}
-
-function saveThreshMode(val){
-  ST.threshMode=val;sv();
-  renderCal();
-  showToast(val==="manual"?"Manual threshold active":"Rolling 6-month avg active");
 }
 
 // HISTORICAL EDIT
@@ -4695,20 +4663,7 @@ function heatBorder(cost,date){
   return"rgba(239,68,68,.6)";
 }
 
-function renderThreshold(){
-  var tMode=ST.threshMode?ST.threshMode:"rolling";
-  var tEl=document.getElementById("threshMode");
-  if(tEl){tEl.value=tMode;}
-  var manRow=document.getElementById("threshManualRow");
-  if(manRow)manRow.style.display=tMode==="manual"?"flex":"none";
-  var tVal=getThreshold();
-  var tDisp=document.getElementById("threshDisplay");
-  if(tDisp)tDisp.textContent="$"+tVal.toFixed(2)+(tMode==="rolling"?" (6-mo avg)":" (manual)");
-  var tValEl=document.getElementById("s-threshVal");
-  if(tValEl)tValEl.textContent="$"+(ST.threshVal||5).toFixed(2);
-}
 function renderCal(){
-  renderThreshold();
   var now=new Date(),today=localDate(now);
   var map={},prodMap={},scMap={},entryMap={},all=allData();
   for(var i=0;i<all.length;i++){
@@ -4780,8 +4735,7 @@ function renderCal(){
     if((isFut&&!isToday)||!isStart){cls+=" fut"}
     else if(typeof map[iso]!=="undefined"){
       var v=map[iso];
-      var thr=getThreshold();
-      if(v>thr){cls+=" high";}else{cls+=" ent";}
+      cls+=" ent";
       cost=v<=0?"credit":"$"+v.toFixed(2);
       var hbg=heatColor(v,iso),hbd=heatBorder(v,iso);
       oc=' onclick="openNP(\''+iso+'\')" style="background:'+hbg+';border-color:'+hbd+'"';
@@ -5308,8 +5262,6 @@ function fbBuildSettingsDoc(ST){
   return {
     billStart: ST.billStart!==undefined?ST.billStart:null,
     target: ST.target!==undefined?ST.target:null,
-    threshMode: ST.threshMode!==undefined?ST.threshMode:null,
-    threshVal: ST.threshVal!==undefined?ST.threshVal:null,
     battery: ST.battery||null,
     system: ST.system||null,
     notes: ST.notes!==undefined?ST.notes:null
@@ -5355,8 +5307,6 @@ async function fbHydrateAndMerge(){
   if (settings){
     if (_s.billStart===undefined && settings.billStart!==undefined && settings.billStart!==null) ST.billStart = settings.billStart;
     if (_s.target===undefined && settings.target!==undefined && settings.target!==null) ST.target = settings.target;
-    if (_s.threshMode===undefined && settings.threshMode!==undefined && settings.threshMode!==null) ST.threshMode = settings.threshMode;
-    if (_s.threshVal===undefined && settings.threshVal!==undefined && settings.threshVal!==null) ST.threshVal = settings.threshVal;
     if (_s.battery===undefined && settings.battery) ST.battery = settings.battery;
     if (_s.system===undefined && settings.system) ST.system = Object.assign({}, ST.system, settings.system);
     if (_s.notes===undefined && settings.notes!==undefined && settings.notes!==null) ST.notes = settings.notes;

@@ -955,7 +955,7 @@ canvas{display:block;width:100%;height:56px}
     <div class="bill-form">
       <div class="bf-row">
         <label class="bf-lbl">BILL PERIOD NAME</label>
-        <input type="text" id="bf-period" class="bf-inp" placeholder="e.g. Jun 2026">
+        <input type="text" id="bf-period" class="bf-inp" placeholder="e.g. Jun 2026" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <div class="bf-row-2">
         <div>
@@ -3166,12 +3166,22 @@ function confirmEdit(){
 document.getElementById("editInp").addEventListener("keydown",function(e){if(e.key==="Enter")confirmEdit()});
 
 // DATA HELPERS
+function billDedupeKey(b,fallback){
+  // Prefer the start date - it is a normalised ISO string with no risk of
+  // the free-text period label differing invisibly (e.g. iOS Safari's
+  // smart-punctuation silently swapping a straight apostrophe for a curly
+  // one on manual entry, which used to defeat exact-string matching here).
+  if(b&&b.s)return"s:"+String(b.s).trim();
+  var p=String(b&&b.p?b.p:("bill"+fallback));
+  p=p.replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/\s+/g," ").trim().toLowerCase();
+  return"p:"+p;
+}
 function dedupeBills(){
   if(!ST.bills||!ST.bills.length)return;
   var seen={},out=[],changed=false;
   for(var i=0;i<ST.bills.length;i++){
     var b=ST.bills[i];
-    var key=String(b&&b.p?b.p:("bill"+i)).replace(/\//g,"-");
+    var key=billDedupeKey(b,i);
     if(seen[key]){changed=true;continue;}
     seen[key]=true;
     out.push(b);
@@ -6565,7 +6575,11 @@ function fbBuildBillDocs(ST){
   var itmFields = (typeof BILL_ITM_FIELDS !== "undefined") ? BILL_ITM_FIELDS : [];
   for (var i=0; i<bills.length; i++){
     var b = bills[i];
-    var id = fbSafeId(b.p || ("bill" + i));
+    // Prefer the start date for the doc id - it's a normalised ISO string,
+    // unlike the free-text period label which iOS smart-punctuation could
+    // silently alter (see billDedupeKey), which used to let two saves of
+    // the same bill land in Firestore as separate documents.
+    var id = fbSafeId(b.s || b.p || ("bill" + i));
     var docObj = {
       p: b.p!==undefined?b.p:null, s: b.s!==undefined?b.s:null, e: b.e!==undefined?b.e:null,
       days: b.days!==undefined?b.days:null, actual: b.actual!==undefined?b.actual:null,

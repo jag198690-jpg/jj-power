@@ -1926,7 +1926,6 @@ function showDotInfo(iso,prod,exp,label){
   for(var i=0;i<all.length;i++){if(all[i].date===iso){dayData=all[i];break;}}
   var coveredHtml="";
   if(dayData&&dayData.usage!==undefined){
-    var solarAtHome=Math.max(0,prod-(dayData.feedin||0));
     var homeCons=(dayData.usage||0)+prod-(dayData.feedin||0)-(dayData.charge||0)+(dayData.discharge||0);
     var covPct=Math.min(100,homeCons>0?Math.round(((homeCons-(dayData.usage||0))/homeCons)*100):0);
     var covCol=covPct>=70?"#34d399":covPct>=40?"#fbbf24":"#fb923c";
@@ -1947,7 +1946,6 @@ function showDotInfo(iso,prod,exp,label){
     if(dayData.net!==undefined)rows.push(['Net Cost','$'+(dayData.net||0).toFixed(2),'var(--or)']);
     if(ST.actual&&ST.actual[iso]){
       var _a=ST.actual[iso];
-      var _cost=typeof _a==="object"?_a.cost:_a;
 
       if(typeof _a==="object"){
         var _rdb=ratesForDate(iso);
@@ -2063,13 +2061,22 @@ function allData(){
     var e=ST.entries[j];
     map[e.date]={date:e.date,usage:e.usage,feedin:e.feedin,net:e.net,production:e.production||0,charge:e.charge||0,discharge:e.discharge||0,rate:e.rate};
   }
-  // Cost truth: wherever exact Red Energy metered cost exists, use it as the day's
-  // net. The stored/estimated net is only a fallback for days with no meter data.
-  // This keeps every cost figure (bill period, calendar tiles, monthly summary,
-  // day popup, trends) on the same accurate number.
+  // Meter truth: wherever exact Red Energy data exists, it wins over the stored
+  // or estimated figures, which are only a fallback for days with no meter data.
+  // Re-derived on every run rather than by a one-shot flagged migration, so a
+  // later import or a correction from another device heals the day by itself.
+  // Cost was already handled this way; grid kWh and feed-in were not, which left
+  // 85 days between Jul 2024 and Apr 2025 showing a usage figure that did not
+  // reconcile with the metered peak/shoulder/off-peak breakdown behind it.
   if(ST.actual){
     for(var k in map){
-      if(ST.actual[k]&&typeof ST.actual[k].cost==="number")map[k].net=Math.round(ST.actual[k].cost*100)/100;
+      var _act=ST.actual[k];
+      if(!_act)continue;
+      if(typeof _act.cost==="number")map[k].net=Math.round(_act.cost*100)/100;
+      if(typeof _act.pk==="number"&&typeof _act.sh==="number"&&typeof _act.op==="number"){
+        map[k].usage=Math.round((_act.pk+_act.sh+_act.op)*100)/100;
+      }
+      if(typeof _act.gen==="number")map[k].feedin=Math.round(_act.gen*100)/100;
     }
   }
   var arr=[];
@@ -2620,7 +2627,6 @@ function getSameMonthLastYear(){
   var curY=now.getFullYear(),curM=now.getMonth(),dayOfMonth=now.getDate();
   var lyY=curY-1;
   var curStart=new Date(curY,curM,1);
-  var lyStart=new Date(lyY,curM,1);
   var all=allData();
   var curTotal=0,curDays=0,lyTotal=0,lyDays=0;
   for(var i=0;i<all.length;i++){
@@ -2811,7 +2817,6 @@ function renderHome(){
 }
 
 function renderInsights(){
-  var all=allData();
 
   //  Same month last year
   var smly=getSameMonthLastYear();

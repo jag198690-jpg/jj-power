@@ -424,6 +424,7 @@ canvas{display:block;width:100%;height:56px}
         <input type="date" id="npDate" style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--cy);font-size:16px;font-weight:600;padding:5px 8px;outline:none" onchange="autoRate(this.value);updateNpDayLbl(this.value)">
       </div>
       <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="rb" id="rb-peak" onclick="setRate('peak')">PEAK<br><span style="font-size:9px;opacity:.7">7-9am,5-8pm Wkdy</span><br><span style="font-size:11px" id="rbv-peak">-</span></button>
         <button class="rb on" id="rb-shoulder" onclick="setRate('shoulder')">WEEKDAY<br><span style="font-size:9px;opacity:.7">Mon-Fri</span><br><span style="font-size:11px" id="rbv-shoulder">-</span></button>
         <button class="rb" id="rb-offpeak" onclick="setRate('offpeak')">WEEKEND<br><span style="font-size:9px;opacity:.7">Sat-Sun</span><br><span style="font-size:11px" id="rbv-offpeak">-</span></button>
       </div>
@@ -561,14 +562,25 @@ function ld(){try{return JSON.parse(localStorage.getItem(SK)||"{}")}catch(e){ret
 function sv(){try{localStorage.setItem(SK,JSON.stringify(ST))}catch(e){}try{if(typeof window.fbBackgroundSync==="function")window.fbBackgroundSync();}catch(e){}}
 // Always use Australian Eastern time for dates
 function localDate(d){
-  var dt=d||new Date();
+  var dt=d||localNow();
   var y=dt.getFullYear();
   var mo=String(dt.getMonth()+1).padStart(2,"0");
   var day=String(dt.getDate()).padStart(2,"0");
   return y+"-"+mo+"-"+day;
 }
+// Anchors "now" to Australia/Sydney regardless of the device's own timezone,
+// so weekday/weekend rate selection, "today", and month boundaries stay
+// correct while traveling. Falls back to device time if Intl is unavailable.
 function localNow(){
-  return new Date();
+  try{
+    var parts=new Intl.DateTimeFormat("en-US",{timeZone:"Australia/Sydney",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());
+    var map={};
+    for(var i=0;i<parts.length;i++){map[parts[i].type]=parts[i].value;}
+    var hh=map.hour==="24"?"00":map.hour;
+    return new Date(parseInt(map.year,10),parseInt(map.month,10)-1,parseInt(map.day,10),parseInt(hh,10),parseInt(map.minute,10),parseInt(map.second,10));
+  }catch(e){
+    return new Date();
+  }
 }
 function escapeHtml(s){
   if(!s)return"";
@@ -1871,10 +1883,13 @@ function updateNpDayLbl(dateStr){
 }
 function autoRate(dateStr){
   if(!dateStr)return;
+  var existing=getEntry(dateStr);
   var day=new Date(dateStr+"T12:00:00").getDay();
-  setRate((day===0||day===6)?"offpeak":"shoulder");
-  document.getElementById("rbv-shoulder").textContent="$"+ST.rates.shoulder.toFixed(4);
-  document.getElementById("rbv-offpeak").textContent="$"+ST.rates.offpeak.toFixed(4);
+  setRate((existing&&existing.rate)?existing.rate:((day===0||day===6)?"offpeak":"shoulder"));
+  var _arRt=ratesForDate(dateStr);
+  document.getElementById("rbv-peak").textContent="$"+_arRt.peak.toFixed(4);
+  document.getElementById("rbv-shoulder").textContent="$"+_arRt.shoulder.toFixed(4);
+  document.getElementById("rbv-offpeak").textContent="$"+_arRt.offpeak.toFixed(4);
 }
 function toggleYoY(){
   var panel=document.getElementById("yoyPanel");
@@ -1953,10 +1968,12 @@ function openNP(date){
       npVals.discharge=String(existing.discharge||0);
     }
     var day=new Date(useDate+"T12:00:00").getDay();
-    npRate=(day===0||day===6)?"offpeak":"shoulder";
+    npRate=(existing&&existing.rate)?existing.rate:((day===0||day===6)?"offpeak":"shoulder");
     document.getElementById("npDate").value=useDate;
-    document.getElementById("rbv-shoulder").textContent="$"+ST.rates.shoulder.toFixed(4);
-    document.getElementById("rbv-offpeak").textContent="$"+ST.rates.offpeak.toFixed(4);
+    var _npRt=ratesForDate(useDate);
+    document.getElementById("rbv-peak").textContent="$"+_npRt.peak.toFixed(4);
+    document.getElementById("rbv-shoulder").textContent="$"+_npRt.shoulder.toFixed(4);
+    document.getElementById("rbv-offpeak").textContent="$"+_npRt.offpeak.toFixed(4);
     try{setRate(npRate);}catch(e){}
     try{npDispUpdate();}catch(e){}
     try{npCalcUpdate();}catch(e){}
@@ -2010,8 +2027,8 @@ function showDotInfo(iso,prod,exp,label){
         rows.push(['  Peak '+_a.pk.toFixed(2)+'kWh','$'+(_a.pk*_rdb.peak).toFixed(2),'rgba(248,113,113,.7)']);
         rows.push(['  Shoulder '+_a.sh.toFixed(2)+'kWh','$'+(_a.sh*_rdb.shoulder).toFixed(2),'rgba(248,113,113,.7)']);
         rows.push(['  Off-Peak '+_a.op.toFixed(2)+'kWh','$'+(_a.op*_rdb.offpeak).toFixed(2),'rgba(248,113,113,.7)']);
-        rows.push(['  Supply charge','$1.4540','rgba(248,113,113,.7)']);
-        if(_a.gen>0)rows.push(['  Solar export -'+_a.gen.toFixed(2)+'kWh','-$'+(_a.gen*0.04).toFixed(2),'rgba(52,211,153,.7)']);
+        rows.push(['  Supply charge','$'+_rdb.supply.toFixed(4),'rgba(248,113,113,.7)']);
+        if(_a.gen>0)rows.push(['  Solar export -'+_a.gen.toFixed(2)+'kWh','-$'+(_a.gen*_rdb.feedin).toFixed(2),'rgba(52,211,153,.7)']);
       }
     }
     if(dayData.usage!==undefined)rows.push(['Grid Use',(dayData.usage||0).toFixed(1)+' kWh','var(--tx)']);
@@ -2062,6 +2079,7 @@ function npBg(e){if(e.target.id==="npOv")closeNP()}
 
 function setRate(r){
   npRate=r;
+  document.getElementById("rb-peak").className="rb"+(r==="peak"?" on":"");
   document.getElementById("rb-shoulder").className="rb"+(r==="shoulder"?" on":"");
   document.getElementById("rb-offpeak").className="rb"+(r==="offpeak"?" on":"");
   npCalcUpdate();
@@ -2689,7 +2707,7 @@ function startApp(){
   document.getElementById("todDate").textContent=now.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"});
   applyTheme();
   renderAll();
-  setTimeout(function(){fetchWeather(new Date().getFullYear(),new Date().getMonth()+1,null);},200);
+  setTimeout(function(){fetchWeather(now.getFullYear(),now.getMonth()+1,null);},200);
   setTimeout(function(){fetchWeather(2026,1,null);},800);
   setTimeout(function(){fetchWeather(2025,4,null);},1600);
 }
@@ -2734,7 +2752,7 @@ var FCAST_CACHE=null;
 var FCAST_DATE="";
 
 function fetchForecast(){
-  var today=localDate(new Date());
+  var today=localDate();
   // Use cached if same day
   if(FCAST_CACHE&&FCAST_DATE===today){
     renderForecast(FCAST_CACHE);
@@ -2835,7 +2853,7 @@ function renderForecast(data){
   h+='</div>';
   el.innerHTML=h;
   if(upEl){
-    var now=new Date();
+    var now=localNow();
     upEl.textContent="Updated "+now.getHours()+":"+String(now.getMinutes()).padStart(2,"0");
   }
 }
@@ -2845,14 +2863,16 @@ function renderHome(){
   var bd=billData(),total=0;
   for(var i=0;i<bd.length;i++)total+=(bd[i].net||0);
   var avg=bd.length>0?total/bd.length:0;
-  var s7=0;for(var j=Math.max(0,bd.length-7);j<bd.length;j++)s7+=(bd[j].net||0);
+  var s7start=Math.max(0,bd.length-7),s7=0,s7n=0;
+  for(var j=s7start;j<bd.length;j++){s7+=(bd[j].net||0);s7n++;}
+  var s7avg=s7n>0?s7/s7n:0;
   var proj=avg*30;
   var bs=currentMonthStart();
   var daysSince=Math.floor((localNow()-bs)/86400000)+1;
   document.getElementById("hBill").innerHTML=total<0?"-$"+Math.abs(total).toFixed(2):"$"+total.toFixed(2);
   document.getElementById("hDays").textContent=daysSince+" days this month - "+bd.length+" days of data";
   document.getElementById("hAvg").innerHTML=f$(avg);
-  document.getElementById("h7d").innerHTML=f$(s7);
+  document.getElementById("h7d").innerHTML=f$(s7avg);
   document.getElementById("hProj").innerHTML=f$(proj);
   // Actual cost total for period
   var actualTotalEl=document.getElementById("hActualTotal");
@@ -2931,7 +2951,7 @@ function heatBorder(cost,date){
 
 function renderCal(){
   renderRateLockStatus();
-  var now=new Date(),today=localDate(now);
+  var now=localNow(),today=localDate(now);
   var map={},prodMap={},scMap={},entryMap={},all=allData();
   for(var i=0;i<all.length;i++){
     map[all[i].date]=all[i].net;
@@ -3081,7 +3101,8 @@ function renderCal(){
   fillWxCells(dim);
   // Fetch weather and overlay on cells (updates any missing/stale entries)
   var wxEl2=document.getElementById("wxStatus");
-  var isRecent=(new Date().getFullYear()-calY)*12+(new Date().getMonth()+1-(calM+1))<=3;
+  var _lnw=localNow();
+  var isRecent=(_lnw.getFullYear()-calY)*12+(_lnw.getMonth()+1-(calM+1))<=3;
   if(wxEl2)wxEl2.textContent=isRecent?"Loading weather (fast)...":"Loading weather from archive (may take a few seconds)...";
   var wxDim=dim; // capture for callback closure
   fetchWeather(calY,calM+1,function(){

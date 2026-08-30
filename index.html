@@ -18,7 +18,6 @@
   --bg:#080c12;--s1:#0e1621;--s2:#141f2e;--bd:#1e3048;
   --tx:#eef2ff;--mu:#8bb8d4;--di:#4a7a9b;
   --or:#fb8c3a;--cy:#22d3ee;--gr:#34d399;--bl:#60a5fa;--re:#f87171;--am:#fbbf24;
-  --pu:#a78bfa;
 }
 body.light{
   --bg:#f0f4f8;--s1:#ffffff;--s2:#e8eef5;--bd:#c8d8e8;
@@ -42,24 +41,9 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 .sub{font-size:11px;color:var(--mu)}
 .card{background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 16px rgba(0,0,0,.2)}
 .row{display:flex;justify-content:space-between;align-items:center}
-.sec{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;margin:18px 0 8px;padding-left:2px;display:flex;align-items:center;gap:8px}.sec::after{content:"";flex:1;height:1px;background:var(--bd)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
-.stat{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:12px 10px;text-align:center}
-.stat-l{font-size:9px;letter-spacing:.12em;color:var(--mu);font-weight:600;display:block;margin-bottom:4px}
-.stat-v{font-size:19px;font-weight:700}
-.stat-u{font-size:9px;color:var(--di);margin-top:2px}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600}
 .pill-gr{background:rgba(52,211,153,.15);color:var(--gr)}
 .pill-or{background:rgba(249,115,22,.15);color:var(--or)}
-.pill-re{background:rgba(248,113,113,.15);color:var(--re)}
-.pill-mu{background:rgba(74,122,155,.15);color:var(--mu)}
-.brow{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.blbl{font-size:9px;color:var(--mu);width:38px;text-align:right;flex-shrink:0}
-.btrack{flex:1;height:22px;background:var(--s2);border-radius:4px;overflow:hidden}
-.bfill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px}
-.bval{font-size:9px;color:rgba(255,255,255,.95);font-weight:600;white-space:nowrap}
-.divider{height:1px;background:var(--bd);margin:14px 0}
 /* OVERLAYS */
 .ov{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   display:none;flex-direction:column;justify-content:flex-end;backdrop-filter:blur(6px)}
@@ -122,28 +106,13 @@ h1{font-size:22px;font-weight:700;margin-bottom:2px}
 .cdc{font-size:13px;font-weight:800;line-height:1;margin-top:3px}
 .ent .cdn{color:rgba(94,255,196,.65)}
 .mis .cdn{color:rgba(255,128,128,.65)}
-.high .cdn{color:rgba(255,96,96,.65)}
 .ent .cdc{color:#5effc4}
 .mis .cdc{color:#ff8080}
-.high .cdc{color:#ff8080}
 /* EDIT SHEET */
 .edit-title{font-size:13px;font-weight:700;padding:0 18px 6px}
 .edit-sub{font-size:11px;color:var(--mu);padding:0 18px 14px;
   border-bottom:1px solid var(--bd);margin-bottom:14px}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
-/* SETTINGS */
-.setting-row{display:flex;justify-content:space-between;align-items:center;
-  padding:13px 0;border-bottom:1px solid var(--bd)}
-.setting-row:last-child{border-bottom:none}
-.setting-lbl{font-size:13px;color:var(--tx)}
-.setting-sub{font-size:10px;color:var(--mu);margin-top:2px}
-.setting-val{font-size:18px;font-weight:700;cursor:pointer;text-align:right}
-.setting-val-sub{font-size:9px;color:var(--mu);text-align:right}
-/* CHIPS */
-.chip{padding:5px 11px;border-radius:20px;border:1px solid var(--bd);
-  background:var(--s2);color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;
-  font-family:-apple-system,sans-serif;transition:all .15s}
-.chip.on{background:var(--or);border-color:var(--or);color:#000}
 /* WEATHER */
 .cwx{font-size:9px;margin-top:3px;line-height:1.4;text-align:center;color:rgba(255,255,255,.75);font-weight:500}
 .info-btn{background:var(--s2);border:1px solid var(--bd);border-radius:50%;width:20px;height:20px;color:var(--mu);font-size:10px;cursor:pointer;padding:0;line-height:18px;text-align:center;flex-shrink:0;font-family:-apple-system,sans-serif;transition:background .15s}.info-btn:active{background:var(--bd)}
@@ -550,10 +519,9 @@ function escapeHtml(s){
 }
 var _s=ld();
 var ST={
-  target:100,entries:[],actual:{},
+  entries:[],actual:{},
   bills:null,rates:null
 };
-if(_s.target)ST.target=_s.target;
 if(_s.entries)ST.entries=_s.entries;
 if(_s.actual)ST.actual=_s.actual;
 if(_s.bills)ST.bills=_s.bills;
@@ -3477,7 +3445,6 @@ function fbBuildRateDocs(ST){
 
 function fbBuildSettingsDoc(ST){
   return {
-    target: ST.target!==undefined?ST.target:null,
     notes: ST.notes!==undefined?ST.notes:null
   };
 }
@@ -3516,10 +3483,8 @@ async function fbHydrateAndMerge(){
   // permanently blocks every other device's real weather data for it.
   for (var wk in wx){ if (!ST.wx[wk] || ST.wx[wk].seed) ST.wx[wk] = wx[wk]; }
   if (bills.length > (ST.bills?ST.bills.length:0)) ST.bills = bills;
-  if (typeof window.dedupeBills === "function") window.dedupeBills();
   if (rateHistory.length && (!ST.rateHistory || !ST.rateHistory.length)) ST.rateHistory = rateHistory;
   if (settings){
-    if (_s.target===undefined && settings.target!==undefined && settings.target!==null) ST.target = settings.target;
     if (_s.notes===undefined && settings.notes!==undefined && settings.notes!==null) ST.notes = settings.notes;
   }
 

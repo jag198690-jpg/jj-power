@@ -169,6 +169,18 @@ canvas{display:block;width:100%;height:56px}
 </head>
 <body>
 
+<!-- LOGIN GATE -->
+<div id="authGate" style="position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="font-size:22px;font-weight:800;margin-bottom:2px"><span style="color:var(--or)">J&amp;J</span> Power</div>
+  <div style="font-size:12px;color:var(--mu);margin-bottom:24px">Sign in to continue</div>
+  <form id="gateForm" onsubmit="event.preventDefault();gateSignIn();return false;" style="width:100%;max-width:320px">
+    <input id="gateEmail" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px;box-sizing:border-box">
+    <input id="gatePassword" name="password" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:12px;box-sizing:border-box">
+    <button type="submit" id="gateBtn" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--or);color:#000;font-family:-apple-system,sans-serif;font-weight:700;font-size:14px;cursor:pointer">Sign In</button>
+  </form>
+  <div id="gateStatus" style="margin-top:14px;font-size:12px;color:var(--re);text-align:center;min-height:16px"></div>
+</div>
+
 <nav class="nav">
   <button class="nt on" onclick="go('home')" id="t-home"><span class="ic">&#9728;</span>HOME</button>
   <button class="nt" onclick="go('cal')" id="t-cal"><span class="ic">&#128197;</span>CALENDAR</button>
@@ -376,7 +388,7 @@ canvas{display:block;width:100%;height:56px}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="sub">CLOUD SYNC (FIREBASE)</div></div>
     <div id="fbLastSyncedDisplay" style="font-size:11px;color:var(--mu);margin-bottom:10px"></div>
     <div id="fbSyncLoggedOut">
-      <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Log in once to pull your data from the cloud and keep future changes backed up automatically. Your app keeps working normally either way.</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:10px">You're signed in on this device already - this is here in case you ever need to reconnect. Your data stays backed up to the cloud automatically.</div>
       <form id="fbLoginForm" onsubmit="event.preventDefault();fbConnectClick();return false;">
       <input id="fbEmail" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" placeholder="Email" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
       <input id="fbPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:16px;margin-bottom:8px">
@@ -3607,6 +3619,22 @@ window.fbConnectClick = function(){
   });
 };
 
+window.gateSignIn = function(){
+  var email = document.getElementById("gateEmail").value.trim();
+  var password = document.getElementById("gatePassword").value;
+  var btn = document.getElementById("gateBtn");
+  var status = document.getElementById("gateStatus");
+  if (!email || !password){ status.textContent = "Enter your email and password"; return; }
+  btn.disabled = true;
+  status.style.color = "var(--mu)";
+  status.textContent = "Signing in...";
+  signInWithEmailAndPassword(fbAuth, email, password).catch(function(err){
+    status.style.color = "var(--re)";
+    status.textContent = err.message;
+    btn.disabled = false;
+  });
+};
+
 // Fires on every load, not just a fresh manual sign-in - Firebase restores
 // a signed-in session automatically (browserLocalPersistence, the default).
 // Pulling here, not just from fbConnectClick, is what makes cloud data show
@@ -3614,9 +3642,11 @@ window.fbConnectClick = function(){
 onAuthStateChanged(fbAuth, function(user){
   var out = document.getElementById("fbSyncLoggedOut");
   var inn = document.getElementById("fbSyncLoggedIn");
+  var gate = document.getElementById("authGate");
   window.fbCurrentUserEmail = user ? user.email : null;
   try{ if (typeof window.renderFbLastSynced === "function") window.renderFbLastSynced(); }catch(e){}
   if (user){
+    if (gate) gate.style.display = "none";
     if (out) out.style.display = "none";
     if (inn) inn.style.display = "block";
     var shown = document.getElementById("fbEmailShown");
@@ -3628,6 +3658,7 @@ onAuthStateChanged(fbAuth, function(user){
       if (btn) btn.disabled = false;
     });
   } else {
+    if (gate) gate.style.display = "flex";
     if (out) out.style.display = "block";
     if (inn) inn.style.display = "none";
   }

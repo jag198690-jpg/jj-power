@@ -3011,7 +3011,7 @@ function renderCal(){
     }
     html+='<div class="'+cls+'"'+oc+'><div class="cdn">'+d+'</div><div class="cdc">'+cost+'</div>';
     html+=dotHtml;
-    if(!isFut&&isStart&&iso>='2025-04-01')html+='<div class="cwx" id="wx-'+iso+'" onclick="event.stopPropagation();openWxEdit(\''+iso+'\')" style="cursor:pointer"></div>';
+    if(!isFut&&isStart)html+='<div class="cwx" id="wx-'+iso+'" onclick="event.stopPropagation();openWxEdit(\''+iso+'\')" style="cursor:pointer"></div>';
     html+=oddHtml;
     if(!isFut&&isStart&&ST.notes&&ST.notes[iso])html+='<div style="font-size:6px;color:var(--cy);line-height:1">note</div>';
     html+='</div>';

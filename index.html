@@ -164,7 +164,8 @@ canvas{display:block;width:100%;height:56px}
 .cpm-yt-track{position:relative;flex:1;height:26px;background:var(--s2);border-radius:6px;overflow:hidden}
 .cpm-yt-fill{height:100%;border-radius:6px}
 .cpm-yt-partial{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:8.5px;font-weight:700;color:rgba(255,255,255,.85);background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px;letter-spacing:.02em}
-.cpm-yt-val{width:78px;flex-shrink:0;text-align:right;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx)}
+.cpm-yt-val{width:84px;flex-shrink:0;text-align:right;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx)}
+.cpm-yt-avg{display:block;font-size:9px;font-weight:600;color:var(--di);margin-top:1px}
 .cpm-yt-note{font-size:10px;color:var(--di);margin:2px 0 20px;line-height:1.5}
 /* CURRENT MONTH cost breakdown */
 .cb-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
@@ -3341,10 +3342,11 @@ function buildCpmYtList(monthly,years){
     var yr=years[j],t=totals[yr];
     if(!t)continue;
     var pct=Math.max(4,(t.sum/max)*100),col=cpmColorForYear(yr,years),partial=t.months<12;
+    var avgPerMo=t.months>0?t.sum/t.months:0;
     html+='<div class="cpm-yt-row"><div class="cpm-yt-year">'+yr+'</div>'
       +'<div class="cpm-yt-track"><div class="cpm-yt-fill" style="width:'+pct+'%;background:'+col+'"></div>'
       +(partial?'<div class="cpm-yt-partial">'+t.months+' mo</div>':'')
-      +'</div><div class="cpm-yt-val">'+f$(t.sum)+'</div></div>';
+      +'</div><div class="cpm-yt-val">'+f$(t.sum)+'<span class="cpm-yt-avg">'+f$(avgPerMo)+'/mo avg</span></div></div>';
   }
   el.innerHTML=html;
 }

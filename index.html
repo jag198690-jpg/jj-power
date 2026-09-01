@@ -156,6 +156,16 @@ canvas{display:block;width:100%;height:56px}
 .cpm-year-bar-row.empty .cpm-bar-value{font-size:10.5px;font-weight:600;color:var(--di)}
 .cpm-year-bar-row.empty .cpm-bar-track{background:none;border:1px dashed var(--bd)}
 .cpm-legend-note{font-size:10.5px;color:var(--di);margin-top:16px;padding-top:12px;border-top:1px solid var(--bd);line-height:1.5}
+.cpm-sec-lbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.cpm-sec-lbl::after{content:"";flex:1;height:1px;background:var(--bd)}
+.cpm-yt-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.cpm-yt-row{display:flex;align-items:center;gap:10px}
+.cpm-yt-year{width:38px;flex-shrink:0;font-size:13px;font-weight:800;color:var(--tx)}
+.cpm-yt-track{position:relative;flex:1;height:26px;background:var(--s2);border-radius:6px;overflow:hidden}
+.cpm-yt-fill{height:100%;border-radius:6px}
+.cpm-yt-partial{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:8.5px;font-weight:700;color:rgba(255,255,255,.85);background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px;letter-spacing:.02em}
+.cpm-yt-val{width:78px;flex-shrink:0;text-align:right;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--tx)}
+.cpm-yt-note{font-size:10px;color:var(--di);margin:2px 0 20px;line-height:1.5}
 /* CURRENT MONTH cost breakdown */
 .cb-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
 .cb-l{font-size:12.5px;color:var(--tx)}
@@ -280,6 +290,10 @@ canvas{display:block;width:100%;height:56px}
     </div>
     <div class="cpm-peek" id="cpmPeek"></div>
     <div class="cpm-body" id="cpmBody"><div class="cpm-inner">
+      <div class="cpm-sec-lbl">YEARLY TOTALS</div>
+      <div class="cpm-yt-list" id="cpmYtList"></div>
+      <div class="cpm-yt-note">Partial years show only the months you actually have data for, not scaled up to a full year.</div>
+      <div class="cpm-sec-lbl">BY MONTH</div>
       <div class="cpm-year-chips" id="cpmYearChips"></div>
       <div class="cpm-month-list" id="cpmMonthList"></div>
       <div class="cpm-legend-note">Tap any bar to open that month's full breakdown. Months with no data for a year are left blank, not estimated.</div>
@@ -3309,10 +3323,37 @@ function toggleCpm(){
   if(chev)chev.setAttribute("aria-label",expanded?"Collapse":"Expand");
 }
 
+function buildCpmYtList(monthly,years){
+  var el=document.getElementById("cpmYtList");
+  if(!el)return;
+  var totals={};
+  for(var k in monthly){
+    var y=k.substring(0,4);
+    if(!totals[y])totals[y]={sum:0,months:0};
+    totals[y].sum+=monthly[k];
+    totals[y].months++;
+  }
+  var max=0;
+  for(var i=0;i<years.length;i++){if(totals[years[i]]&&totals[years[i]].sum>max)max=totals[years[i]].sum;}
+  if(max<=0)max=1;
+  var html="";
+  for(var j=0;j<years.length;j++){
+    var yr=years[j],t=totals[yr];
+    if(!t)continue;
+    var pct=Math.max(4,(t.sum/max)*100),col=cpmColorForYear(yr,years),partial=t.months<12;
+    html+='<div class="cpm-yt-row"><div class="cpm-yt-year">'+yr+'</div>'
+      +'<div class="cpm-yt-track"><div class="cpm-yt-fill" style="width:'+pct+'%;background:'+col+'"></div>'
+      +(partial?'<div class="cpm-yt-partial">'+t.months+' mo</div>':'')
+      +'</div><div class="cpm-yt-val">'+f$(t.sum)+'</div></div>';
+  }
+  el.innerHTML=html;
+}
+
 function renderChargesPerMonth(){
   var monthly=cpmMonthlyTotals();
   var years=cpmYears(monthly);
   cpmEnsureActiveYears(years);
+  buildCpmYtList(monthly,years);
   buildCpmYearChips(years);
   buildCpmMonthList(monthly,years);
   buildCpmPeek(monthly);

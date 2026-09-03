@@ -159,7 +159,7 @@ canvas{display:block;width:100%;height:56px}
 .cpm-sec-lbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:0 0 12px}
 .cpm-sec-lbl::after{content:"";flex:1;height:1px;background:var(--bd)}
 .cpm-yt-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
-.cpm-yt-row{display:flex;align-items:center;gap:10px}
+.cpm-yt-row{display:flex;align-items:center;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cpm-yt-year{width:38px;flex-shrink:0;font-size:13px;font-weight:800;color:var(--tx)}
 .cpm-yt-track{position:relative;flex:1;height:26px;background:var(--s2);border-radius:6px;overflow:hidden}
 .cpm-yt-fill{height:100%;border-radius:6px}
@@ -3343,7 +3343,7 @@ function buildCpmYtList(monthly,years){
     if(!t)continue;
     var pct=Math.max(4,(t.sum/max)*100),col=cpmColorForYear(yr,years),partial=t.months<12;
     var avgPerMo=t.months>0?t.sum/t.months:0;
-    html+='<div class="cpm-yt-row"><div class="cpm-yt-year">'+yr+'</div>'
+    html+='<div class="cpm-yt-row" onclick="showYearDetail(\''+yr+'\')"><div class="cpm-yt-year">'+yr+'</div>'
       +'<div class="cpm-yt-track"><div class="cpm-yt-fill" style="width:'+pct+'%;background:'+col+'"></div>'
       +(partial?'<div class="cpm-yt-partial">'+t.months+' mo</div>':'')
       +'</div><div class="cpm-yt-val">'+f$(t.sum)+'<span class="cpm-yt-avg">'+f$(avgPerMo)+'/mo avg</span></div></div>';
@@ -3359,6 +3359,28 @@ function renderChargesPerMonth(){
   buildCpmYearChips(years);
   buildCpmMonthList(monthly,years);
   buildCpmPeek(monthly);
+}
+
+// Shared row/delta/money formatters for the month- and year-detail sheets
+function dMoney(n){return "$"+(Math.round(n*100)/100).toFixed(2);}
+function dDlt(cur,last,lb){
+  if(last===null||cur===null)return "";
+  var d=cur-last;
+  if(Math.abs(d)<0.005)return ' <span style="color:var(--di);font-size:9px">=</span>';
+  var col="var(--di)";
+  if(lb===true)col=(d<0)?"var(--gr)":"var(--re)";
+  else if(lb===false)col=(d>0)?"var(--gr)":"var(--re)";
+  var arrow=(d<0)?"\u25BC":"\u25B2";
+  return ' <span style="color:'+col+';font-size:9px">'+arrow+Math.abs(Math.round(d*100)/100)+'</span>';
+}
+function dRow(lbl,thisStr,thisRaw,lastRaw,lb,lastStr,col,sub){
+  var ly="-";
+  if(lastRaw!==null&&lastStr!==null)ly=lastStr+dDlt(thisRaw,lastRaw,lb);
+  else if(lastStr!==null)ly=lastStr;
+  return '<div style="display:flex;align-items:center;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.04)">'
+    +'<div style="flex:1.5;font-size:13px;color:var(--tx)">'+lbl+(sub?'<span style="display:block;font-size:9px;color:var(--di)">'+sub+'</span>':'')+'</div>'
+    +'<div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:'+(col||"var(--tx)")+'">'+thisStr+'</div>'
+    +'<div style="flex:1;text-align:right;font-size:11px;color:var(--mu)">'+ly+'</div></div>';
 }
 
 function showMonthDetail(ym){
@@ -3378,28 +3400,7 @@ function showMonthDetail(ym){
   var hasLY=L.hasData;
   var rd=ratesForDate(ym+"-15");
   var PK=rd.peak,SHr=rd.shoulder,OPr=rd.offpeak;
-
-  function money(n){return "$"+(Math.round(n*100)/100).toFixed(2);}
-  function dlt(cur,last,lb){
-    if(last===null||cur===null)return "";
-    var d=cur-last;
-    if(Math.abs(d)<0.005)return ' <span style="color:var(--di);font-size:9px">=</span>';
-    var col="var(--di)";
-    if(lb===true)col=(d<0)?"var(--gr)":"var(--re)";
-    else if(lb===false)col=(d>0)?"var(--gr)":"var(--re)";
-    var arrow=(d<0)?"\u25BC":"\u25B2";
-    return ' <span style="color:'+col+';font-size:9px">'+arrow+Math.abs(Math.round(d*100)/100)+'</span>';
-  }
   function lyN(v){return hasLY?v:null;}
-  function row(lbl,thisStr,thisRaw,lastRaw,lb,lastStr,col,sub){
-    var ly="-";
-    if(lastRaw!==null&&lastStr!==null)ly=lastStr+dlt(thisRaw,lastRaw,lb);
-    else if(lastStr!==null)ly=lastStr;
-    return '<div style="display:flex;align-items:center;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,.04)">'
-      +'<div style="flex:1.5;font-size:13px;color:var(--tx)">'+lbl+(sub?'<span style="display:block;font-size:9px;color:var(--di)">'+sub+'</span>':'')+'</div>'
-      +'<div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:'+(col||"var(--tx)")+'">'+thisStr+'</div>'
-      +'<div style="flex:1;text-align:right;font-size:11px;color:var(--mu)">'+ly+'</div></div>';
-  }
 
   var h='';
   h+='<div style="text-align:center;border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:10px">';
@@ -3408,33 +3409,127 @@ function showMonthDetail(ym){
   h+='<div style="display:flex;font-size:9px;color:var(--di);text-transform:uppercase;letter-spacing:.4px;padding:0 2px 6px;border-bottom:1px solid var(--bd);margin-bottom:4px">'
     +'<div style="flex:1.5"></div><div style="flex:1;text-align:right">This month</div><div style="flex:1;text-align:right">'+months[mo-1]+' '+(yr-1)+'</div></div>';
 
-  h+=row("Net Cost",money(A.net),A.net,lyN(L.net),true,hasLY?money(L.net):null,"var(--or)");
-  h+=row("Peak",A.pk.toFixed(1)+" kWh "+money(A.pk*PK),A.pk*PK,lyN(L.pk*PK),true,hasLY?money(L.pk*PK):null,"var(--re)");
-  h+=row("Shoulder",A.sh.toFixed(1)+" kWh "+money(A.sh*SHr),A.sh*SHr,lyN(L.sh*SHr),true,hasLY?money(L.sh*SHr):null,"var(--re)");
-  h+=row("Off-Peak",A.op.toFixed(1)+" kWh "+money(A.op*OPr),A.op*OPr,lyN(L.op*OPr),true,hasLY?money(L.op*OPr):null,"var(--re)");
-  h+=row("Supply charge",money(A.supply),A.supply,lyN(L.supply),true,hasLY?money(L.supply):null,"var(--re)");
-  h+=row("Solar export","-"+Math.round(A.exp)+" kWh",A.exp,lyN(L.exp),null,hasLY?Math.round(L.exp)+" kWh":null,"var(--gr)");
-  h+=row("Grid Use",Math.round(A.grid)+" kWh",A.grid,lyN(L.grid),true,hasLY?Math.round(L.grid)+" kWh":null,"var(--tx)");
-  h+=row("Home Consumption",Math.round(A.home)+" kWh",A.home,lyN(L.home),null,hasLY?Math.round(L.home)+" kWh":null,"var(--am)");
-  h+=row("Solar Saved",money(A.saved),A.saved,lyN(L.saved),false,hasLY?money(L.saved):null,"var(--gr)");
-  h+=row("Feed-in",A.fi.toFixed(1)+" kWh",A.fi,lyN(L.fi),null,hasLY?L.fi.toFixed(1)+" kWh":null,"var(--gr)");
+  h+=dRow("Net Cost",dMoney(A.net),A.net,lyN(L.net),true,hasLY?dMoney(L.net):null,"var(--or)");
+  h+=dRow("Peak",A.pk.toFixed(1)+" kWh "+dMoney(A.pk*PK),A.pk*PK,lyN(L.pk*PK),true,hasLY?dMoney(L.pk*PK):null,"var(--re)");
+  h+=dRow("Shoulder",A.sh.toFixed(1)+" kWh "+dMoney(A.sh*SHr),A.sh*SHr,lyN(L.sh*SHr),true,hasLY?dMoney(L.sh*SHr):null,"var(--re)");
+  h+=dRow("Off-Peak",A.op.toFixed(1)+" kWh "+dMoney(A.op*OPr),A.op*OPr,lyN(L.op*OPr),true,hasLY?dMoney(L.op*OPr):null,"var(--re)");
+  h+=dRow("Supply charge",dMoney(A.supply),A.supply,lyN(L.supply),true,hasLY?dMoney(L.supply):null,"var(--re)");
+  h+=dRow("Solar export","-"+Math.round(A.exp)+" kWh",A.exp,lyN(L.exp),null,hasLY?Math.round(L.exp)+" kWh":null,"var(--gr)");
+  h+=dRow("Grid Use",Math.round(A.grid)+" kWh",A.grid,lyN(L.grid),true,hasLY?Math.round(L.grid)+" kWh":null,"var(--tx)");
+  h+=dRow("Home Consumption",Math.round(A.home)+" kWh",A.home,lyN(L.home),null,hasLY?Math.round(L.home)+" kWh":null,"var(--am)");
+  h+=dRow("Solar Saved",dMoney(A.saved),A.saved,lyN(L.saved),false,hasLY?dMoney(L.saved):null,"var(--gr)");
+  h+=dRow("Feed-in",A.fi.toFixed(1)+" kWh",A.fi,lyN(L.fi),null,hasLY?L.fi.toFixed(1)+" kWh":null,"var(--gr)");
   var chAvg=A.days?(A.ch/A.days):0,disAvg=A.days?(A.dis/A.days):0;
   var chAvgL=L.days?(L.ch/L.days):0,disAvgL=L.days?(L.dis/L.days):0;
   var chSub=chAvg.toFixed(1)+" kWh/day avg"+((hasLY&&L.days)?" (LY "+chAvgL.toFixed(1)+")":"");
   var disSub=disAvg.toFixed(1)+" kWh/day avg"+((hasLY&&L.days)?" (LY "+disAvgL.toFixed(1)+")":"");
-  h+=row("Batt Charge",Math.round(A.ch)+" kWh",A.ch,lyN(L.ch),null,hasLY?Math.round(L.ch)+" kWh":null,"var(--cy)",chSub);
-  h+=row("Batt Discharge",Math.round(A.dis)+" kWh",A.dis,lyN(L.dis),null,hasLY?Math.round(L.dis)+" kWh":null,"var(--cy)",disSub);
+  h+=dRow("Batt Charge",Math.round(A.ch)+" kWh",A.ch,lyN(L.ch),null,hasLY?Math.round(L.ch)+" kWh":null,"var(--cy)",chSub);
+  h+=dRow("Batt Discharge",Math.round(A.dis)+" kWh",A.dis,lyN(L.dis),null,hasLY?Math.round(L.dis)+" kWh":null,"var(--cy)",disSub);
   var tThis=A.tdays?(Math.round(A.tmax/A.tdays)+"/"+Math.round(A.tmin/A.tdays)+" deg"):"n/a";
   var tLast=(hasLY&&L.tdays)?(Math.round(L.tmax/L.tdays)+"/"+Math.round(L.tmin/L.tdays)+" deg"):(hasLY?"n/a":"-");
-  h+=row("Avg Temp",tThis,null,null,null,tLast,"var(--tx)");
+  h+=dRow("Avg Temp",tThis,null,null,null,tLast,"var(--tx)");
   var rThis=A.raindata?(A.rain.toFixed(0)+" mm"):"n/a";
   var rLast=(hasLY&&L.raindata)?(L.rain.toFixed(0)+" mm"):(hasLY?"n/a":"-");
-  h+=row("Total Rainfall",rThis,A.raindata?A.rain:null,(hasLY&&L.raindata)?L.rain:null,null,rLast,"var(--bl)",A.raindata?(A.wet+" wet days"+((hasLY&&L.raindata)?" ("+L.wet+" last year)":"")):"");
+  h+=dRow("Total Rainfall",rThis,A.raindata?A.rain:null,(hasLY&&L.raindata)?L.rain:null,null,rLast,"var(--bl)",A.raindata?(A.wet+" wet days"+((hasLY&&L.raindata)?" ("+L.wet+" last year)":"")):"");
 
   if(partial)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">Current month is part-done - showing days 1-'+capDay+' against the same range last year.</div>';
   else if(!hasLY)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">No data for '+months[mo-1]+' '+(yr-1)+', so the last-year column is blank.</div>';
 
   document.getElementById("mdTitle").innerHTML=months[mo-1]+" "+yr;
+  document.getElementById("mdBody").innerHTML=h;
+  document.getElementById("monthDetailOv").style.display="flex";
+}
+
+// YEAR DETAIL - combines every day in a year into the same breakdown as
+// showMonthDetail, but rate-safe: peak/shoulder/off-peak dollars are summed
+// day by day using the rate that was actually in effect that day, not one
+// flat rate applied to the whole year (rates change month to month via the
+// rate-lock system, so a single end-of-year multiply would be wrong).
+function yrAgg(year,cutoffMd){
+  var all=allData();
+  var a={prod:0,grid:0,exp:0,fi:0,ch:0,dis:0,net:0,home:0,saved:0,
+    pkKwh:0,shKwh:0,opKwh:0,pkCost:0,shCost:0,opCost:0,supply:0,
+    tmax:0,tmin:0,tdays:0,rain:0,wet:0,raindata:false,days:0,hasData:false};
+  for(var i=0;i<all.length;i++){
+    var d=all[i];
+    if(d.date.substring(0,4)!==year)continue;
+    if(cutoffMd&&d.date.substring(5,10)>cutoffMd)continue;
+    a.days++;a.hasData=true;
+    a.prod+=d.production||0;a.grid+=d.usage||0;a.fi+=d.feedin||0;a.exp+=d.feedin||0;
+    a.ch+=d.charge||0;a.dis+=d.discharge||0;a.net+=(d.net||0);
+    a.home+=(d.usage||0)+(d.production||0)-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
+    var rd=ratesForDate(d.date);
+    a.saved+=solarSavedFor(d);
+    if(ST.actual&&ST.actual[d.date]){
+      var ac=ST.actual[d.date];
+      a.pkKwh+=ac.pk||0;a.shKwh+=ac.sh||0;a.opKwh+=ac.op||0;
+      a.pkCost+=(ac.pk||0)*rd.peak;a.shCost+=(ac.sh||0)*rd.shoulder;a.opCost+=(ac.op||0)*rd.offpeak;
+      a.supply+=rd.supply;
+    }
+    var wx=(typeof WX!=="undefined"&&WX[d.date])?WX[d.date]:null;
+    if(wx&&wx.maxT!==null&&wx.maxT!==undefined){a.tmax+=wx.maxT;a.tmin+=(wx.minT||0);a.tdays++;}
+    if(wx&&wx.rain!==null&&wx.rain!==undefined){a.rain+=wx.rain;a.raindata=true;if(wx.rain>1)a.wet++;}
+  }
+  return a;
+}
+
+function showYearDetail(year){
+  var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var yr=parseInt(year,10),lyYear=""+(yr-1);
+  var nowY=""+localNow().getFullYear();
+  var cutoff=null,cutoffLbl="",partial=false;
+  if(year===nowY){
+    var all=allData(),maxMd="00-00";
+    for(var i=0;i<all.length;i++){
+      if(all[i].date.substring(0,4)===year){
+        var md=all[i].date.substring(5,10);
+        if(md>maxMd)maxMd=md;
+      }
+    }
+    if(maxMd>"00-00"&&maxMd<"12-31"){
+      cutoff=maxMd;partial=true;
+      cutoffLbl=months[parseInt(maxMd.substring(0,2),10)-1]+" "+parseInt(maxMd.substring(3,5),10);
+    }
+  }
+
+  var A=yrAgg(year,cutoff),L=yrAgg(lyYear,cutoff);
+  var hasLY=L.hasData;
+  function lyN(v){return hasLY?v:null;}
+
+  var h='';
+  h+='<div style="text-align:center;border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:10px">';
+  h+='<div style="font-size:32px;font-weight:800;color:var(--gr);line-height:1.1">'+Math.round(A.prod)+' kWh</div>';
+  h+='<div style="font-size:12px;color:var(--mu);margin-top:2px">solar generated'+(partial?" (Jan 1 - "+cutoffLbl+")":"")+'</div></div>';
+  h+='<div style="display:flex;font-size:9px;color:var(--di);text-transform:uppercase;letter-spacing:.4px;padding:0 2px 6px;border-bottom:1px solid var(--bd);margin-bottom:4px">'
+    +'<div style="flex:1.5"></div><div style="flex:1;text-align:right">This year</div><div style="flex:1;text-align:right">'+lyYear+'</div></div>';
+
+  h+=dRow("Net Cost",dMoney(A.net),A.net,lyN(L.net),true,hasLY?dMoney(L.net):null,"var(--or)");
+  h+=dRow("Peak",A.pkKwh.toFixed(1)+" kWh "+dMoney(A.pkCost),A.pkCost,lyN(L.pkCost),true,hasLY?dMoney(L.pkCost):null,"var(--re)");
+  h+=dRow("Shoulder",A.shKwh.toFixed(1)+" kWh "+dMoney(A.shCost),A.shCost,lyN(L.shCost),true,hasLY?dMoney(L.shCost):null,"var(--re)");
+  h+=dRow("Off-Peak",A.opKwh.toFixed(1)+" kWh "+dMoney(A.opCost),A.opCost,lyN(L.opCost),true,hasLY?dMoney(L.opCost):null,"var(--re)");
+  h+=dRow("Supply charge",dMoney(A.supply),A.supply,lyN(L.supply),true,hasLY?dMoney(L.supply):null,"var(--re)");
+  h+=dRow("Solar export","-"+Math.round(A.exp)+" kWh",A.exp,lyN(L.exp),null,hasLY?Math.round(L.exp)+" kWh":null,"var(--gr)");
+  h+=dRow("Grid Use",Math.round(A.grid)+" kWh",A.grid,lyN(L.grid),true,hasLY?Math.round(L.grid)+" kWh":null,"var(--tx)");
+  h+=dRow("Home Consumption",Math.round(A.home)+" kWh",A.home,lyN(L.home),null,hasLY?Math.round(L.home)+" kWh":null,"var(--am)");
+  h+=dRow("Solar Saved",dMoney(A.saved),A.saved,lyN(L.saved),false,hasLY?dMoney(L.saved):null,"var(--gr)");
+  h+=dRow("Feed-in",A.fi.toFixed(1)+" kWh",A.fi,lyN(L.fi),null,hasLY?L.fi.toFixed(1)+" kWh":null,"var(--gr)");
+  var chAvg=A.days?(A.ch/A.days):0,disAvg=A.days?(A.dis/A.days):0;
+  var chAvgL=L.days?(L.ch/L.days):0,disAvgL=L.days?(L.dis/L.days):0;
+  var chSub=chAvg.toFixed(1)+" kWh/day avg"+((hasLY&&L.days)?" (LY "+chAvgL.toFixed(1)+")":"");
+  var disSub=disAvg.toFixed(1)+" kWh/day avg"+((hasLY&&L.days)?" (LY "+disAvgL.toFixed(1)+")":"");
+  h+=dRow("Batt Charge",Math.round(A.ch)+" kWh",A.ch,lyN(L.ch),null,hasLY?Math.round(L.ch)+" kWh":null,"var(--cy)",chSub);
+  h+=dRow("Batt Discharge",Math.round(A.dis)+" kWh",A.dis,lyN(L.dis),null,hasLY?Math.round(L.dis)+" kWh":null,"var(--cy)",disSub);
+  var tThis=A.tdays?(Math.round(A.tmax/A.tdays)+"/"+Math.round(A.tmin/A.tdays)+" deg"):"n/a";
+  var tLast=(hasLY&&L.tdays)?(Math.round(L.tmax/L.tdays)+"/"+Math.round(L.tmin/L.tdays)+" deg"):(hasLY?"n/a":"-");
+  h+=dRow("Avg Temp",tThis,null,null,null,tLast,"var(--tx)");
+  var rThis=A.raindata?(A.rain.toFixed(0)+" mm"):"n/a";
+  var rLast=(hasLY&&L.raindata)?(L.rain.toFixed(0)+" mm"):(hasLY?"n/a":"-");
+  h+=dRow("Total Rainfall",rThis,A.raindata?A.rain:null,(hasLY&&L.raindata)?L.rain:null,null,rLast,"var(--bl)",A.raindata?(A.wet+" wet days"+((hasLY&&L.raindata)?" ("+L.wet+" last year)":"")):"");
+
+  if(partial)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">'+year+' is part-done - showing Jan 1 through the same day-of-year against '+lyYear+'.</div>';
+  else if(!hasLY)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">No data for '+lyYear+', so that column is blank.</div>';
+
+  document.getElementById("mdTitle").innerHTML=year;
   document.getElementById("mdBody").innerHTML=h;
   document.getElementById("monthDetailOv").style.display="flex";
 }

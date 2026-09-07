@@ -269,6 +269,7 @@ canvas{display:block;width:100%;height:56px}
       <div class="cb-row"><div class="cb-l">Off-Peak<span class="cb-kwh" id="hOpKwh">-</span></div><div class="cb-v" id="hOpCost">-</div></div>
       <div class="cb-row"><div class="cb-l">Supply charge<span class="cb-kwh" id="hSupplyDays">-</span></div><div class="cb-v" id="hSupplyCost">-</div></div>
       <div class="cb-total"><div class="cb-l">MINUS FEED-IN CREDIT</div><div class="cb-v" id="hFeedinCredit" style="color:var(--gr)">-</div></div>
+      <div id="hCbNote" style="font-size:10px;color:var(--am);margin-top:8px;line-height:1.4"></div>
     </div>
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -2871,9 +2872,13 @@ function renderHome(){
     document.getElementById("hShCost").textContent=f$(_cbA.sh*_cbRd.shoulder);
     document.getElementById("hOpKwh").textContent=_cbA.op.toFixed(1)+" kWh";
     document.getElementById("hOpCost").textContent=f$(_cbA.op*_cbRd.offpeak);
-    document.getElementById("hSupplyDays").textContent=_cbA.days+" day"+(_cbA.days===1?"":"s");
+    document.getElementById("hSupplyDays").textContent=_cbA.actualDays+" day"+(_cbA.actualDays===1?"":"s");
     document.getElementById("hSupplyCost").textContent=f$(_cbA.supply);
     document.getElementById("hFeedinCredit").textContent="-"+f$(_cbA.exp*_cbRd.feedin);
+    var hCbNoteEl=document.getElementById("hCbNote");
+    if(hCbNoteEl){
+      hCbNoteEl.textContent=(_cbA.actualDays<_cbA.days)?(_cbA.days-_cbA.actualDays)+" of "+_cbA.days+" day(s) this month have no detailed meter import (no Red Energy CSV for that day, or it hasn't synced from another device yet), so this breakdown reads lower than the net cost above.":"";
+    }
   }
   // Actual cost total for period
   var actualTotalEl=document.getElementById("hActualTotal");
@@ -3188,7 +3193,7 @@ function closeMonthDetail(){document.getElementById("monthDetailOv").style.displ
 function mdAgg(ym,capDay){
   if(!capDay)capDay=31;
   var all=allData();
-  var a={prod:0,grid:0,exp:0,fi:0,ch:0,dis:0,net:0,home:0,saved:0,pk:0,sh:0,op:0,supply:0,tmax:0,tmin:0,tdays:0,rain:0,wet:0,raindata:false,days:0,hasData:false};
+  var a={prod:0,grid:0,exp:0,fi:0,ch:0,dis:0,net:0,home:0,saved:0,pk:0,sh:0,op:0,supply:0,tmax:0,tmin:0,tdays:0,rain:0,wet:0,raindata:false,days:0,actualDays:0,hasData:false};
   for(var i=0;i<all.length;i++){
     var d=all[i];
     if(d.date.substring(0,7)!==ym)continue;
@@ -3200,7 +3205,7 @@ function mdAgg(ym,capDay){
     a.home+=(d.usage||0)+(d.production||0)-(d.feedin||0)-(d.charge||0)+(d.discharge||0);
     var rd=ratesForDate(d.date);
     a.saved+=solarSavedFor(d);
-    if(ST.actual&&ST.actual[d.date]){var ac=ST.actual[d.date];a.pk+=ac.pk||0;a.sh+=ac.sh||0;a.op+=ac.op||0;a.supply+=rd.supply;}
+    if(ST.actual&&ST.actual[d.date]){var ac=ST.actual[d.date];a.pk+=ac.pk||0;a.sh+=ac.sh||0;a.op+=ac.op||0;a.supply+=rd.supply;a.actualDays++;}
     var wx=(typeof WX!=="undefined"&&WX[d.date])?WX[d.date]:null;
     if(wx&&wx.maxT!==null&&wx.maxT!==undefined){a.tmax+=wx.maxT;a.tmin+=(wx.minT||0);a.tdays++;}
     if(wx&&wx.rain!==null&&wx.rain!==undefined){a.rain+=wx.rain;a.raindata=true;if(wx.rain>1)a.wet++;}

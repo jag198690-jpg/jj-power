@@ -3437,6 +3437,7 @@ function showMonthDetail(ym){
   var rLast=(hasLY&&L.raindata)?(L.rain.toFixed(0)+" mm"):(hasLY?"n/a":"-");
   h+=dRow("Total Rainfall",rThis,A.raindata?A.rain:null,(hasLY&&L.raindata)?L.rain:null,null,rLast,"var(--bl)",A.raindata?(A.wet+" wet days"+((hasLY&&L.raindata)?" ("+L.wet+" last year)":"")):"");
 
+  if(A.actualDays<A.days)h+='<div style="font-size:10px;color:var(--am);line-height:1.5;margin-top:10px">'+(A.days-A.actualDays)+' of '+A.days+' day(s) have no detailed meter import (no Red Energy CSV for that day, or it hasn\'t synced from another device yet), so Peak/Shoulder/Off-Peak/Supply above read lower than Net Cost.</div>';
   if(partial)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">Current month is part-done - showing days 1-'+capDay+' against the same range last year.</div>';
   else if(!hasLY)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">No data for '+months[mo-1]+' '+(yr-1)+', so the last-year column is blank.</div>';
 
@@ -3454,7 +3455,7 @@ function yrAgg(year,cutoffMd){
   var all=allData();
   var a={prod:0,grid:0,exp:0,fi:0,ch:0,dis:0,net:0,home:0,saved:0,
     pkKwh:0,shKwh:0,opKwh:0,pkCost:0,shCost:0,opCost:0,supply:0,
-    tmax:0,tmin:0,tdays:0,rain:0,wet:0,raindata:false,days:0,hasData:false};
+    tmax:0,tmin:0,tdays:0,rain:0,wet:0,raindata:false,days:0,actualDays:0,hasData:false};
   for(var i=0;i<all.length;i++){
     var d=all[i];
     if(d.date.substring(0,4)!==year)continue;
@@ -3469,7 +3470,7 @@ function yrAgg(year,cutoffMd){
       var ac=ST.actual[d.date];
       a.pkKwh+=ac.pk||0;a.shKwh+=ac.sh||0;a.opKwh+=ac.op||0;
       a.pkCost+=(ac.pk||0)*rd.peak;a.shCost+=(ac.sh||0)*rd.shoulder;a.opCost+=(ac.op||0)*rd.offpeak;
-      a.supply+=rd.supply;
+      a.supply+=rd.supply;a.actualDays++;
     }
     var wx=(typeof WX!=="undefined"&&WX[d.date])?WX[d.date]:null;
     if(wx&&wx.maxT!==null&&wx.maxT!==undefined){a.tmax+=wx.maxT;a.tmin+=(wx.minT||0);a.tdays++;}
@@ -3531,6 +3532,7 @@ function showYearDetail(year){
   var rLast=(hasLY&&L.raindata)?(L.rain.toFixed(0)+" mm"):(hasLY?"n/a":"-");
   h+=dRow("Total Rainfall",rThis,A.raindata?A.rain:null,(hasLY&&L.raindata)?L.rain:null,null,rLast,"var(--bl)",A.raindata?(A.wet+" wet days"+((hasLY&&L.raindata)?" ("+L.wet+" last year)":"")):"");
 
+  if(A.actualDays<A.days)h+='<div style="font-size:10px;color:var(--am);line-height:1.5;margin-top:10px">'+(A.days-A.actualDays)+' of '+A.days+' day(s) have no detailed meter import (no Red Energy CSV for that day, or it hasn\'t synced from another device yet), so Peak/Shoulder/Off-Peak/Supply above read lower than Net Cost.</div>';
   if(partial)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">'+year+' is part-done - showing Jan 1 through the same day-of-year against '+lyYear+'.</div>';
   else if(!hasLY)h+='<div style="font-size:10px;color:var(--di);line-height:1.5;margin-top:10px">No data for '+lyYear+', so that column is blank.</div>';
 
